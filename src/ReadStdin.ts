@@ -21,12 +21,13 @@ export class ReadStdin {
 
     public setMouse = (
         b: boolean | number,
-        opts: { mode: 0 | 1 | 2 | 3 } = { mode: 3 },
+        opts: { mode: 0 | 2 | 3 } = { mode: 3 },
     ): void => {
         const end = "\x1b[?1000l";
         const start = `\x1b[?100${opts.mode}h`;
 
         this.stream.write(b ? start : end);
+        if (b) this.stream.write("\x1b[?1006h");
 
         process.on("exit", () => this.stream.write(end));
     };
@@ -64,29 +65,28 @@ export class ReadStdin {
         }
 
         // Mouse event
-        else if (buf[0] === 27 && buf[1] === 91 && buf[2] === 77) {
-            // leftBtnDown is 32 or 64 if mousemove
-            // rightBtnDown is 34 or 66 if mousemove
-            // scrollBtnDown is 33 or 65 is mousemove
-            // mousemove alone is 67
+        else if (buf[0] === 27 && buf[1] === 91 && buf[2] === 60) {
+            const regex = /<(\d+);(\d+);(\d+)(m)$/gim;
+            const mousedata = regex.exec(data.utf);
 
-            const event = buf[3];
+            if (mousedata) {
+                const event = Number(mousedata[1]);
+                const x = Number(mousedata[2]) - 1;
+                const y = Number(mousedata[3]) - 1;
+                const down = mousedata[4] === "M";
 
-            data.mouse = {
-                x: buf[5] - 33,
-                y: buf[4] - 33,
-                leftBtnDown: event === 32 || event === 64,
-                rightBtnDown: event === 34 || event === 66,
-                scrollBtnDown: event === 33 || event === 65,
-                releaseBtn: event === 35,
-                scrollUp: event === 96,
-                scrollDown: event === 97,
-                mousemove:
-                    event === 67 ||
-                    event === 64 ||
-                    event === 66 ||
-                    event === 65,
-            };
+                data.mouse = {
+                    x,
+                    y,
+                    leftBtnDown: (event === 0 && down) || event === 32,
+                    rightBtnDown: (event === 2 && down) || event === 34,
+                    scrollBtnDown: (event === 1 && down) || event === 33,
+                    releaseBtn: !down,
+                    scrollUp: event === 64,
+                    scrollDown: event === 65,
+                    mousemove: event >= 32 && event <= 35,
+                };
+            }
         }
 
         // Escape Sequence
