@@ -1,6 +1,7 @@
 import EventEmitter from "node:events";
 import type { Data } from "./Data.js";
 import { EscMap } from "./EscMap.js";
+import { parseCtrlChar } from "./parseCtrl.js";
 
 export class ReadStdin {
     private stream: NodeJS.ReadStream;
@@ -23,7 +24,7 @@ export class ReadStdin {
         b: boolean | number,
         opts: { mode: 0 | 2 | 3 } = { mode: 3 },
     ): void => {
-        const end = "\x1b[?1000l";
+        const end = "\x1b[?1000l\x1b[?1002l\x1b[?1003l";
         const start = `\x1b[?100${opts.mode}h`;
 
         this.stream.write(b ? start : end);
@@ -48,22 +49,8 @@ export class ReadStdin {
         };
 
         // Ctrl character
-        if (buf[0] < 32 && buf[0] !== 27) {
-            data.key.ctrl = true;
-
-            if (data.raw.utf === "\t") {
-                data.key.tab = true;
-            }
-
-            if (data.raw.utf === "\r") {
-                data.key.return = true;
-            }
-
-            if (buf[0] >= 1 && buf[0] <= 26) {
-                data.input = String.fromCharCode(buf[0] + 96);
-            } else {
-                data.input = String.fromCharCode(buf[0]);
-            }
+        if (buf[0] < 128 && buf[0] !== 27) {
+            parseCtrlChar(buf, data);
         }
 
         // Mouse event
@@ -100,7 +87,16 @@ export class ReadStdin {
             // Alt key
             else {
                 data.key.alt = true;
-                data.input = String.fromCharCode(buf[1]);
+
+                if (
+                    (buf[1] >= 41 && buf[1] <= 90) ||
+                    (buf[1] >= 60 && buf[1] <= 126)
+                ) {
+                    data.input = String.fromCharCode(buf[1]);
+                } else {
+                    const arr = Array.from(buf).slice(1);
+                    parseCtrlChar(Buffer.from(arr), data);
+                }
             }
         }
 
