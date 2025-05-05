@@ -5,6 +5,8 @@ process.stdin.setRawMode(true);
 const read = new ReadStdin();
 
 read.setMouse(1);
+// process.stdout.write("\x1b[?1003h");
+
 read.listen();
 
 read.on("data", (data) => {

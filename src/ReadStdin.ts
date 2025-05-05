@@ -1,5 +1,6 @@
 import EventEmitter from "node:events";
 import type { Data } from "./Data.js";
+import { EscMap } from "./EscMap.js";
 
 export class ReadStdin {
     private stream: NodeJS.ReadStream;
@@ -18,10 +19,16 @@ export class ReadStdin {
         this.stream.off("data", this.handleData);
     };
 
-    public setMouse = (b: boolean | number): void => {
-        this.stream.write(b ? "\x1b[?1000h" : "\x1b[?1000l");
+    public setMouse = (
+        b: boolean | number,
+        opts: { mode: 0 | 1 | 2 | 3 } = { mode: 3 },
+    ): void => {
+        const end = "\x1b[?1000l";
+        const start = `\x1b[?100${opts.mode}h`;
 
-        process.on("exit", () => this.stream.write("\x1b[?1000l"));
+        this.stream.write(b ? start : end);
+
+        process.on("exit", () => this.stream.write(end));
     };
 
     public on = (event: "data", cb: (data: Data) => void): void => {
@@ -58,56 +65,34 @@ export class ReadStdin {
 
         // Mouse event
         else if (buf[0] === 27 && buf[1] === 91 && buf[2] === 77) {
+            // leftBtnDown is 32 or 64 if mousemove
+            // rightBtnDown is 34 or 66 if mousemove
+            // scrollBtnDown is 33 or 65 is mousemove
+            // mousemove alone is 67
+
+            const event = buf[3];
+
             data.mouse = {
                 x: buf[5] - 33,
                 y: buf[4] - 33,
-                leftBtnDown: buf[3] === 32,
-                rightBtnDown: buf[3] === 34,
-                scrollBtnDown: buf[3] === 33,
-                releaseBtn: buf[3] === 35,
-                scrollUp: buf[3] === 96,
-                scrollDown: buf[3] === 97,
+                leftBtnDown: event === 32 || event === 64,
+                rightBtnDown: event === 34 || event === 66,
+                scrollBtnDown: event === 33 || event === 65,
+                releaseBtn: event === 35,
+                scrollUp: event === 96,
+                scrollDown: event === 97,
+                mousemove:
+                    event === 67 ||
+                    event === 64 ||
+                    event === 66 ||
+                    event === 65,
             };
         }
 
         // Escape Sequence
         else if (buf[0] === 27) {
-            if (data.utf === "\x1b[3~") {
-                data.key.delete = true;
-            } else if (data.utf === "\x1b[2~") {
-                data.key.insert = true;
-            } else if (data.utf === "\x1b[A") {
-                data.key.up = true;
-            } else if (data.utf === "\x1b[B") {
-                data.key.down = true;
-            } else if (data.utf === "\x1b[C") {
-                data.key.right = true;
-            } else if (data.utf === "\x1b[D") {
-                data.key.left = true;
-            } else if (data.utf === "\x1bOP") {
-                data.key.f1 = true;
-            } else if (data.utf === "\x1bOQ") {
-                data.key.f2 = true;
-            } else if (data.utf === "\x1bOR") {
-                data.key.f3 = true;
-            } else if (data.utf === "\x1bOS") {
-                data.key.f4 = true;
-            } else if (data.utf === "\x1b[15~") {
-                data.key.f5 = true;
-            } else if (data.utf === "\x1b[17~") {
-                data.key.f6 = true;
-            } else if (data.utf === "\x1b[18~") {
-                data.key.f7 = true;
-            } else if (data.utf === "\x1b[19~") {
-                data.key.f8 = true;
-            } else if (data.utf === "\x1b[20~") {
-                data.key.f9 = true;
-            } else if (data.utf === "\x1b[21~") {
-                data.key.f10 = true;
-            } else if (data.utf === "\x1b[23~") {
-                data.key.f11 = true;
-            } else if (data.utf === "\x1b[24~") {
-                data.key.f12 = true;
+            if (data.utf in EscMap) {
+                data.key[EscMap[data.utf]] = true;
             }
 
             // Alt key
