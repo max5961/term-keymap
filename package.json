@@ -1,0 +1,33 @@
+{
+    "name": "jtest",
+    "version": "1.0.0",
+    "description": "",
+    "main": "./dist/index.js",
+    "exports": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+    },
+    "scripts": {
+        "start": "tsc && node ./dist/index.js",
+        "compile": "tsc --noUnusedLocals",
+        "test": "tsc && npx vitest",
+        "lint": "eslint",
+        "fix": "eslint --fix",
+        "dev": "tsc --watch",
+        "update": "npx directlink --update"
+    },
+    "type": "module",
+    "keywords": [],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "@mmorrissey5961/directlink": "^1.0.0",
+        "@types/node": "^22.15.3",
+        "vitest": "^3.1.2",
+        "eslint": "^9.26.0",
+        "eslint-plugin-react-hooks": "^5.2.0",
+        "globals": "^16.0.0",
+        "typescript-eslint": "^8.31.1"
+    },
+    "directlinks": {}
+}
