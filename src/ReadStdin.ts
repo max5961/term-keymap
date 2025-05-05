@@ -38,9 +38,11 @@ export class ReadStdin {
 
     private handleData = (buf: Buffer): void => {
         const data: Data = {
-            buffer: buf,
-            hex: buf.toString("hex"),
-            utf: buf.toString("utf-8"),
+            raw: {
+                buffer: buf,
+                hex: buf.toString("hex"),
+                utf: buf.toString("utf-8"),
+            },
             key: {},
             input: "",
         };
@@ -49,11 +51,11 @@ export class ReadStdin {
         if (buf[0] < 32 && buf[0] !== 27) {
             data.key.ctrl = true;
 
-            if (data.utf === "\t") {
+            if (data.raw.utf === "\t") {
                 data.key.tab = true;
             }
 
-            if (data.utf === "\r") {
+            if (data.raw.utf === "\r") {
                 data.key.return = true;
             }
 
@@ -67,7 +69,7 @@ export class ReadStdin {
         // Mouse event
         else if (buf[0] === 27 && buf[1] === 91 && buf[2] === 60) {
             const regex = /<(\d+);(\d+);(\d+)(m)$/gim;
-            const mousedata = regex.exec(data.utf);
+            const mousedata = regex.exec(data.raw.utf);
 
             if (mousedata) {
                 const event = Number(mousedata[1]);
@@ -91,8 +93,8 @@ export class ReadStdin {
 
         // Escape Sequence
         else if (buf[0] === 27) {
-            if (data.utf in EscMap) {
-                data.key[EscMap[data.utf]] = true;
+            if (data.raw.utf in EscMap) {
+                data.key[EscMap[data.raw.utf]] = true;
             }
 
             // Alt key
@@ -104,7 +106,7 @@ export class ReadStdin {
 
         // default
         else {
-            data.input = data.utf;
+            data.input = data.raw.utf;
         }
 
         this.emitter.emit("data", data);

@@ -68,7 +68,9 @@ export type Data = {
         scrollDown: boolean;
         mousemove: boolean;
     };
-    readonly buffer: Buffer;
-    readonly hex: string;
-    readonly utf: string;
+    raw: {
+        readonly buffer: Buffer;
+        readonly hex: string;
+        readonly utf: string;
+    };
 };
