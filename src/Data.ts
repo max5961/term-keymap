@@ -56,7 +56,8 @@ export type EscKey =
 
 export type Data = {
     key: Partial<Record<Key, boolean>>;
-    input: string;
+    input: Set<string>;
+    defaultInput: string;
     mouse?: {
         x: number;
         y: number;

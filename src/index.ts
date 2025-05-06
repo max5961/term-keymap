@@ -16,9 +16,9 @@ read.on("data", (data) => {
         bufnums += ", ";
     }
     console.log("BUFFER: ", bufnums, "\n");
-    console.log(data);
+    console.log({ ...data, defaultInput: data.defaultInput });
 
-    if (data.key.ctrl && data.input === "c") process.exit();
+    if (data.key.ctrl && data.defaultInput === "c") process.exit();
 });
 
 console.log("Running...");

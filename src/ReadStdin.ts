@@ -1,6 +1,6 @@
 import EventEmitter from "node:events";
 import type { Data } from "./Data.js";
-import { EscMap } from "./EscMap.js";
+import { SpecialKeyMap } from "./EscMap.js";
 import { parseCtrlChar } from "./parseCtrl.js";
 
 export class ReadStdin {
@@ -45,11 +45,15 @@ export class ReadStdin {
                 utf: buf.toString("utf-8"),
             },
             key: {},
-            input: "",
+            input: new Set(),
+            get defaultInput(): string {
+                for (const value of this.input.values()) return value;
+                return "";
+            },
         };
 
         // Ctrl character
-        if (buf[0] < 128 && buf[0] !== 27) {
+        if (buf[0] < 32 && buf[0] !== 27) {
             parseCtrlChar(buf, data);
         }
 
@@ -78,31 +82,29 @@ export class ReadStdin {
             }
         }
 
-        // Escape Sequence
+        // Special Keys
+        else if (data.raw.utf in SpecialKeyMap) {
+            data.key[SpecialKeyMap[data.raw.utf]] = true;
+        }
+
+        // Alt key
         else if (buf[0] === 27) {
-            if (data.raw.utf in EscMap) {
-                data.key[EscMap[data.raw.utf]] = true;
-            }
+            data.key.alt = true;
 
-            // Alt key
-            else {
-                data.key.alt = true;
-
-                if (
-                    (buf[1] >= 41 && buf[1] <= 90) ||
-                    (buf[1] >= 60 && buf[1] <= 126)
-                ) {
-                    data.input = String.fromCharCode(buf[1]);
-                } else {
-                    const arr = Array.from(buf).slice(1);
-                    parseCtrlChar(Buffer.from(arr), data);
-                }
+            if (
+                (buf[1] >= 41 && buf[1] <= 90) ||
+                (buf[1] >= 60 && buf[1] <= 126)
+            ) {
+                data.input.add(String.fromCharCode(buf[1]));
+            } else {
+                const arr = Array.from(buf).slice(1);
+                parseCtrlChar(Buffer.from(arr), data);
             }
         }
 
         // default
         else {
-            data.input = data.raw.utf;
+            data.input.add(data.raw.utf);
         }
 
         this.emitter.emit("data", data);

@@ -1,7 +1,8 @@
 import type { Key } from "./Data.js";
 
-export const EscMap: Record<string, Key> = {
+export const SpecialKeyMap: Record<string, Key> = {
     "\x1B[3~": "delete",
+    "\x7F": "backspace",
     "\x1B[2~": "insert",
     "\x1B[A": "up",
     "\x1B[B": "down",
