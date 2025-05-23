@@ -1,4 +1,4 @@
-import type { Key } from "./Data.js";
+import { type Key } from "../types.js";
 
 export const SpecialKeyMap: Record<string, Key> = {
     "\x1B[3~": "delete",

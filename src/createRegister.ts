@@ -1,10 +1,10 @@
-import type { Data, Key } from "./Data.js";
-import { parseBuffer } from "./parseBuffer.js";
+import type { Data, Key } from "./types.js";
+import { parseBuffer } from "./parse/parseBuffer.js";
+import PeekSet from "./helpers/PeekSet.js";
 
 type Register = {
-    key: Set<Key>;
-    input: Set<string>;
-    defaultInput: string;
+    key: PeekSet<Key>;
+    input: PeekSet<string>;
 };
 
 type Return = {
@@ -18,31 +18,23 @@ export function createRegister(opts: { size?: number } = {}): Return {
     opts.size = opts.size ?? 2;
 
     const register: Register = {
-        key: new Set(),
-        input: new Set(),
-        get defaultInput() {
-            for (const v of this.input) return v;
-            return "";
-        },
+        key: new PeekSet(),
+        input: new PeekSet(),
     };
 
     const clearRegister = () => {
-        register.key = new Set();
-        register.input = new Set();
+        register.key = new PeekSet();
+        register.input = new PeekSet();
     };
 
     const data: Data = {
         raw: {
-            buffer: Buffer.from([]),
+            buffer: [],
             hex: "",
             utf: "",
         },
-        key: {},
-        input: new Set(),
-        get defaultInput(): string {
-            for (const value of this.input.values()) return value;
-            return "";
-        },
+        key: new PeekSet(),
+        input: new PeekSet(),
     };
 
     return {
@@ -63,10 +55,7 @@ export function createRegister(opts: { size?: number } = {}): Return {
                 }
             }
 
-            const nextKeys = new Set<Key>();
-            for (const [k, v] of Object.entries(data.key)) {
-                if (v) nextKeys.add(k as Key);
-            }
+            const nextKeys = new PeekSet<Key>(data.key);
 
             if (
                 nextKeys.size !== register.key.size ||
@@ -95,7 +84,7 @@ export function createRegister(opts: { size?: number } = {}): Return {
                     setData.push(i);
                 }
             }
-            register.input = new Set(setData);
+            register.input = new PeekSet(setData);
 
             return data;
         },

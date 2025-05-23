@@ -1,19 +1,16 @@
+import PeekSet from "../helpers/PeekSet.js";
+import { SpecialKeyMap } from "../maps/SpecialKeyMap.js";
 import { parseCtrlChar } from "./parseCtrl.js";
-import { SpecialKeyMap } from "./EscMap.js";
-import type { Data } from "./Data.js";
+import type { Data } from "../types.js";
 
 export function parseBuffer(buf: Buffer): Data {
     const data: Data = {
+        key: new PeekSet(),
+        input: new PeekSet(),
         raw: {
-            buffer: buf,
-            hex: buf.toString("hex"),
+            buffer: [...buf],
             utf: buf.toString("utf-8"),
-        },
-        key: {},
-        input: new Set(),
-        get defaultInput(): string {
-            for (const value of this.input.values()) return value;
-            return "";
+            hex: buf.toString("hex"),
         },
     };
 
@@ -24,10 +21,10 @@ export function parseBuffer(buf: Buffer): Data {
 
     // Esc
     else if (buf[0] === 27 && buf[1] === undefined) {
-        data.key.esc = true;
+        data.key.add("esc");
     }
 
-    // Mouse event
+    // Mouse Event
     else if (buf[0] === 27 && buf[1] === 91 && buf[2] === 60) {
         const regex = /<(\d+);(\d+);(\d+)(m)$/gim;
         const mousedata = regex.exec(data.raw.utf);
@@ -54,12 +51,12 @@ export function parseBuffer(buf: Buffer): Data {
 
     // Special Keys
     else if (data.raw.utf in SpecialKeyMap) {
-        data.key[SpecialKeyMap[data.raw.utf]] = true;
+        data.key.add(SpecialKeyMap[data.raw.utf]);
     }
 
     // Alt key
     else if (buf[0] === 27) {
-        data.key.alt = true;
+        data.key.add("alt");
 
         if ((buf[1] >= 41 && buf[1] <= 90) || (buf[1] >= 60 && buf[1] <= 126)) {
             data.input.add(String.fromCharCode(buf[1]));
@@ -69,7 +66,7 @@ export function parseBuffer(buf: Buffer): Data {
         }
     }
 
-    // default
+    // Default
     else {
         data.input.add(data.raw.utf);
     }
