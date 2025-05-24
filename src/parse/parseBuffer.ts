@@ -2,6 +2,7 @@ import PeekSet from "../helpers/PeekSet.js";
 import { SpecialKeyMap } from "../maps/SpecialKeyMap.js";
 import { parseCtrlChar } from "./parseCtrl.js";
 import type { Data } from "../types.js";
+import { parseKittyLayout } from "./parseKittyModifiers.js";
 
 export function parseBuffer(buf: Buffer): Data {
     const data: Data = {
@@ -13,6 +14,8 @@ export function parseBuffer(buf: Buffer): Data {
             hex: buf.toString("hex"),
         },
     };
+
+    parseKittyLayout(data);
 
     // Ctrl character
     if (buf[0] < 32 && buf[0] !== 27) {
