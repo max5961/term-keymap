@@ -1,6 +1,6 @@
-import type { Data, Key } from "./types.js";
-import { parseBuffer } from "./parse/parseBuffer.js";
-import PeekSet from "./helpers/PeekSet.js";
+import type { Data, Key } from "../types.js";
+import { parseBuffer } from "../parse/parseBuffer.js";
+import PeekSet from "../helpers/PeekSet.js";
 
 type Register = {
     key: PeekSet<Key>;

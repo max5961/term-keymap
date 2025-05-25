@@ -1,52 +1,30 @@
-import { setMouse } from "./setMouse.js";
-import { createRegister } from "./createRegister.js";
-import type { Key } from "./types.js";
-import { isExtendedLayout } from "./helpers/isExtendedLayout.js";
+import { setMouse } from "./helpers/setMouse.js";
+import { setExtendedLayout } from "./helpers/setExtendedLayout.js";
+import { detectExtendedLayoutSupport } from "./helpers/isExtendedLayout.js";
+import { parseBuffer } from "./parse/parseBuffer.js";
 
 process.stdin.setRawMode(true);
 setMouse(true, { stream: process.stdin, mode: 3 });
+setExtendedLayout(true);
 
-const { parseBuffer, register, data } = createRegister({ size: 2 });
+let isExtendedLayout = false;
 
-function dispatchEvent() {
-    const events = [
-        { key: "ctrl", input: "dd", cb: () => console.log("event!!!") },
-    ];
+detectExtendedLayoutSupport().then((result) => (isExtendedLayout = result));
 
-    events.forEach((e) => {
-        if (register.key.only(e.key as Key) && register.input.only(e.input)) {
-            e.cb();
-        }
+process.stdin.on("data", (buf: Buffer) => {
+    console.clear();
+
+    const { key, input, mouse, raw } = parseBuffer(buf, {
+        extendedKb: isExtendedLayout,
     });
-}
 
-// process.stdout.write("\x1b[>1u");
-// process.stdout.write("\x1b[>8u");
-process.on("exit", () => process.stdout.write("\x1b[<u"));
+    console.log({ raw });
+    console.log({ key: key.values() });
+    console.log({ input: input.values() });
+    console.log({ mouse });
 
-isExtendedLayout().then(console.log);
-//
-// process.stdin.on("data", (buf) => {
-//     console.clear();
-//     parseBuffer(buf);
-//
-//     console.log("raw bytes:", data.raw.buffer.toString());
-//     console.log("raw utf:", data.raw.utf);
-//     console.log("key:", register.key.values());
-//     console.log("input:", register.input.values());
-//     console.log("mouse:", data.mouse ?? "-----");
-//
-//     console.log("-".repeat(process.stdout.columns));
-//     console.log("data:", data);
-//
-//     if (register.key.only("ctrl") && register.input.has("c")) {
-//         process.exit();
-//     }
-//
-//     if (register.input.has("qq")) process.exit();
-//
-//     dispatchEvent();
-// });
-//
-// console.clear();
-// console.log("Type something or move the mouse...");
+    if (buf[0] === 3) process.exit();
+});
+
+console.clear();
+console.log("Type something or move the mouse...");

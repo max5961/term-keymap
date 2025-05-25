@@ -1,6 +1,6 @@
-import { detectExtendedLayoutSupport } from "./helpers/isExtendedLayout.js";
-import { parseBuffer } from "./parse/parseBuffer.js";
-import type { Data } from "./types.js";
+import { detectExtendedLayoutSupport } from "../helpers/isExtendedLayout.js";
+import { parseBuffer } from "../parse/parseBuffer.js";
+import type { Data } from "../types.js";
 
 type Opts = {
     /**

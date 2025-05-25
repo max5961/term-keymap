@@ -1,8 +1,8 @@
 import PeekSet from "../helpers/PeekSet.js";
 import { SpecialKeyMap } from "../maps/SpecialKeyMap.js";
 import { parseCtrlChar } from "./parseCtrl.js";
+import { parseExtendedKb } from "./parseExtendedKb.js";
 import type { Data } from "../types.js";
-import { parseKittyLayout } from "./parseKittyModifiers.js";
 
 export function parseBuffer(buf: Buffer, opts = { extendedKb: false }): Data {
     const data: Data = {
@@ -16,9 +16,11 @@ export function parseBuffer(buf: Buffer, opts = { extendedKb: false }): Data {
     };
 
     if (opts.extendedKb) {
-        parseKittyLayout(data);
+        parseExtendedKb(data);
         return data;
     }
+
+    console.log("ayooooooo");
 
     // Ctrl character
     if (buf[0] < 32 && buf[0] !== 27) {

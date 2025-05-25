@@ -1,7 +1,7 @@
 /**
  * Queries the terminal for the status of Kitty's extended layout and immediately
  * after queries for primary device attributes.  If no answer is received from
- * Kitty, or if the answer is 'x1b[0u', then the extended layout is not supported.
+ * Kitty, or if the answer is 'x1b[0u', then the extended layout is not set or supported.
  * Querying for device attributes gaurantees a response so that the Promise can
  * resolve.
  */
