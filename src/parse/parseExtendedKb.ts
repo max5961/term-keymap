@@ -11,7 +11,7 @@ const Map = {
     numLock: 128,
 };
 
-export function parseKittyLayout(data: Data): void {
+export function parseExtendedKb(data: Data): void {
     const regex = /^\[(\d+);(\d+)(\w+)/gm;
     const regexResults = regex.exec(data.raw.utf.slice(1));
     const matches = regexResults
@@ -24,8 +24,6 @@ export function parseKittyLayout(data: Data): void {
         const char = String.fromCharCode(Number(matches[0]));
         const modifier = matches[1];
 
-        console.log({ modifier });
-
         const map = {
             shift: (modifier & Map.shift) !== 0,
             alt: (modifier & Map.alt) !== 0,
@@ -37,7 +35,6 @@ export function parseKittyLayout(data: Data): void {
             numLock: (modifier & Map.numLock) !== 0,
         };
 
-        console.log({ char, map });
-        console.log("-".repeat(process.stdout.columns));
+        console.log({ map, modifier, char });
     }
 }

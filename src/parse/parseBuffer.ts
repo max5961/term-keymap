@@ -4,7 +4,7 @@ import { parseCtrlChar } from "./parseCtrl.js";
 import type { Data } from "../types.js";
 import { parseKittyLayout } from "./parseKittyModifiers.js";
 
-export function parseBuffer(buf: Buffer): Data {
+export function parseBuffer(buf: Buffer, opts = { extendedKb: false }): Data {
     const data: Data = {
         key: new PeekSet(),
         input: new PeekSet(),
@@ -15,7 +15,10 @@ export function parseBuffer(buf: Buffer): Data {
         },
     };
 
-    parseKittyLayout(data);
+    if (opts.extendedKb) {
+        parseKittyLayout(data);
+        return data;
+    }
 
     // Ctrl character
     if (buf[0] < 32 && buf[0] !== 27) {
