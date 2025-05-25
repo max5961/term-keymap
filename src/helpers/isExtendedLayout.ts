@@ -1,4 +1,4 @@
-export function isExtendedLayout(): Promise<boolean> {
+export function detectExtendedLayoutSupport(): Promise<boolean> {
     const queries = {
         kittyProgressiveEnhancements: "\x1b[?u",
         deviceAttributes: "\x1b[>0c",

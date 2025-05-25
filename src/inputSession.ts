@@ -1,3 +1,4 @@
+import { detectExtendedLayoutSupport } from "./helpers/isExtendedLayout.js";
 import { parseBuffer } from "./parse/parseBuffer.js";
 import type { Data } from "./types.js";
 
@@ -20,42 +21,49 @@ type Opts = {
      * @default 1
      * */
     registerSize?: number;
+
+    /**
+     * Callback function that handles the parsed data
+     */
+    handleData: (data: Data) => unknown;
 };
 
-type Controller = {
+type InputSession = {
     stream: NonNullable<Opts["stream"]>;
     mouse: NonNullable<Opts["mouse"]>;
     registerSize: NonNullable<Opts["registerSize"]>;
     close: () => void;
 };
 
-export function handleStream(
-    opts: Opts = {},
-    handleData: (data: Data) => unknown,
-): Controller {
+export function inputSession(opts: Opts): InputSession {
     opts.stream = opts.stream ?? process.stdin;
     opts.registerSize = opts.registerSize ?? 1;
     opts.mouse = opts.mouse ? (opts.mouse === true ? 3 : opts.mouse) : 0;
 
-    const createStreamReader = (stream: NodeJS.ReadStream) => {
+    const createStreamHandler = (stream: NodeJS.ReadStream) => {
         const handler = (buf: Buffer) => {
             const data = parseBuffer(buf);
-            handleData(data);
+            opts.handleData(data);
         };
         stream.on("data", handler);
 
         return () => stream.off("data", handler);
     };
 
-    const streamHandler = {
-        detach: createStreamReader(opts.stream),
+    const session = {
+        detachStream: createStreamHandler(opts.stream),
+        isExtendedLayout: false,
     };
+
+    detectExtendedLayoutSupport().then(
+        (result) => (session.isExtendedLayout = result),
+    );
 
     return {
         set stream(s: NonNullable<Opts["stream"]>) {
             opts.stream = s;
-            streamHandler.detach();
-            streamHandler.detach = createStreamReader(opts.stream);
+            session.detachStream();
+            session.detachStream = createStreamHandler(opts.stream);
         },
         get stream() {
             return opts.stream!;
@@ -72,9 +80,10 @@ export function handleStream(
         get mouse() {
             return opts.mouse!;
         },
+        close() {
+            //
+        },
     };
 }
 
-const stream1 = handleStream(_, (data) => {
-    //
-});
+// const stream1 = inputSession();
