@@ -20,8 +20,6 @@ export function parseBuffer(buf: Buffer, opts = { extendedKb: false }): Data {
         return data;
     }
 
-    console.log("ayooooooo");
-
     // Ctrl character
     if (buf[0] < 32 && buf[0] !== 27) {
         parseCtrlChar(buf, data);

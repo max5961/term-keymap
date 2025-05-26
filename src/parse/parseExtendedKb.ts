@@ -22,7 +22,7 @@ export function parseExtendedKb(data: Data): void {
 
     if (matches && matches.length === 3) {
         const char = String.fromCharCode(Number(matches[0]));
-        const modifier = matches[1];
+        const modifier = matches[1] - 1;
 
         const map = {
             shift: (modifier & Map.shift) !== 0,
@@ -35,6 +35,19 @@ export function parseExtendedKb(data: Data): void {
             numLock: (modifier & Map.numLock) !== 0,
         };
 
-        console.log({ map, modifier, char });
+        const byte = [
+            modifier & Map.numLock,
+            modifier & Map.capsLock,
+            modifier & Map.meta,
+            modifier & Map.hyper,
+            modifier & Map.super,
+            modifier & Map.ctrl,
+            modifier & Map.alt,
+            modifier & Map.shift,
+        ];
+
+        if (map.ctrl && char === "c") process.exit();
+        console.log({ map, modifier, char, byte });
+        console.log("-");
     }
 }
