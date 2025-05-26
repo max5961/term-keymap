@@ -13,17 +13,23 @@ const Map = {
 };
 
 export function parseExtendedKb(data: Data): void {
-    const regex = /^\[(\d+);(\d+)(\w+)/gm;
-    const regexResults = regex.exec(data.raw.utf.slice(1));
-    const matches = regexResults
-        ? Array.from(regexResults)
-              .slice(1)
-              .map((m) => Number(m))
-        : null;
+    // Regex has issues with \x1b
+    const msg = data.raw.utf.slice(1);
+
+    const modifierRegex = /^\[(\d+);(\d+)(\w+)/gm;
+    const normalRegex = /^\[(\d+)/gm;
+
+    const modifierResults = modifierRegex.exec(msg);
+    const normalResults = normalRegex.exec(msg);
+
+    const matches = Array.from(modifierResults ?? normalResults ?? [])
+        .slice(1)
+        .map((m) => Number(m));
 
     console.log({ matches });
 
-    if (matches && matches.length === 3) {
+    // This is a modifier sequence
+    if (matches.length === 3) {
         const char = String.fromCharCode(Number(matches[0]));
         const modifier = matches[1] - 1;
 
@@ -52,7 +58,10 @@ export function parseExtendedKb(data: Data): void {
         if (map.ctrl && char === "c") process.exit();
         console.log({ map, modifier, char, byte });
         console.log("-");
-    } else if (matches && matches[0] !== undefined) {
+    }
+
+    // This is a normal sequence
+    else if (matches.length === 1) {
         if (matches[0] in KittyKey) {
             data.key.add(KittyKey[matches[0]]);
         }
