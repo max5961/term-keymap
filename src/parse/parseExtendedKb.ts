@@ -1,3 +1,4 @@
+import { KittyKey } from "../maps/KittyMap.js";
 import type { Data } from "../types.js";
 
 const Map = {
@@ -19,6 +20,8 @@ export function parseExtendedKb(data: Data): void {
               .slice(1)
               .map((m) => Number(m))
         : null;
+
+    console.log({ matches });
 
     if (matches && matches.length === 3) {
         const char = String.fromCharCode(Number(matches[0]));
@@ -49,5 +52,9 @@ export function parseExtendedKb(data: Data): void {
         if (map.ctrl && char === "c") process.exit();
         console.log({ map, modifier, char, byte });
         console.log("-");
+    } else if (matches && matches[0] !== undefined) {
+        if (matches[0] in KittyKey) {
+            data.key.add(KittyKey[matches[0]]);
+        }
     }
 }
