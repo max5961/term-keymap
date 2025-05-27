@@ -9,7 +9,7 @@ import type { Data } from "../types.js";
  * calling block can either return or continue
  */
 export function handleMouse(data: Data): boolean {
-    const msg = data.raw.utf.slice(1);
+    const msg = data.raw.utf.replace(/\x1b/g, "");
     const matches = Array.from(Matchers.mouseEvent.exec(msg) ?? []).map((m) =>
         Number.isNaN(Number(m)) ? m : Number(m),
     );

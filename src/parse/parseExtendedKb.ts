@@ -13,8 +13,7 @@ const Map = {
 };
 
 export function parseExtendedKb(data: Data): void {
-    // Regex has issues with \x1b
-    const msg = data.raw.utf.slice(1);
+    const msg = data.raw.utf.replace(/\x1b/g, "");
 
     const modifierRegex = /^\[(\d+);(\d+)(\w+)/gm;
     const normalRegex = /^\[(\d+)/gm;
@@ -25,8 +24,6 @@ export function parseExtendedKb(data: Data): void {
     const matches = Array.from(modifierResults ?? normalResults ?? [])
         .slice(1)
         .map((m) => Number(m));
-
-    console.log({ matches });
 
     // This is a modifier sequence
     if (matches.length === 3) {
