@@ -1,29 +1,26 @@
-import { setMouse } from "./helpers/setMouse.js";
-import { setExtendedLayout } from "./helpers/setExtendedLayout.js";
-import { detectExtendedLayoutSupport } from "./helpers/isExtendedLayout.js";
+import { enableMouse } from "./helpers/enableMouse.js";
+import { enableKittyProtocol } from "./helpers/enableKittyProtocol.js";
 import { parseBuffer } from "./parse/parseBuffer.js";
 
 process.stdin.setRawMode(true);
-setMouse(true, { stream: process.stdin, mode: 3 });
-setExtendedLayout(true);
+enableMouse();
 
-let isExtendedLayout = false;
-
-detectExtendedLayoutSupport().then((result) => (isExtendedLayout = result));
+let kittySupported = false;
+enableKittyProtocol().then((result) => (kittySupported = result));
 
 process.stdin.on("data", (buf: Buffer) => {
+    if (buf[0] === 3) process.exit();
+
     console.clear();
 
     const { key, input, mouse, raw } = parseBuffer(buf, {
-        extendedKb: isExtendedLayout,
+        kittyProtocol: kittySupported,
     });
 
     console.log({ raw });
     console.log({ key: key.values() });
     console.log({ input: input.values() });
     console.log({ mouse });
-
-    if (buf[0] === 3) process.exit();
 });
 
 console.clear();

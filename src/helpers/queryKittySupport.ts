@@ -5,7 +5,17 @@
  * Querying for device attributes gaurantees a response so that the Promise can
  * resolve.
  */
-export function detectExtendedLayoutSupport(): Promise<boolean> {
+
+/**
+ * @returns a Promise<boolean> representing support for Kitty's keyboard protcol.
+ *
+ * Queries the terminal for the status for Kitty's keyboard protocol, and immediately
+ * after queryies for primary device attributes.  Querying for device attr gaurantees
+ * a response.  If the Kitty protocol does not respond then the terminal does
+ * not support the protocol.  If Kitty responds with 'x1b[0u' then it is supported,
+ * but not turned on and the Promise still returns false.
+ */
+export function queryKittySupport(): Promise<boolean> {
     const queries = {
         kittyProgressiveEnhancements: "\x1b[?u",
         deviceAttributes: "\x1b[>0c",

@@ -1,4 +1,4 @@
-import { detectExtendedLayoutSupport } from "../helpers/isExtendedLayout.js";
+import { isKittyProtocolEnabled } from "../helpers/queryKittySupport.js";
 import { parseBuffer } from "../parse/parseBuffer.js";
 import type { Data } from "../types.js";
 
@@ -55,7 +55,7 @@ export function inputSession(opts: Opts): InputSession {
         isExtendedLayout: false,
     };
 
-    detectExtendedLayoutSupport().then(
+    isKittyProtocolEnabled().then(
         (result) => (session.isExtendedLayout = result),
     );
 
