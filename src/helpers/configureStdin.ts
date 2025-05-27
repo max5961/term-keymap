@@ -8,9 +8,33 @@ export type ConfigureReturn = {
 };
 
 export type Opts = {
+    /**
+     * The stdout stream that configuration escape codes are sent to
+     * @default process.stdout
+     */
     stdout?: NodeJS.WriteStream;
+    /**
+     * One reason you might *not* want this on is that many terminals alter the
+     * cursor and might prevent copying text.
+     * @default true
+     */
     enableMouse?: boolean;
+
+    /**
+     * @param 0 basic clicks
+     * @param 2 button press & release
+     * @param 3 mouse movement + button press & release
+     * @default 3
+     */
     mouseMode?: 0 | 2 | 3;
+
+    /**
+     * Enable or disable Kitty's extended keyboard layout
+     * @link *https://sw.kovidgoyal.net/kitty/keyboard-protocol/*
+     *
+     * `configureStdin` returns `{ kittySupported }` which must be passed to
+     * parseBuffer in order to parse Kitty protocol sequences
+     */
     enableKittyProtocol?: boolean;
 };
 

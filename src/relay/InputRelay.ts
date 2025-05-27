@@ -36,7 +36,7 @@ export class InputRelay {
     }
 
     private handleBuffer(buf: Buffer): void {
-        const data = parseBuffer(buf);
+        const data = parseBuffer(buf, false);
 
         for (const consumer of this.consumers) {
             // add conditional in case consumer paused

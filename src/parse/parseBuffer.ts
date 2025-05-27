@@ -6,14 +6,11 @@ import type { Data } from "../types.js";
 import { handleMouse } from "./handleMouse.js";
 
 /**
- * @param [opts={ kittyProtocol: false }] determines whether or not this function will
- * use Kitty's keyboard protocol to parse the buffer.  The protocol must be initiated
- * and checked for outside of this function.
+ * @param buf the buffer from stdin to parse
+ * @param isKittyProtocol determines whether or not the function will use Kitty's
+ * keyboard protocol to parse the buffer.
  */
-export function parseBuffer(
-    buf: Buffer,
-    opts = { kittyProtocol: false },
-): Data {
+export function parseBuffer(buf: Buffer, isKittyProtocol: boolean): Data {
     const data: Data = {
         key: new PeekSet(),
         input: new PeekSet(),
@@ -28,7 +25,7 @@ export function parseBuffer(
         return data;
     }
 
-    if (opts.kittyProtocol) {
+    if (isKittyProtocol) {
         parseExtendedKb(data);
         return data;
     }

@@ -13,9 +13,7 @@ process.stdin.on("data", (buf: Buffer) => {
 
     console.clear();
 
-    const { key, input, mouse, raw } = parseBuffer(buf, {
-        kittyProtocol: cfg.kittySupported,
-    });
+    const { key, input, mouse, raw } = parseBuffer(buf, cfg.kittySupported);
 
     console.log({ raw });
     console.log({ key: key.values() });
