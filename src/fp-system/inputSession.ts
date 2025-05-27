@@ -1,4 +1,4 @@
-import { isKittyProtocolEnabled } from "../helpers/queryKittySupport.js";
+import { queryKittySupport } from "../helpers/queryKittySupport.js";
 import { parseBuffer } from "../parse/parseBuffer.js";
 import type { Data } from "../types.js";
 
@@ -55,9 +55,7 @@ export function inputSession(opts: Opts): InputSession {
         isExtendedLayout: false,
     };
 
-    isKittyProtocolEnabled().then(
-        (result) => (session.isExtendedLayout = result),
-    );
+    queryKittySupport().then((result) => (session.isExtendedLayout = result));
 
     return {
         set stream(s: NonNullable<Opts["stream"]>) {

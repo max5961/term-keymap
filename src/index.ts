@@ -1,12 +1,12 @@
-import { enableMouse } from "./helpers/enableMouse.js";
-import { enableKittyProtocol } from "./helpers/enableKittyProtocol.js";
 import { parseBuffer } from "./parse/parseBuffer.js";
+import { configureStdin } from "./helpers/configureStdin.js";
 
-process.stdin.setRawMode(true);
-enableMouse();
-
-let kittySupported = false;
-enableKittyProtocol().then((result) => (kittySupported = result));
+const cfg = configureStdin({
+    stdout: process.stdout,
+    enableMouse: true,
+    mouseMode: 3,
+    enableKittyProtocol: true,
+});
 
 process.stdin.on("data", (buf: Buffer) => {
     if (buf[0] === 3) process.exit();
@@ -14,7 +14,7 @@ process.stdin.on("data", (buf: Buffer) => {
     console.clear();
 
     const { key, input, mouse, raw } = parseBuffer(buf, {
-        kittyProtocol: kittySupported,
+        kittyProtocol: cfg.kittySupported,
     });
 
     console.log({ raw });
