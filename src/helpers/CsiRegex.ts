@@ -19,12 +19,12 @@ function getMouseEvent(utf: string) {
     });
 }
 
-function getKittyWithModifier(utf: string) {
+function getKittyCharWithMod(utf: string) {
     const regex = /^\x1b\[(\d+);(\d+)(\w+)/gm;
     return regex.exec(utf);
 }
 
-function getKittyCharCode(utf: string) {
+function getKittyChar(utf: string) {
     const regex = /^\x1b\[(\d+)/gm;
     return regex.exec(utf);
 }
@@ -33,6 +33,6 @@ export const CsiRegex = {
     isKittyProtocol,
     isMouseEvent,
     getMouseEvent,
-    getKittyWithModifier,
-    getKittyCharCode,
+    getKittyCharWithMod,
+    getKittyChar,
 };

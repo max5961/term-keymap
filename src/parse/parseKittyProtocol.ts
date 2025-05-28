@@ -1,3 +1,4 @@
+import { CsiRegex } from "../helpers/CsiRegex.js";
 import { KittyKey } from "../maps/KittyMap.js";
 import { ShiftMap } from "../maps/ShiftMap.js";
 import type { Data, Key } from "../types.js";
@@ -14,13 +15,10 @@ const BitWiseMap = {
 } as const;
 
 export function parseKittyProtocol(data: Data): void {
-    const sequence = data.raw.utf.replace(/\x1b/g, "");
-    const modifierRgx = /^\[(\d+);(\d+)(\w+)/gm;
-    const normalRgx = /^\[(\d+)/gm;
-    const modifierRes = modifierRgx.exec(sequence);
-    const normalRes = normalRgx.exec(sequence);
+    const withMods = CsiRegex.getKittyCharWithMod(data.raw.utf);
+    const withoutMods = CsiRegex.getKittyChar(data.raw.utf);
 
-    const matches = Array.from(modifierRes ?? normalRes ?? [])
+    const matches = Array.from(withMods ?? withoutMods ?? [])
         .slice(1)
         .map((m) => Number(m));
 
