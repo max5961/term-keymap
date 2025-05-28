@@ -2,7 +2,7 @@ export function enableMouse({
     enabled,
     mode,
     stdout,
-}: { enabled?: boolean; mode?: 0 | 2 | 3; stdout?: NodeJS.WriteStream } = {}) {
+}: { enabled?: boolean; mode?: 0 | 3; stdout?: NodeJS.WriteStream } = {}) {
     enabled = enabled ?? true;
     mode = mode ?? 3;
     stdout = stdout ?? process.stdout;

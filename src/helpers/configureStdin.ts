@@ -21,12 +21,11 @@ export type Opts = {
     enableMouse?: boolean;
 
     /**
-     * @param 0 basic clicks
-     * @param 2 button press & release
-     * @param 3 mouse movement + button press & release
+     * @param 0 button press & release + position on mouse event
+     * @param 3 mouse movement events + everything from `0`
      * @default 3
      */
-    mouseMode?: 0 | 2 | 3;
+    mouseMode?: 0 | 3;
 
     /**
      * Enable or disable Kitty's extended keyboard layout
