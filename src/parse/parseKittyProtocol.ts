@@ -1,5 +1,6 @@
 import { CsiRegex } from "../helpers/CsiRegex.js";
 import { KittyKey } from "../maps/KittyMap.js";
+import { LegacyKeys } from "../maps/LegacyKeys.js";
 import { ShiftMap } from "../maps/ShiftMap.js";
 import type { Data, Key } from "../types.js";
 
@@ -57,6 +58,8 @@ export function parseKittyProtocol(data: Data): void {
             data.input.add(ShiftMap[char as keyof typeof ShiftMap]);
         } else if (charCode in KittyKey) {
             data.key.add(KittyKey[charCode]);
+        } else if (data.raw.utf in LegacyKeys) {
+            data.key.add(LegacyKeys[data.raw.utf]);
         } else {
             data.input.add(char);
         }

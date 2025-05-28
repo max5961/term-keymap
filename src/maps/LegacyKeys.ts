@@ -1,6 +1,6 @@
 import { type Key } from "../types.js";
 
-export const SpecialKeyMap: Record<string, Key> = {
+export const LegacyKeys: Record<string, Key> = {
     "\x1B[3~": "delete",
     "\x7F": "backspace",
     "\x1B[2~": "insert",
@@ -20,4 +20,16 @@ export const SpecialKeyMap: Record<string, Key> = {
     "\x1B[21~": "f10",
     "\x1B[23~": "f11",
     "\x1B[24~": "f12",
+    "\x1b[5~": "pageUp",
+    "\x1b[6~": "pageDown",
+    "\x1b[F": "end",
+    "\x1b[8~": "end",
+    "\x1b[H": "home",
+    "\x1b[7~": "home",
+
+    /* Kitty Legacy Keys */
+    "\x1b[27u": "esc",
+    "\x1b[9u": "tab",
+    "\x1b[13u": "return",
+    "\x1b[127u": "backspace",
 } as const;

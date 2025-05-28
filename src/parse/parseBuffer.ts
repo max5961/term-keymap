@@ -1,5 +1,5 @@
 import PeekSet from "../helpers/PeekSet.js";
-import { SpecialKeyMap } from "../maps/SpecialKeyMap.js";
+import { LegacyKeys } from "../maps/LegacyKeys.js";
 import { parseCtrlChar } from "./parseCtrl.js";
 import { parseKittyProtocol } from "./parseKittyProtocol.js";
 import type { Data } from "../types.js";
@@ -40,8 +40,8 @@ export function parseBuffer(buf: Buffer): Data {
     }
 
     // Special Keys
-    else if (data.raw.utf in SpecialKeyMap) {
-        data.key.add(SpecialKeyMap[data.raw.utf]);
+    else if (data.raw.utf in LegacyKeys) {
+        data.key.add(LegacyKeys[data.raw.utf]);
     }
 
     // Alt key
