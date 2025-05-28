@@ -3,8 +3,8 @@ import { SpecialKeyMap } from "../maps/SpecialKeyMap.js";
 import { parseCtrlChar } from "./parseCtrl.js";
 import { parseKittyProtocol } from "./parseKittyProtocol.js";
 import type { Data } from "../types.js";
-import { handleMouse } from "./handleMouse.js";
-import { Testers } from "../helpers/RegexParsers.js";
+import { parseMouseData } from "./parseMouseData.js";
+import { CsiRegex } from "../helpers/CsiRegex.js";
 
 /**
  * @param buf the buffer from the stdin event to parse
@@ -20,11 +20,11 @@ export function parseBuffer(buf: Buffer): Data {
         },
     };
 
-    if (Testers.isMouseEvent(data.raw.utf)) {
-        handleMouse(data);
+    if (CsiRegex.isMouseEvent(data.raw.utf)) {
+        parseMouseData(data);
     }
 
-    if (Testers.isKittyProtocol(data.raw.utf)) {
+    if (CsiRegex.isKittyProtocol(data.raw.utf)) {
         parseKittyProtocol(data);
         return data;
     }
