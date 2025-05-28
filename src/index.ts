@@ -1,21 +1,20 @@
 import { parseBuffer } from "./parse/parseBuffer.js";
 import { configureStdin } from "./helpers/configureStdin.js";
 
-const cfg = configureStdin({
+configureStdin({
     stdout: process.stdout,
     enableMouse: true,
     mouseMode: 3,
     enableKittyProtocol: true,
 });
 
-cfg.enableMouse({ enabled: true, mode: 3 });
-
 process.stdin.on("data", (buf: Buffer) => {
     console.clear();
 
-    const { key, input, mouse, raw } = parseBuffer(buf, cfg.kittySupported);
+    const { key, input, mouse, raw } = parseBuffer(buf);
 
     if (mouse) {
+        console.log({ raw });
         console.log({ mouse });
     } else {
         console.log({ raw });

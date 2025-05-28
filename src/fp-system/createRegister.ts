@@ -42,7 +42,7 @@ export function createRegister(opts: { size?: number } = {}): Return {
         clearRegister,
         data,
         parseBuffer: (buf: Buffer) => {
-            const parsedData = parseBuffer(buf, false);
+            const parsedData = parseBuffer(buf);
 
             data.input = parsedData.input;
             data.key = parsedData.key;

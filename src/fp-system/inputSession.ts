@@ -42,7 +42,7 @@ export function inputSession(opts: Opts): InputSession {
 
     const createStreamHandler = (stream: NodeJS.ReadStream) => {
         const handler = (buf: Buffer) => {
-            const data = parseBuffer(buf, false);
+            const data = parseBuffer(buf);
             opts.handleData(data);
         };
         stream.on("data", handler);

@@ -4,13 +4,12 @@ import { parseCtrlChar } from "./parseCtrl.js";
 import { parseKittyProtocol } from "./parseKittyProtocol.js";
 import type { Data } from "../types.js";
 import { handleMouse } from "./handleMouse.js";
+import { Testers } from "../helpers/RegexParsers.js";
 
 /**
- * @param buf the buffer from stdin to parse
- * @param isKittyProtocol determines whether or not the function will use Kitty's
- * keyboard protocol to parse the buffer.
+ * @param buf the buffer from the stdin event to parse
  */
-export function parseBuffer(buf: Buffer, isKittyProtocol: boolean): Data {
+export function parseBuffer(buf: Buffer): Data {
     const data: Data = {
         key: new PeekSet(),
         input: new PeekSet(),
@@ -21,11 +20,11 @@ export function parseBuffer(buf: Buffer, isKittyProtocol: boolean): Data {
         },
     };
 
-    if (handleMouse(data)) {
-        return data;
+    if (Testers.isMouseEvent(data.raw.utf)) {
+        handleMouse(data);
     }
 
-    if (isKittyProtocol) {
+    if (Testers.isKittyProtocol(data.raw.utf)) {
         parseKittyProtocol(data);
         return data;
     }
