@@ -1,7 +1,7 @@
 import PeekSet from "../helpers/PeekSet.js";
 import { SpecialKeyMap } from "../maps/SpecialKeyMap.js";
 import { parseCtrlChar } from "./parseCtrl.js";
-import { parseExtendedKb } from "./parseExtendedKb.js";
+import { parseKittyProtocol } from "./parseKittyProtocol.js";
 import type { Data } from "../types.js";
 import { handleMouse } from "./handleMouse.js";
 
@@ -26,7 +26,7 @@ export function parseBuffer(buf: Buffer, isKittyProtocol: boolean): Data {
     }
 
     if (isKittyProtocol) {
-        parseExtendedKb(data);
+        parseKittyProtocol(data);
         return data;
     }
 
