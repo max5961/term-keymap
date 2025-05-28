@@ -1,6 +1,18 @@
 import PeekSet from "../helpers/PeekSet.js";
 
-// TODO: Kitty extended keyboard mode \c1b[>1u can handle some of the ambiguity
+/**
+ * Matches control codes to their character combinations.
+ *
+ * `ctrl` + `-|=|-|1|3|9|'|;|,|.` don't emit distinct control codes so they
+ * aren't included.  These are commented out and marked with a `!`.
+ *
+ * ambiguous *Ctrl* + *char|key* combinations are:
+ * - `<C-h>` = `<C-backspace>`
+ * - `<C-i>` = `tab`
+ * - `<C-m>` = `return`
+ * - `<C-3>` = `esc`           = `<C-[>`
+ * - `<C-8>` = `backspace`
+ */
 export const CtrlMap: Record<number, PeekSet<string>> = {
     0: new PeekSet([" ", "2"]),
     1: new PeekSet("a"),
@@ -10,12 +22,12 @@ export const CtrlMap: Record<number, PeekSet<string>> = {
     5: new PeekSet("e"),
     6: new PeekSet("f"),
     7: new PeekSet("g"),
-    8: new PeekSet("h"),
-    9: new PeekSet(["\t", "i"]),
+    8: new PeekSet("h"), // can also be ctrl + backspace
+    9: new PeekSet("i"), // can also be 'tab'
     10: new PeekSet("j"),
     11: new PeekSet("k"),
     12: new PeekSet("l"),
-    13: new PeekSet(["\r", "m"]),
+    13: new PeekSet("m"), // can also be 'return'
     14: new PeekSet("n"),
     15: new PeekSet("o"),
     16: new PeekSet("p"),
@@ -29,28 +41,19 @@ export const CtrlMap: Record<number, PeekSet<string>> = {
     24: new PeekSet("x"),
     25: new PeekSet("y"),
     26: new PeekSet("z"),
-    27: new PeekSet("3"), // Esc char
+    // 45: new PeekSet("-"), // !
+    // 61: new PeekSet("="), // !
+    // 48: new PeekSet("0"), // !
+    // 49: new PeekSet("1"), // !
+    // 27: new PeekSet("3"), // Esc char handled in parseBuffer
     28: new PeekSet(["\\", "4"]),
-    29: new PeekSet("5"),
+    29: new PeekSet(["5", "]"]),
     30: new PeekSet(["6", "^"]),
-    31: new PeekSet("7"),
-    32: new PeekSet("8"), // could also be ....
-    /* .... */
-    // 48: new PeekSet("0"), // ctrl + 0 and 0 register as the same byte
-    // 57: new PeekSet("9"), // ctrl + 9 and 9 register as the same byte also
-    /* ... */
-    // 33: new PeekSet("!"), // Kitty does not support this or the other ctrl + shift + numbers
-    // 34: "", // empty string (need to make sure this doesn't arbitrarily trigger)
-    // 35: new PeekSet("#"),
-    // 36: new PeekSet("$"),
-    // 37: new PeekSet("%"),
-    // 38: new PeekSet("&"),
-    // 39: new PeekSet("'"),
-    // 40: new PeekSet("("),
-    // 41: new PeekSet(")"),
-    // 42: new PeekSet("*"),
-
-    /* finish...
-     * https://simple.m.wikipedia.org/wiki/File:ASCII-Table-wide.svg
-     */
+    31: new PeekSet(["7", "/"]),
+    127: new PeekSet("8"), // can also be 'backspace'
+    // 57: new PeekSet("9"), // !
+    // 39: new PeekSet("'"), // !
+    // 59: new PeekSet(";"), // !
+    // 44: new PeekSet(","), // !
+    // 46: new PeekSet("."), // !
 };

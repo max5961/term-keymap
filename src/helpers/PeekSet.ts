@@ -3,7 +3,8 @@ export default class PeekSet<T = unknown> extends Set<T> {
 
     constructor(v?: Iterable<T> | null) {
         super(v);
-        this.baseHas = new Set().has.bind(this);
+        const baseSet = new Set<T>();
+        this.baseHas = baseSet.has.bind(this);
     }
 
     /**
@@ -25,7 +26,7 @@ export default class PeekSet<T = unknown> extends Set<T> {
     /**
      * @returns *true* if the set contains *only* the given value.
      */
-    public only(value: T): boolean {
-        return this.size === 1 && this.baseHas(value);
+    public only(...values: T[]): boolean {
+        return this.size === values.length && this.has(...values);
     }
 }

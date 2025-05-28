@@ -15,4 +15,6 @@ export function parseCtrlChar(buf: Buffer, data: Data): void {
     // Ambiguous mappings update both input and the key
     if (num === 9) data.key.add("tab");
     if (num === 13) data.key.add("return");
+    if (num === 127) data.key.add("backspace");
+    if (num === 8) data.key.add("backspace");
 }

@@ -5,6 +5,7 @@ import { parseKittyProtocol } from "./parseKittyProtocol.js";
 import type { Data } from "../types.js";
 import { parseMouseData } from "./parseMouseData.js";
 import { CsiRegex } from "../helpers/CsiRegex.js";
+import { CtrlMap } from "../maps/CtrlKeyMap.js";
 
 /**
  * @param buf the buffer from the stdin event to parse
@@ -30,13 +31,18 @@ export function parseBuffer(buf: Buffer): Data {
     }
 
     // Ctrl character
-    if (buf[0] < 32 && buf[0] !== 27) {
+    if (buf[0] in CtrlMap) {
         parseCtrlChar(buf, data);
     }
 
-    // Esc
-    else if (buf[0] === 27 && buf[1] === undefined) {
+    // Esc alone or alt + esc
+    else if (buf[0] === 27 && (buf[1] === undefined || buf[1] === 27)) {
         data.key.add("esc");
+        data.key.add("ctrl");
+        data.input.add("3"); // ambiguity
+        data.input.add("["); // ambiguity
+
+        if (buf[1] === 27) data.key.add("alt");
     }
 
     // Special Keys
@@ -48,11 +54,11 @@ export function parseBuffer(buf: Buffer): Data {
     else if (buf[0] === 27) {
         data.key.add("alt");
 
-        if ((buf[1] >= 41 && buf[1] <= 90) || (buf[1] >= 60 && buf[1] <= 126)) {
-            data.input.add(String.fromCharCode(buf[1]));
+        if (buf[1] in CtrlMap) {
+            const buffArr = Array.from(buf).slice(1);
+            parseCtrlChar(Buffer.from(buffArr), data);
         } else {
-            const arr = Array.from(buf).slice(1);
-            parseCtrlChar(Buffer.from(arr), data);
+            data.input.add(String.fromCharCode(buf[1]));
         }
     }
 

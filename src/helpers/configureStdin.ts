@@ -50,10 +50,12 @@ export function configureStdin(opts: Opts) {
     }
 
     let kittyEnabled = false;
-    enableKittyProtocol({
-        stdout: opts.stdout,
-        enabled: opts.enableKittyProtocol,
-    }).then((supported) => (kittyEnabled = supported));
+    if (opts.enableKittyProtocol) {
+        enableKittyProtocol({
+            stdout: opts.stdout,
+            enabled: opts.enableKittyProtocol,
+        }).then((supported) => (kittyEnabled = supported));
+    }
 
     enableMouse({
         enabled: opts.enableMouse,

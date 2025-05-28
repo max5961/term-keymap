@@ -6,7 +6,7 @@ configureStdin({
     stdout: process.stdout,
     enableMouse: true,
     mouseMode: 3,
-    enableKittyProtocol: true,
+    enableKittyProtocol: false,
 });
 
 // prettier-ignore
