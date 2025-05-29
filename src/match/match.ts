@@ -5,24 +5,20 @@ export type KeyMap = {
     input?: string;
 };
 
-export function match(m: KeyMap, data: Data): boolean {
-    if (Array.isArray(m)) return false;
-
-    const mKeys = Array.isArray(m.key) ? m.key : [m.key];
-    const mInput = Array.isArray(m.input) ? m.input : [m.input];
-
-    if (data.key && mKeys?.length !== data.key.size) return false;
-    if (data.input && mInput?.length !== data.input.size) return false;
-
-    for (const key of mKeys) {
-        if (key && !data.key.has(key)) {
-            return false;
-        }
+export function match<T extends Pick<Data, "key" | "input">>(
+    keymap: KeyMap,
+    data: T,
+): boolean {
+    if (keymap.input) {
+        if (keymap.input.length > 1) return false;
+        if (keymap.input.length !== data.input.size) return false;
+        if (!data.input.has(keymap.input)) return false;
     }
-
-    for (const inp of mInput) {
-        if (inp && !data.input.has(inp)) {
-            return false;
+    if (keymap.key) {
+        if (Array.isArray(keymap.key)) {
+            if (!data.key.only(...keymap.key)) return false;
+        } else {
+            if (!data.key.only(keymap.key)) return false;
         }
     }
 

@@ -1,12 +1,20 @@
 import type { KeyMap } from "./match.js";
 
-export function normalizeKeymap(keymap: KeyMap | KeyMap[]): KeyMap[] {
+/**
+ * Handles variable input lengths and expands into a single sequence which is
+ * easier to parse.
+ *
+ * ```typescript
+ * expandKeymap({key: 'ctrl', input: 'dd'}) returns [{key: 'ctrl', input: 'd'}, {key: 'ctrl', input: 'd'}]
+ * ```
+ * */
+export function expandKeymap(keymap: KeyMap | KeyMap[]): KeyMap[] {
     if (Array.isArray(keymap)) {
         if (keymap.length <= 1) return keymap;
 
         const result: KeyMap[] = [];
         for (const km of keymap) {
-            result.push(...normalizeKeymap(km));
+            result.push(...expandKeymap(km));
         }
 
         return result;

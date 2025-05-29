@@ -1,51 +1,50 @@
 import type { Data } from "../types.js";
 import { CircularQueue } from "./CircularQueue.js";
-import { match, type KeyMap } from "./match.js";
-import { normalizeKeymap } from "./normalizeKeymap.js";
+import { match } from "./match.js";
+import type { EnhancedKeyMap } from "./createKeymap.js";
 
 export function history() {
     const q = new CircularQueue<Data>(50);
 
-    const update = (data: Data) => {
+    const checkMatch = (
+        keymaps: EnhancedKeyMap[],
+        data: Data,
+    ): string | undefined => {
         if (data.key.size || data.input.size) {
             q.enqueue(data);
         }
-    };
 
-    const checkMatch = (
-        keymaps: (KeyMap | KeyMap[])[],
-    ): KeyMap | KeyMap[] | undefined => {
         // Map of containing lengths so that shorter sequences can be checked first
-        const bucketMap: Record<number, KeyMap[][]> = {};
+        const bucket = new Map<number, EnhancedKeyMap[]>();
 
-        keymaps.forEach((kmOrSeq) => {
-            const normalized = normalizeKeymap(kmOrSeq);
-            const len = normalized.length;
-            if (!bucketMap[len]) bucketMap[len] = [];
-            bucketMap[len].push(normalized);
+        keymaps.forEach((km) => {
+            const len = km.keymap.length;
+            const value = bucket.get(len) ?? [];
+            value.push(km);
+            bucket.set(len, value);
         });
 
-        const sortedKeys = Object.keys(bucketMap)
-            .sort()
-            .map((s) => Number(s));
+        const keys = Array.from(bucket.keys());
 
-        for (const key of sortedKeys) {
-            const sequences = bucketMap[key];
+        for (const len of keys) {
+            const enhancedKeymaps = bucket.get(len);
+            if (!enhancedKeymaps) continue;
 
-            for (const seq of sequences) {
-                if (seq.length > q.size) continue;
+            for (const ekm of enhancedKeymaps) {
+                if (ekm.keymap.length > q.size) continue;
 
                 let found = true;
-                for (let i = seq.length - 1; i >= 0; --i) {
-                    if (!q.fromTail(i) || !match(seq[i], q.fromTail(i)!)) {
+                q.forEach((data, i) => {
+                    const nextKm = ekm.keymap[len - 1 - i];
+                    if (nextKm && !match(nextKm, data)) {
                         found = false;
-                        break;
                     }
-                }
+                });
 
                 if (found) {
+                    ekm.callback?.();
                     q.clear();
-                    return seq;
+                    return ekm.name;
                 }
             }
         }
@@ -53,5 +52,5 @@ export function history() {
         return;
     };
 
-    return { update, checkMatch };
+    return { checkMatch };
 }
