@@ -35,6 +35,11 @@ const keymaps = [
             { key: "ctrl", input: "dd" },
         ],
     }),
+    createKeymap({
+        name: "foobar",
+        keymap: Array.from({ length: 5 }).map(() => ({ key: "backspace" })),
+        callback: () => console.log("callback: 5 <BS>"),
+    }),
 ];
 
 process.stdin.on("data", (buf: Buffer) => {

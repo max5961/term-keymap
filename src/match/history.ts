@@ -1,7 +1,8 @@
-import type { Data } from "../types.js";
+import type { Data, Key } from "../types.js";
 import { CircularQueue } from "./CircularQueue.js";
 import { match } from "./match.js";
 import type { EnhancedKeyMap } from "./createKeymap.js";
+import PeekSet from "../helpers/PeekSet.js";
 
 export function history() {
     const q = new CircularQueue<Data>(50);
@@ -11,7 +12,28 @@ export function history() {
         data: Data,
     ): string | undefined => {
         if (data.key.size || data.input.size) {
-            q.enqueue(data);
+            const modifiers = new PeekSet<Key>([
+                "shift",
+                "alt",
+                "ctrl",
+                "super",
+                "hyper",
+                "meta",
+                "capsLock",
+                "numLock",
+            ]);
+
+            let onlyModifiers = true;
+            for (const key of data.key) {
+                if (!modifiers.has(key)) {
+                    onlyModifiers = false;
+                    break;
+                }
+            }
+
+            if (!onlyModifiers || data.input.size) {
+                q.enqueue(data);
+            }
         }
 
         // Map of containing lengths so that shorter sequences can be checked first
