@@ -26,9 +26,13 @@ describe("CircularQueue", () => {
         });
 
         expect(q.tail()).toBe(9);
+        expect(q.fromTail(0)).toBe(9);
+        expect(q.fromTail(3)).toBe(6);
+        expect(q.fromTail(5)).toBe(undefined);
 
         q.clear();
         expect(q.size).toBe(0);
         expect(q.tail()).toBe(undefined);
+        expect(q.fromTail(0)).toBe(undefined);
     });
 });

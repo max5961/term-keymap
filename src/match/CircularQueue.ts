@@ -31,8 +31,12 @@ export class CircularQueue<T> {
         this.map.delete(this.start++);
     }
 
-    public peek(idx: number): T | undefined {
-        return this.map.get(idx);
+    /**
+     * @param idx represents the index counting from the tail of the queue.  idx of
+     * `0` is the tail itself
+     */
+    public fromTail(idx: number): T | undefined {
+        return this.map.get(this.end - 1 - idx);
     }
 
     public tail(): T | undefined {
@@ -45,7 +49,7 @@ export class CircularQueue<T> {
     public forEach(cb: (item: T, i: number) => unknown): void {
         let i = 0;
         for (let j = this.end - 1; j >= this.start; --j) {
-            const item = this.peek(j);
+            const item = this.map.get(j);
             if (item) cb(item, i++);
         }
     }

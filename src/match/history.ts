@@ -1,51 +1,56 @@
 import type { Data } from "../types.js";
 import { CircularQueue } from "./CircularQueue.js";
 import { match, type KeyMap } from "./match.js";
+import { normalizeKeymap } from "./normalizeKeymap.js";
 
 export function history() {
     const q = new CircularQueue<Data>(50);
 
     const update = (data: Data) => {
-        q.enqueue(data);
+        if (data.key.size || data.input.size) {
+            q.enqueue(data);
+        }
     };
 
-    const checkMatch = (keymaps: KeyMap[]) => {
-        const sorted: Record<number, Record<number, KeyMap[]>> = {};
+    const checkMatch = (
+        keymaps: (KeyMap | KeyMap[])[],
+    ): KeyMap | KeyMap[] | undefined => {
+        // Map of containing lengths so that shorter sequences can be checked first
+        const bucketMap: Record<number, KeyMap[][]> = {};
 
-        keymaps.forEach((km) => {
-            const inputLength = km.input?.length ?? 0;
-            const keyLength = km.key?.length ?? 0;
-
-            if (!sorted[inputLength]) {
-                sorted[inputLength] = {};
-            }
-            if (!sorted[inputLength][keyLength]) {
-                sorted[inputLength][keyLength] = [];
-            }
-
-            sorted[inputLength][keyLength].push(km);
+        keymaps.forEach((kmOrSeq) => {
+            const normalized = normalizeKeymap(kmOrSeq);
+            const len = normalized.length;
+            if (!bucketMap[len]) bucketMap[len] = [];
+            bucketMap[len].push(normalized);
         });
 
-        const sortedInputLengths = Object.keys(sorted)
-            .map((s) => Number(s))
-            .sort();
+        const sortedKeys = Object.keys(bucketMap)
+            .sort()
+            .map((s) => Number(s));
 
-        sortedInputLengths.forEach((inputIdx) => {
-            const sortedKeyLengths = Object.keys(sorted[inputIdx])
-                .map((s) => Number(s))
-                .sort();
+        for (const key of sortedKeys) {
+            const sequences = bucketMap[key];
 
-            sortedKeyLengths.forEach((keyIdx) => {
-                const arr = (sorted[inputIdx]?.[keyIdx] ?? []) as KeyMap[];
+            for (const seq of sequences) {
+                if (seq.length > q.size) continue;
 
-                arr.forEach((km) => {
-                    console.log(km);
-                    // if (match()) {
-                    //     return km;
-                    // }
-                });
-            });
-        });
+                let found = true;
+                for (let i = seq.length - 1; i >= 0; --i) {
+                    if (!q.fromTail(i) || !match(seq[i], q.fromTail(i)!)) {
+                        found = false;
+                        break;
+                    }
+                }
+
+                if (found) {
+                    q.clear();
+                    return seq;
+                }
+            }
+        }
+
+        return;
     };
 
     return { update, checkMatch };

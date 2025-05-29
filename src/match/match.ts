@@ -6,6 +6,8 @@ export type KeyMap = {
 };
 
 export function match(m: KeyMap, data: Data): boolean {
+    if (Array.isArray(m)) return false;
+
     const mKeys = Array.isArray(m.key) ? m.key : [m.key];
     const mInput = Array.isArray(m.input) ? m.input : [m.input];
 
