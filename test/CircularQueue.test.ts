@@ -29,5 +29,6 @@ describe("CircularQueue", () => {
 
         q.clear();
         expect(q.size).toBe(0);
+        expect(q.tail()).toBe(undefined);
     });
 });
