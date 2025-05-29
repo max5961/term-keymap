@@ -35,13 +35,18 @@ export class CircularQueue<T> {
         return this.map.get(idx);
     }
 
+    public tail(): T | undefined {
+        return this.map.get(this.end - 1);
+    }
+
     /**
      * Reverse iterates the queue (latest to earliest added)
      * */
-    public forEach(cb: (item: T) => unknown): void {
-        for (let i = this.end - 1; i >= this.start; --i) {
-            const item = this.peek(i);
-            if (item) cb(item);
+    public forEach(cb: (item: T, i: number) => unknown): void {
+        let i = 0;
+        for (let j = this.end - 1; j >= this.start; --j) {
+            const item = this.peek(j);
+            if (item) cb(item, i++);
         }
     }
 }

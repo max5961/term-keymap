@@ -1,6 +1,5 @@
 import { parseBuffer } from "./parse/parseBuffer.js";
 import { configureStdin } from "./helpers/configureStdin.js";
-import { match, type Match } from "./match/match.js";
 
 configureStdin({
     stdout: process.stdout,
@@ -8,13 +7,6 @@ configureStdin({
     mouseMode: 3,
     enableKittyProtocol: false,
 });
-
-// prettier-ignore
-const matches: Map<Match, string> = new Map([
-    [{ key: ["ctrl", "alt"],  input: "I" },              "foo"],
-    [{ key: ["alt", "super"], input: "j" },              "bar"],
-    [{ key: ["super"],        input: "u" },              "baz"],
-]);
 
 process.stdin.on("data", (buf: Buffer) => {
     console.clear();
@@ -28,13 +20,6 @@ process.stdin.on("data", (buf: Buffer) => {
         console.log({ raw: data.raw });
         console.log({ key: data.key.values() });
         console.log({ input: data.input.values() });
-    }
-
-    for (const [k, v] of matches) {
-        const result = match(k, data);
-        if (result) {
-            console.log(`matched: ${v}`);
-        }
     }
 
     if (data.key.only("ctrl") && data.input.only("c")) process.exit();

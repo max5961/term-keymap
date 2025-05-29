@@ -1,11 +1,11 @@
 import type { Data, Key } from "../types.js";
 
-export type Match = {
+export type KeyMap = {
     key?: Key | Key[];
     input?: string;
 };
 
-export function match(m: Match, data: Data): boolean {
+export function match(m: KeyMap, data: Data): boolean {
     const mKeys = Array.isArray(m.key) ? m.key : [m.key];
     const mInput = Array.isArray(m.input) ? m.input : [m.input];
 
@@ -35,7 +35,7 @@ export function match(m: Match, data: Data): boolean {
  * returns that data as:
  * - `[ {key: ['tab']}, {key: ['ctrl'], input: ['i']} ]`
  */
-export function splitAmbiguousData({ key, input }: Data): Match[] {
+export function splitAmbiguousData({ key, input }: Data): KeyMap[] {
     const toMatch = (key: Key[], input?: string) => ({
         key: key.length ? key : undefined,
         input: input && input.length ? input : undefined,

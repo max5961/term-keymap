@@ -2,7 +2,7 @@ import { describe, test, expect } from "vitest";
 import { CircularQueue } from "../src/match/CircularQueue.js";
 
 describe("CircularQueue", () => {
-    test("public: enqueue, forEach, size", () => {
+    test("public: enqueue, forEach, size, tail", () => {
         const q = new CircularQueue<number>(5);
 
         q.enqueue(0);
@@ -19,9 +19,13 @@ describe("CircularQueue", () => {
         expect(q.size).toBe(5);
 
         let i = 9;
-        q.forEach((item) => {
+        let j = 0;
+        q.forEach((item, k) => {
             expect(item).toBe(i--);
+            expect(k).toBe(j++);
         });
+
+        expect(q.tail()).toBe(9);
 
         q.clear();
         expect(q.size).toBe(0);
