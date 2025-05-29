@@ -2,8 +2,8 @@ import type { KeyMap } from "./match.js";
 import { expandKeymap } from "./expandKeymap.js";
 
 /**
- * Utility function for creating keymaps with metadata.  Expands keymaps into
- * more easily parsable expanded form.
+ * Utility for attaching metadata to keymaps.  Expands keymaps into more easily
+ * parsable expanded form.
  * */
 export function createKeymap({
     keymap,

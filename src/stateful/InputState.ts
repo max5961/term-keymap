@@ -1,16 +1,22 @@
 import type { Data, Key } from "../types.js";
+import type { EnhancedKeyMap } from "./createKeymap.js";
 import { CircularQueue } from "./CircularQueue.js";
 import { match } from "./match.js";
-import type { EnhancedKeyMap } from "./createKeymap.js";
 import PeekSet from "../helpers/PeekSet.js";
 
-export function history() {
-    const q = new CircularQueue<Data>(50);
+export class InputState {
+    private q: CircularQueue<Data>;
+    private size: number;
 
-    const checkMatch = (
+    constructor(size: number = 50) {
+        this.size = size;
+        this.q = new CircularQueue<Data>(this.size);
+    }
+
+    public process = (
         keymaps: EnhancedKeyMap[],
         data: Data,
-    ): string | undefined => {
+    ): EnhancedKeyMap | undefined => {
         if (data.key.size || data.input.size) {
             const modifiers = new PeekSet<Key>([
                 "shift",
@@ -32,7 +38,7 @@ export function history() {
             }
 
             if (!onlyModifiers || data.input.size) {
-                q.enqueue(data);
+                this.q.enqueue(data);
             }
         }
 
@@ -53,10 +59,10 @@ export function history() {
             if (!enhancedKeymaps) continue;
 
             for (const ekm of enhancedKeymaps) {
-                if (ekm.keymap.length > q.size) continue;
+                if (ekm.keymap.length > this.q.size) continue;
 
                 let found = true;
-                q.forEach((data, i) => {
+                this.q.forEach((data, i) => {
                     const nextKm = ekm.keymap[len - 1 - i];
                     if (nextKm && !match(nextKm, data)) {
                         found = false;
@@ -65,14 +71,12 @@ export function history() {
 
                 if (found) {
                     ekm.callback?.();
-                    q.clear();
-                    return ekm.name;
+                    this.q.clear();
+                    return ekm;
                 }
             }
         }
 
         return;
     };
-
-    return { checkMatch };
 }

@@ -1,7 +1,7 @@
 import { parseBuffer } from "./parse/parseBuffer.js";
-import { configureStdin } from "./helpers/configureStdin.js";
-import { history } from "./match/history.js";
-import { createKeymap } from "./match/createKeymap.js";
+import { configureStdin } from "./configureStdin.js";
+import { InputState } from "./stateful/InputState.js";
+import { createKeymap } from "./stateful/createKeymap.js";
 
 configureStdin({
     stdout: process.stdout,
@@ -9,8 +9,6 @@ configureStdin({
     mouseMode: 3,
     enableKittyProtocol: true,
 });
-
-const { checkMatch } = history();
 
 const keymaps = [
     createKeymap({
@@ -32,8 +30,9 @@ const keymaps = [
         name: "ban",
         keymap: [
             { key: "alt", input: "j" },
-            { key: "ctrl", input: "dd" },
+            { key: "ctrl", input: "dddd" },
         ],
+        callback: () => console.log("<A-j><C-d><C-d><C-d><C-d>"),
     }),
     createKeymap({
         name: "foobar",
@@ -41,6 +40,8 @@ const keymaps = [
         callback: () => console.log("callback: 5 <BS>"),
     }),
 ];
+
+const ip = new InputState();
 
 process.stdin.on("data", (buf: Buffer) => {
     console.clear();
@@ -56,8 +57,8 @@ process.stdin.on("data", (buf: Buffer) => {
         console.log({ input: data.input.values() });
     }
 
-    const evt = checkMatch(keymaps, data);
-    if (evt) console.log(`event: ${evt}`);
+    const km = ip.process(keymaps, data);
+    if (km) console.log(`event: ${km.name}`);
 
     if (data.key.only("ctrl") && data.input.only("c")) process.exit();
     if (buf[0] === 3) process.exit();

@@ -6,11 +6,11 @@ import PeekSet from "../helpers/PeekSet.js";
  * `ctrl` + `-|=|-|1|3|9|'|;|,|.` don't emit distinct control codes so they
  * aren't included.  These are commented out and marked with a `!`.
  *
- * ambiguous *Ctrl* + *char|key* combinations are:
+ * Ambiguous `Ctrl` + `char|key` combinations are:
  * - `<C-h>` = `<C-backspace>`
  * - `<C-i>` = `tab`
  * - `<C-m>` = `return`
- * - `<C-3>` = `esc`           = `<C-[>`
+ * - `<C-3>` = `esc` = `<C-[>`
  * - `<C-8>` = `backspace`
  */
 export const CtrlMap: Record<number, PeekSet<string>> = {

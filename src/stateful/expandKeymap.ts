@@ -1,8 +1,8 @@
 import type { KeyMap } from "./match.js";
 
 /**
- * Handles variable input lengths and expands into a single sequence which is
- * easier to parse.
+ * Handles variable input lengths and expands into a single sequence for easier
+ * parsing.
  *
  * ```typescript
  * expandKeymap({key: 'ctrl', input: 'dd'}) returns [{key: 'ctrl', input: 'd'}, {key: 'ctrl', input: 'd'}]
