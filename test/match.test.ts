@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { match } from "../src/match/match.js";
+import { match } from "../src/stateful/match.js";
 import PeekSet from "../src/helpers/PeekSet";
 
 describe("match", () => {

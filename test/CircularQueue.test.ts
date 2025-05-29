@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { CircularQueue } from "../src/match/CircularQueue.js";
+import { CircularQueue } from "../src/stateful/CircularQueue.js";
 
 describe("CircularQueue", () => {
     test("public: enqueue, forEach, size, tail", () => {

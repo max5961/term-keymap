@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { expandKeymap } from "../src/match/expandKeymap.js";
-import { KeyMap } from "../src/match/match.js";
+import { expandKeymap } from "../src/stateful/expandKeymap.js";
+import { KeyMap } from "../src/stateful/match.js";
 
 describe("expandKeymap", () => {
     const seq1: KeyMap = { key: ["ctrl", "alt", "meta"], input: "a" };
