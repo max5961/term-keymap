@@ -7,15 +7,18 @@
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
     },
+    "files": [
+        "dist/"
+    ],
     "scripts": {
         "start": "tsc && node ./dist/index.js",
         "compile": "tsc --noUnusedLocals",
         "test": "tsc && npx vitest",
         "lint": "eslint",
         "fix": "eslint --fix",
-        "example:stateful": "tsc && node ./dist/examples/stateful.js",
-        "example:parse": "tsc && node ./dist/examples/parseBuffer.js",
-        "example:mouse": "tsc && node ./dist/examples/mouse.js"
+        "example:stateful": "tsc -p examples && node ./compiled-examples/examples/stateful.js",
+        "example:parse": "tsc -p examples && node ./compiled-examples/examples/parseBuffer.js",
+        "example:mouse": "tsc -p examples && node ./compiled-examples/examples/mouse.js"
     },
     "type": "module",
     "keywords": [
