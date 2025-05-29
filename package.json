@@ -1,7 +1,7 @@
 {
-    "name": "jtest",
-    "version": "1.0.0",
-    "description": "",
+    "name": "term-input",
+    "version": "0.0.0",
+    "description": "Parse std input buffers and assign keymaps",
     "main": "./dist/index.js",
     "exports": {
         "types": "./dist/index.d.ts",
@@ -13,21 +13,28 @@
         "test": "tsc && npx vitest",
         "lint": "eslint",
         "fix": "eslint --fix",
-        "dev": "tsc --watch",
-        "update": "npx directlink --update"
+        "example:stateful": "tsc && node ./dist/examples/stateful.js",
+        "example:parse": "tsc && node ./dist/examples/parseBuffer.js",
+        "example:mouse": "tsc && node ./dist/examples/mouse.js"
     },
     "type": "module",
-    "keywords": [],
+    "keywords": [
+        "stdin",
+        "terminal",
+        "tty",
+        "vim",
+        "neovim",
+        "keymap",
+        "parse",
+        "buffer"
+    ],
     "author": "",
     "license": "MIT",
     "devDependencies": {
-        "@mmorrissey5961/directlink": "^1.0.0",
         "@types/node": "^22.15.3",
-        "vitest": "^3.1.2",
         "eslint": "^9.26.0",
-        "eslint-plugin-react-hooks": "^5.2.0",
         "globals": "^16.0.0",
-        "typescript-eslint": "^8.31.1"
-    },
-    "directlinks": {}
+        "typescript-eslint": "^8.31.1",
+        "vitest": "^3.1.2"
+    }
 }
