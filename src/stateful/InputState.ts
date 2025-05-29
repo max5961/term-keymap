@@ -42,7 +42,8 @@ export class InputState {
             }
         }
 
-        // Map of containing lengths so that shorter sequences can be checked first
+        // Map containing lengths of keymap sequences. Lengths are sorted so that
+        // shorter sequences are prioritized over longer ones.
         const bucket = new Map<number, EnhancedKeyMap[]>();
 
         keymaps.forEach((km) => {
@@ -52,7 +53,7 @@ export class InputState {
             bucket.set(len, value);
         });
 
-        const keys = Array.from(bucket.keys());
+        const keys = Array.from(bucket.keys()).sort();
 
         for (const len of keys) {
             const enhancedKeymaps = bucket.get(len);
