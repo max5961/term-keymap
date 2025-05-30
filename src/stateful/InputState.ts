@@ -3,6 +3,7 @@ import type { EnhancedKeyMap } from "./createKeymap.js";
 import { CircularQueue } from "./CircularQueue.js";
 import { match } from "./match.js";
 import PeekSet from "../helpers/PeekSet.js";
+import { parseBuffer } from "../parse/parseBuffer.js";
 
 export class InputState {
     private q: CircularQueue<Data>;
@@ -14,9 +15,11 @@ export class InputState {
     }
 
     public process = (
+        buf: Buffer,
         keymaps: EnhancedKeyMap[],
-        data: Data,
-    ): EnhancedKeyMap | undefined => {
+    ): { keymap?: EnhancedKeyMap; data: Data } => {
+        const data = parseBuffer(buf);
+
         if (data.key.size || data.input.size) {
             const modifiers = new PeekSet<Key>([
                 "shift",
@@ -73,11 +76,11 @@ export class InputState {
                 if (found) {
                     ekm.callback?.();
                     this.q.clear();
-                    return ekm;
+                    return { data, keymap: ekm };
                 }
             }
         }
 
-        return;
+        return { data };
     };
 }

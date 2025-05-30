@@ -1,4 +1,3 @@
-import { parseBuffer } from "../src/parse/parseBuffer.js";
 import { configureStdin } from "../src/configureStdin.js";
 import { InputState } from "../src/stateful/InputState.js";
 import { createKeymap } from "../src/stateful/createKeymap.js";
@@ -49,12 +48,16 @@ const ip = new InputState();
 
 process.stdin.on("data", (buf: Buffer) => {
     console.clear();
-    const data = parseBuffer(buf);
+    const { data, keymap } = ip.process(buf, keymaps);
+
     console.log({
         key: data.key.values(),
         input: data.input.values(),
     });
-    ip.process(keymaps, data);
+
+    if (keymap?.name) {
+        console.log(keymap.name);
+    }
 });
 
 console.clear();
