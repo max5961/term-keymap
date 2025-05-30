@@ -1,4 +1,4 @@
-import type PeekSet from "./helpers/PeekSet.js";
+import type { PeekSet } from "./helpers/PeekSet.js";
 
 export type Key =
     | "ctrl"

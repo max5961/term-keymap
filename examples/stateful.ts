@@ -50,6 +50,8 @@ process.stdin.on("data", (buf: Buffer) => {
     console.clear();
     const { data, keymap } = ip.process(buf, keymaps);
 
+    if (data.key.only("ctrl") && data.input.only("c")) process.exit();
+
     console.log({
         key: data.key.values(),
         input: data.input.values(),

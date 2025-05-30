@@ -2,7 +2,7 @@ import type { Data, Key } from "../types.js";
 import type { EnhancedKeyMap } from "./createKeymap.js";
 import { CircularQueue } from "./CircularQueue.js";
 import { match } from "./match.js";
-import PeekSet from "../helpers/PeekSet.js";
+import { PeekSet } from "../helpers/PeekSet.js";
 import { parseBuffer } from "../parse/parseBuffer.js";
 
 export class InputState {
@@ -32,13 +32,8 @@ export class InputState {
                 "numLock",
             ]);
 
-            let onlyModifiers = true;
-            for (const key of data.key) {
-                if (!modifiers.has(key)) {
-                    onlyModifiers = false;
-                    break;
-                }
-            }
+            const keys = Array.from(data.key.values()) as Key[];
+            const onlyModifiers = keys.every((key) => modifiers.has(key));
 
             if (!onlyModifiers || data.input.size) {
                 this.q.enqueue(data);
@@ -66,12 +61,15 @@ export class InputState {
                 if (ekm.keymap.length > this.q.size) continue;
 
                 let found = true;
-                this.q.forEach((data, i) => {
-                    const nextKm = ekm.keymap[len - 1 - i];
-                    if (nextKm && !match(nextKm, data)) {
+                for (let i = 0; i < ekm.keymap.length; ++i) {
+                    const nextKm = ekm.keymap[i];
+                    const nextData = this.q.fromTail(ekm.keymap.length - 1 - i);
+
+                    if (!nextKm || !nextData || !match(nextKm, nextData)) {
                         found = false;
+                        break;
                     }
-                });
+                }
 
                 if (found) {
                     ekm.callback?.();

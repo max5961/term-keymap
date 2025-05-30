@@ -1,4 +1,4 @@
-import PeekSet from "../helpers/PeekSet.js";
+import { PeekSet } from "../helpers/PeekSet.js";
 
 /**
  * Matches control codes to their character combinations.

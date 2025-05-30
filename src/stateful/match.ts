@@ -180,7 +180,7 @@ export function splitAmbiguousData({ key, input }: Data): KeyMap[] {
         }
     }
 
-    return Array.from(input.values()).map((input) => {
+    return Array.from(input.values() as Iterable<string>).map((input) => {
         return toMatch([...key.values()], input);
     });
 }

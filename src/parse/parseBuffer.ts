@@ -1,4 +1,4 @@
-import PeekSet from "../helpers/PeekSet.js";
+import { PeekSet } from "../helpers/PeekSet.js";
 import { LegacyKeys } from "../maps/LegacyKeys.js";
 import { parseCtrlChar } from "./parseCtrl.js";
 import { parseKittyProtocol } from "./parseKittyProtocol.js";
@@ -23,6 +23,7 @@ export function parseBuffer(buf: Buffer): Data {
 
     if (CsiRegex.isMouseEvent(data.raw.utf)) {
         parseMouseData(data);
+        return data;
     }
 
     if (CsiRegex.isKittyProtocol(data.raw.utf)) {
@@ -33,25 +34,29 @@ export function parseBuffer(buf: Buffer): Data {
     // Ctrl character
     if (buf[0] in CtrlMap) {
         parseCtrlChar(buf, data);
+        return data;
     }
 
     // Esc alone or alt + esc
-    else if (buf[0] === 27 && (buf[1] === undefined || buf[1] === 27)) {
+    if (buf[0] === 27 && (buf[1] === undefined || buf[1] === 27)) {
         data.key.add("esc");
         data.key.add("ctrl");
         data.input.add("3"); // ambiguity
         data.input.add("["); // ambiguity
 
         if (buf[1] === 27) data.key.add("alt");
+
+        return data;
     }
 
     // Special Keys
-    else if (data.raw.utf in LegacyKeys) {
+    if (data.raw.utf in LegacyKeys) {
         data.key.add(LegacyKeys[data.raw.utf]);
+        return data;
     }
 
     // Alt key
-    else if (buf[0] === 27) {
+    if (buf[0] === 27) {
         data.key.add("alt");
 
         if (buf[1] in CtrlMap) {
@@ -60,12 +65,11 @@ export function parseBuffer(buf: Buffer): Data {
         } else {
             data.input.add(String.fromCharCode(buf[1]));
         }
+
+        return data;
     }
 
     // Default
-    else {
-        data.input.add(data.raw.utf);
-    }
-
+    data.input.add(data.raw.utf);
     return data;
 }
