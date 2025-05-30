@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { match } from "../src/stateful/match.js";
-import PeekSet from "../src/helpers/PeekSet";
+import { PeekSet } from "../src/helpers/PeekSet";
 
 describe("match", () => {
     test("input: 'a'", () => {
