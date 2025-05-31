@@ -63,7 +63,7 @@ export function parseBuffer(buf: Buffer): Data {
     }
 
     // Alt key
-    if (buf[0] === 27) {
+    if (buf[0] === 27 && buf.length === 2) {
         data.key.add("alt");
 
         if (buf[1] in CtrlMap) {
@@ -77,7 +77,7 @@ export function parseBuffer(buf: Buffer): Data {
     }
 
     // Default
-    if (data.raw.utf) {
+    if (data.raw.utf && !new RegExp(/^\x1b/).test(data.raw.utf)) {
         data.input.add(data.raw.utf);
     }
     return data;

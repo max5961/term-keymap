@@ -35,6 +35,15 @@ describe("edge cases", () => {
         expect(data.key.size).toBe(0);
         expect(data.input.size).toBe(0);
     });
+
+    // This is the case such as when you press and hold a key.  Every now and then
+    // key data may be concatenated.  Could handle differently if dropping the occasional
+    // key is noticable and looks bad.
+    test("Concatenated esc codes fall through and do not modify data", () => {
+        const data = parseBuffer(Buffer.from("\x1b[A\x1b[A"));
+        expect(data.key.size).toBe(0);
+        expect(data.input.size).toBe(0);
+    });
 });
 
 describe("single bytes - legacy buffers 0-127", () => {
