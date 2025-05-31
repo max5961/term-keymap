@@ -77,6 +77,8 @@ export function parseBuffer(buf: Buffer): Data {
     }
 
     // Default
-    data.input.add(data.raw.utf);
+    if (data.raw.utf) {
+        data.input.add(data.raw.utf);
+    }
     return data;
 }

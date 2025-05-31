@@ -29,6 +29,14 @@ describe("buffers that aren't explicitly handled are encoded to utf and added to
     });
 });
 
+describe("edge cases", () => {
+    test("empty buffer", () => {
+        const data = parseBuffer(Buffer.from([]));
+        expect(data.key.size).toBe(0);
+        expect(data.input.size).toBe(0);
+    });
+});
+
 describe("single bytes - legacy buffers 0-127", () => {
     test("lowercase alphabet", () => {
         expect(checkParse([97], { input: "a" })).toBe(true);
