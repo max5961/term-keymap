@@ -259,7 +259,46 @@ describe("legacy non-modifier keys", () => {
     });
 
     // Todo alt + key, ctrl + key
-    test("alt|ctrl + modifier appends ;<modifier>~", () => {
-        //
+    test("alt|ctrl + key", () => {
+        // expect(checkparse("\x1b"))
+        expect(checkParse("\x1b[1;5A", { key: ["ctrl", "up"] })).toBe(true);
+        expect(checkParse("\x1b[1;5B", { key: ["ctrl", "down"] })).toBe(true);
+        expect(checkParse("\x1b[1;5C", { key: ["ctrl", "right"] })).toBe(true);
+        expect(checkParse("\x1b[1;5D", { key: ["ctrl", "left"] })).toBe(true);
+        expect(checkParse("\x1b[1;5F", { key: ["ctrl", "end"] })).toBe(true);
+        expect(checkParse("\x1b[1;5H", { key: ["ctrl", "home"] })).toBe(true);
+        expect(checkParse("\x1b[1;5P", { key: ["ctrl", "f1"] })).toBe(true);
+        expect(checkParse("\x1b[1;5Q", { key: ["ctrl", "f2"] })).toBe(true);
+        expect(checkParse("\x1b[1;5R", { key: ["ctrl", "f3"] })).toBe(true);
+        expect(checkParse("\x1b[1;5S", { key: ["ctrl", "f4"] })).toBe(true);
+
+        expect(checkParse("\x1b[1;3A", { key: ["alt", "up"] })).toBe(true);
+        expect(checkParse("\x1b[1;3B", { key: ["alt", "down"] })).toBe(true);
+        expect(checkParse("\x1b[1;3C", { key: ["alt", "right"] })).toBe(true);
+        expect(checkParse("\x1b[1;3D", { key: ["alt", "left"] })).toBe(true);
+        expect(checkParse("\x1b[1;3F", { key: ["alt", "end"] })).toBe(true);
+        expect(checkParse("\x1b[1;3H", { key: ["alt", "home"] })).toBe(true);
+        expect(checkParse("\x1b[1;3P", { key: ["alt", "f1"] })).toBe(true);
+        expect(checkParse("\x1b[1;3Q", { key: ["alt", "f2"] })).toBe(true);
+        expect(checkParse("\x1b[1;3R", { key: ["alt", "f3"] })).toBe(true);
+        expect(checkParse("\x1b[1;3S", { key: ["alt", "f4"] })).toBe(true);
+
+        expect(checkParse("\x1b[15;5~", { key: ["ctrl", "f5"] })).toBe(true);
+        expect(checkParse("\x1b[17;5~", { key: ["ctrl", "f6"] })).toBe(true);
+        expect(checkParse("\x1b[18;5~", { key: ["ctrl", "f7"] })).toBe(true);
+        expect(checkParse("\x1b[19;5~", { key: ["ctrl", "f8"] })).toBe(true);
+        expect(checkParse("\x1b[20;5~", { key: ["ctrl", "f9"] })).toBe(true);
+        expect(checkParse("\x1b[21;5~", { key: ["ctrl", "f10"] })).toBe(true);
+        expect(checkParse("\x1b[23;5~", { key: ["ctrl", "f11"] })).toBe(true);
+        expect(checkParse("\x1b[24;5~", { key: ["ctrl", "f12"] })).toBe(true);
+
+        expect(checkParse("\x1b[15;3~", { key: ["alt", "f5"] })).toBe(true);
+        expect(checkParse("\x1b[17;3~", { key: ["alt", "f6"] })).toBe(true);
+        expect(checkParse("\x1b[18;3~", { key: ["alt", "f7"] })).toBe(true);
+        expect(checkParse("\x1b[19;3~", { key: ["alt", "f8"] })).toBe(true);
+        expect(checkParse("\x1b[20;3~", { key: ["alt", "f9"] })).toBe(true);
+        expect(checkParse("\x1b[21;3~", { key: ["alt", "f10"] })).toBe(true);
+        expect(checkParse("\x1b[23;3~", { key: ["alt", "f11"] })).toBe(true);
+        expect(checkParse("\x1b[24;3~", { key: ["alt", "f12"] })).toBe(true);
     });
 });

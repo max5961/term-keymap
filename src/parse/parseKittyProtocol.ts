@@ -3,6 +3,7 @@ import { KittyKey } from "../maps/KittyMap.js";
 import { LegacyKeys } from "../maps/LegacyKeys.js";
 import { ShiftMap } from "../maps/ShiftMap.js";
 import type { Data, Key } from "../types.js";
+import { parseLegacyKeys } from "./parseLegacyKeys.js";
 
 const BitWiseMap = {
     shift: 1,
@@ -59,7 +60,7 @@ export function parseKittyProtocol(data: Data): void {
         } else if (charCode in KittyKey) {
             data.key.add(KittyKey[charCode]);
         } else if (data.raw.utf in LegacyKeys) {
-            data.key.add(LegacyKeys[data.raw.utf]);
+            parseLegacyKeys(data);
         } else {
             data.input.add(char);
         }
