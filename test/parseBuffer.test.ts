@@ -1,16 +1,35 @@
 import { describe, test, expect } from "vitest";
 import { checkParse } from "./helpers/helpers";
+import { parseBuffer } from "../src/parse/parseBuffer";
 
-test("checkParse works", () => {
-    expect(checkParse("a", { input: "a" })).toBe(true);
-    expect(checkParse([97], { input: "a" })).toBe(true);
-    expect(checkParse("a", { input: "b" })).toBe(false);
-    expect(checkParse([97], { input: "b" })).toBe(false);
-    expect(checkParse("a", { input: "a", key: "ctrl" })).toBe(false);
-    expect(checkParse([97], { input: "a", key: "ctrl" })).toBe(false);
+describe("helpers", () => {
+    test("checkParse", () => {
+        expect(checkParse("a", { input: "a" })).toBe(true);
+        expect(checkParse([97], { input: "a" })).toBe(true);
+        expect(checkParse("a", { input: "b" })).toBe(false);
+        expect(checkParse([97], { input: "b" })).toBe(false);
+        expect(checkParse("a", { input: "a", key: "ctrl" })).toBe(false);
+        expect(checkParse([97], { input: "a", key: "ctrl" })).toBe(false);
+    });
 });
 
-describe("legacy buffers", () => {
+describe("buffers that aren't explicitly handled are encoded to utf and added to the input set", () => {
+    test("pasted text", () => {
+        const data = parseBuffer(Buffer.from("foobar", "utf-8"));
+        expect(!data.key.size && data.input.only("foobar")).toBe(true);
+    });
+
+    test("unicode", () => {
+        const unicodes = ["‼", "⁇", "Ξ", "↷", "⇒"];
+
+        for (let i = 0; i < unicodes.length; ++i) {
+            const data = parseBuffer(Buffer.from(unicodes[i], "utf-8"));
+            expect(!data.key.size && data.input.only(unicodes[i])).toBe(true);
+        }
+    });
+});
+
+describe("single bytes - legacy buffers 0-127", () => {
     test("lowercase alphabet", () => {
         expect(checkParse([97], { input: "a" })).toBe(true);
         expect(checkParse([98], { input: "b" })).toBe(true);
@@ -69,8 +88,141 @@ describe("legacy buffers", () => {
         expect(checkParse([90], { input: "Z" })).toBe(true);
     });
 
-    test("ascii encodings 0-128", () => {
-        // need to expend KeyMap for this specific use case because of ambiguous buffers
-        // expect(checkParse([0], {input: }))
+    test("non-alphabet - ambiguous expected false", () => {
+        expect(checkParse([0], { key: "ctrl", input: " " })).toBe(false); // !
+        expect(checkParse([1], { key: "ctrl", input: "a" })).toBe(true);
+        expect(checkParse([2], { key: "ctrl", input: "b" })).toBe(true);
+        expect(checkParse([3], { key: "ctrl", input: "c" })).toBe(true);
+        expect(checkParse([4], { key: "ctrl", input: "d" })).toBe(true);
+        expect(checkParse([5], { key: "ctrl", input: "e" })).toBe(true);
+        expect(checkParse([6], { key: "ctrl", input: "f" })).toBe(true);
+        expect(checkParse([7], { key: "ctrl", input: "g" })).toBe(true);
+        expect(checkParse([8], { key: "ctrl", input: "h" })).toBe(false); // !
+        expect(checkParse([9], { key: "ctrl", input: "i" })).toBe(false); // !
+        expect(checkParse([10], { key: "ctrl", input: "j" })).toBe(true);
+        expect(checkParse([11], { key: "ctrl", input: "k" })).toBe(true);
+        expect(checkParse([12], { key: "ctrl", input: "l" })).toBe(true);
+        expect(checkParse([13], { key: "ctrl", input: "m" })).toBe(false); // !
+        expect(checkParse([14], { key: "ctrl", input: "n" })).toBe(true);
+        expect(checkParse([15], { key: "ctrl", input: "o" })).toBe(true);
+        expect(checkParse([16], { key: "ctrl", input: "p" })).toBe(true);
+        expect(checkParse([17], { key: "ctrl", input: "q" })).toBe(true);
+        expect(checkParse([18], { key: "ctrl", input: "r" })).toBe(true);
+        expect(checkParse([19], { key: "ctrl", input: "s" })).toBe(true);
+        expect(checkParse([20], { key: "ctrl", input: "t" })).toBe(true);
+        expect(checkParse([21], { key: "ctrl", input: "u" })).toBe(true);
+        expect(checkParse([22], { key: "ctrl", input: "v" })).toBe(true);
+        expect(checkParse([23], { key: "ctrl", input: "w" })).toBe(true);
+        expect(checkParse([24], { key: "ctrl", input: "x" })).toBe(true);
+        expect(checkParse([25], { key: "ctrl", input: "y" })).toBe(true);
+        expect(checkParse([26], { key: "ctrl", input: "z" })).toBe(true);
+        expect(checkParse([27], { key: "esc" })).toBe(false); // !
+        expect(checkParse([28], { key: "ctrl", input: "4" })).toBe(false); // !
+        expect(checkParse([29], { key: "ctrl", input: "5" })).toBe(false); // !
+        expect(checkParse([30], { key: "ctrl", input: "6" })).toBe(false); // !
+        expect(checkParse([31], { key: "ctrl", input: "7" })).toBe(false); // !
+        expect(checkParse([32], { input: " " })).toBe(true);
+        expect(checkParse([33], { input: "!" })).toBe(true);
+        expect(checkParse([34], { input: '"' })).toBe(true);
+        expect(checkParse([35], { input: "#" })).toBe(true);
+        expect(checkParse([36], { input: "$" })).toBe(true);
+        expect(checkParse([37], { input: "%" })).toBe(true);
+        expect(checkParse([38], { input: "&" })).toBe(true);
+        expect(checkParse([39], { input: "'" })).toBe(true);
+        expect(checkParse([40], { input: "(" })).toBe(true);
+        expect(checkParse([41], { input: ")" })).toBe(true);
+        expect(checkParse([42], { input: "*" })).toBe(true);
+        expect(checkParse([43], { input: "+" })).toBe(true);
+        expect(checkParse([44], { input: "," })).toBe(true);
+        expect(checkParse([45], { input: "-" })).toBe(true);
+        expect(checkParse([46], { input: "." })).toBe(true);
+        expect(checkParse([47], { input: "/" })).toBe(true);
+        expect(checkParse([48], { input: "0" })).toBe(true);
+        expect(checkParse([49], { input: "1" })).toBe(true);
+        expect(checkParse([50], { input: "2" })).toBe(true);
+        expect(checkParse([51], { input: "3" })).toBe(true);
+        expect(checkParse([52], { input: "4" })).toBe(true);
+        expect(checkParse([53], { input: "5" })).toBe(true);
+        expect(checkParse([54], { input: "6" })).toBe(true);
+        expect(checkParse([55], { input: "7" })).toBe(true);
+        expect(checkParse([56], { input: "8" })).toBe(true);
+        expect(checkParse([57], { input: "9" })).toBe(true);
+        expect(checkParse([58], { input: ":" })).toBe(true);
+        expect(checkParse([59], { input: ";" })).toBe(true);
+        expect(checkParse([60], { input: "<" })).toBe(true);
+        expect(checkParse([61], { input: "=" })).toBe(true);
+        expect(checkParse([62], { input: ">" })).toBe(true);
+        expect(checkParse([63], { input: "?" })).toBe(true);
+        expect(checkParse([64], { input: "@" })).toBe(true);
+        expect(checkParse([91], { input: "[" })).toBe(true);
+        expect(checkParse([92], { input: "\\" })).toBe(true);
+        expect(checkParse([93], { input: "]" })).toBe(true);
+        expect(checkParse([94], { input: "^" })).toBe(true);
+        expect(checkParse([95], { input: "_" })).toBe(true);
+        expect(checkParse([96], { input: "`" })).toBe(true);
+        expect(checkParse([123], { input: "{" })).toBe(true);
+        expect(checkParse([124], { input: "|" })).toBe(true);
+        expect(checkParse([125], { input: "}" })).toBe(true);
+        expect(checkParse([126], { input: "~" })).toBe(true);
+        expect(checkParse([127], { key: "backspace" })).toBe(false); // !
+    });
+
+    test("ambiguous 0-127", () => {
+        let data = parseBuffer(Buffer.from([0]));
+        expect(data.key.only("ctrl") && data.input.only(" ", "2")).toBe(true);
+
+        data = parseBuffer(Buffer.from([8]));
+        // prettier-ignore
+        expect(data.key.only("ctrl", "backspace") && data.input.only("h")).toBe(true);
+
+        data = parseBuffer(Buffer.from([9]));
+        expect(data.key.only("ctrl", "tab") && data.input.only("i")).toBe(true);
+
+        data = parseBuffer(Buffer.from([13]));
+        // prettier-ignore
+        expect(data.key.only("ctrl", "return") && data.input.only("m")).toBe(true);
+
+        data = parseBuffer(Buffer.from([27]));
+        // prettier-ignore
+        expect(data.key.only("ctrl", "esc") && data.input.only("3", "[")).toBe(true);
+
+        data = parseBuffer(Buffer.from([28]));
+        expect(data.key.only("ctrl") && data.input.only("4", "\\")).toBe(true);
+
+        data = parseBuffer(Buffer.from([29]));
+        expect(data.key.only("ctrl") && data.input.only("5", "]")).toBe(true);
+
+        data = parseBuffer(Buffer.from([30]));
+        expect(data.key.only("ctrl") && data.input.only("6", "^")).toBe(true);
+
+        data = parseBuffer(Buffer.from([31]));
+        expect(data.key.only("ctrl") && data.input.only("7", "/")).toBe(true);
+
+        data = parseBuffer(Buffer.from([127]));
+        // prettier-ignore
+        expect(data.key.only("ctrl", "backspace") && data.input.only("8")).toBe(true);
+    });
+});
+
+describe("legacy alt + character === 27 + ascii code", () => {
+    test("alt + ctrl + letter", () => {
+        // prettier-ignore
+        expect(checkParse([27, 1], { key: ["alt", "ctrl"], input: "a"})).toBe(true);
+        // prettier-ignore
+        expect(checkParse([27, 2], { key: ["alt", "ctrl"], input: "b"})).toBe(true);
+        // prettier-ignore
+        expect(checkParse([27, 3], { key: ["alt", "ctrl"], input: "c"})).toBe(true);
+    });
+    test("alt + unshifted chars", () => {
+        expect(checkParse([27, 97], { key: "alt", input: "a" })).toBe(true);
+        expect(checkParse([27, 98], { key: "alt", input: "b" })).toBe(true);
+        expect(checkParse([27, 99], { key: "alt", input: "c" })).toBe(true);
+        expect(checkParse([27, 48], { key: "alt", input: "0" })).toBe(true);
+    });
+    test("alt + shifted chars", () => {
+        expect(checkParse([27, 65], { key: "alt", input: "A" })).toBe(true);
+        expect(checkParse([27, 66], { key: "alt", input: "B" })).toBe(true);
+        expect(checkParse([27, 67], { key: "alt", input: "C" })).toBe(true);
+        expect(checkParse([27, 41], { key: "alt", input: ")" })).toBe(true);
     });
 });
