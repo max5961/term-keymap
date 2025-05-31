@@ -7,6 +7,7 @@ import { parseMouseData } from "./parseMouseData.js";
 import { CsiRegex } from "../helpers/CsiRegex.js";
 import { CtrlMap } from "../maps/CtrlKeyMap.js";
 import { parseLegacyKeys } from "./parseLegacyKeys.js";
+import { parseLegacyModifierSequence } from "./parseLegacyModifierSequence.js";
 
 /**
  * @param buf the buffer from the stdin event to parse
@@ -53,6 +54,11 @@ export function parseBuffer(buf: Buffer): Data {
     // Special Keys
     if (data.raw.utf in LegacyKeys) {
         parseLegacyKeys(data);
+        return data;
+    }
+
+    // Special Keys + ctrl|alt
+    if (parseLegacyModifierSequence(data)) {
         return data;
     }
 

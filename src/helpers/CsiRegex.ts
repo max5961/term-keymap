@@ -29,10 +29,20 @@ function getKittyChar(utf: string) {
     return regex.exec(utf);
 }
 
+/**
+ * @example
+ * - matches \x1b[1;3A, \x1b[15;3~
+ */
+function getLegacyModifierSequence(utf: string) {
+    const regex = /^\x1b\[(\d+);(\d+)([ABCDEFHPQRSA~])/gm;
+    return regex.exec(utf);
+}
+
 export const CsiRegex = {
     isKittyProtocol,
     isMouseEvent,
     getMouseEvent,
     getKittyCharWithMod,
     getKittyChar,
+    getLegacyModifierSequence,
 };

@@ -167,23 +167,21 @@ describe("single bytes - legacy buffers 0-127", () => {
         expect(checkParse([127], { key: "backspace" })).toBe(false); // !
     });
 
+    // prettier-ignore
     test("ambiguous 0-127", () => {
         let data = parseBuffer(Buffer.from([0]));
         expect(data.key.only("ctrl") && data.input.only(" ", "2")).toBe(true);
 
         data = parseBuffer(Buffer.from([8]));
-        // prettier-ignore
         expect(data.key.only("ctrl", "backspace") && data.input.only("h")).toBe(true);
 
         data = parseBuffer(Buffer.from([9]));
         expect(data.key.only("ctrl", "tab") && data.input.only("i")).toBe(true);
 
         data = parseBuffer(Buffer.from([13]));
-        // prettier-ignore
         expect(data.key.only("ctrl", "return") && data.input.only("m")).toBe(true);
 
         data = parseBuffer(Buffer.from([27]));
-        // prettier-ignore
         expect(data.key.only("ctrl", "esc") && data.input.only("3", "[")).toBe(true);
 
         data = parseBuffer(Buffer.from([28]));
@@ -199,18 +197,15 @@ describe("single bytes - legacy buffers 0-127", () => {
         expect(data.key.only("ctrl") && data.input.only("7", "/")).toBe(true);
 
         data = parseBuffer(Buffer.from([127]));
-        // prettier-ignore
         expect(data.key.only("ctrl", "backspace") && data.input.only("8")).toBe(true);
     });
 });
 
 describe("legacy alt + character === 27 + ascii code", () => {
+    // prettier-ignore
     test("alt + ctrl + letter", () => {
-        // prettier-ignore
         expect(checkParse([27, 1], { key: ["alt", "ctrl"], input: "a"})).toBe(true);
-        // prettier-ignore
         expect(checkParse([27, 2], { key: ["alt", "ctrl"], input: "b"})).toBe(true);
-        // prettier-ignore
         expect(checkParse([27, 3], { key: ["alt", "ctrl"], input: "c"})).toBe(true);
     });
     test("alt + unshifted chars", () => {
@@ -227,11 +222,8 @@ describe("legacy alt + character === 27 + ascii code", () => {
     });
 });
 
-describe("legacy non-modifier keys", () => {
+describe("legacy non-modifier keys with no modifiers", () => {
     test("non-modifier keys only", () => {
-        // This gets handled since \x7F === byte 127
-        expect(checkParse("\x7F", { key: "backspace" })).toBe(false);
-
         expect(checkParse("\x1bOP", { key: "f1" })).toBe(true);
         expect(checkParse("\x1bOQ", { key: "f2" })).toBe(true);
         expect(checkParse("\x1bOR", { key: "f3" })).toBe(true);
@@ -258,20 +250,15 @@ describe("legacy non-modifier keys", () => {
         expect(checkParse("\x1b[7~", { key: "home" })).toBe(true);
     });
 
-    // Todo alt + key, ctrl + key
-    test("alt|ctrl + key", () => {
-        // expect(checkparse("\x1b"))
-        expect(checkParse("\x1b[1;5A", { key: ["ctrl", "up"] })).toBe(true);
-        expect(checkParse("\x1b[1;5B", { key: ["ctrl", "down"] })).toBe(true);
-        expect(checkParse("\x1b[1;5C", { key: ["ctrl", "right"] })).toBe(true);
-        expect(checkParse("\x1b[1;5D", { key: ["ctrl", "left"] })).toBe(true);
-        expect(checkParse("\x1b[1;5F", { key: ["ctrl", "end"] })).toBe(true);
-        expect(checkParse("\x1b[1;5H", { key: ["ctrl", "home"] })).toBe(true);
-        expect(checkParse("\x1b[1;5P", { key: ["ctrl", "f1"] })).toBe(true);
-        expect(checkParse("\x1b[1;5Q", { key: ["ctrl", "f2"] })).toBe(true);
-        expect(checkParse("\x1b[1;5R", { key: ["ctrl", "f3"] })).toBe(true);
-        expect(checkParse("\x1b[1;5S", { key: ["ctrl", "f4"] })).toBe(true);
+    test("backspace is ambiguous and is not handled by hashing", () => {
+        // This gets handled since \x7F === byte 127
+        expect(checkParse("\x7F", { key: "backspace" })).toBe(false);
+    });
+});
 
+// prettier-ignore
+describe("(alt | ctrl) + key", () => {
+    test("CSI 1 ; <alt> + letter", () => {
         expect(checkParse("\x1b[1;3A", { key: ["alt", "up"] })).toBe(true);
         expect(checkParse("\x1b[1;3B", { key: ["alt", "down"] })).toBe(true);
         expect(checkParse("\x1b[1;3C", { key: ["alt", "right"] })).toBe(true);
@@ -282,16 +269,35 @@ describe("legacy non-modifier keys", () => {
         expect(checkParse("\x1b[1;3Q", { key: ["alt", "f2"] })).toBe(true);
         expect(checkParse("\x1b[1;3R", { key: ["alt", "f3"] })).toBe(true);
         expect(checkParse("\x1b[1;3S", { key: ["alt", "f4"] })).toBe(true);
+    })
 
-        expect(checkParse("\x1b[15;5~", { key: ["ctrl", "f5"] })).toBe(true);
-        expect(checkParse("\x1b[17;5~", { key: ["ctrl", "f6"] })).toBe(true);
-        expect(checkParse("\x1b[18;5~", { key: ["ctrl", "f7"] })).toBe(true);
-        expect(checkParse("\x1b[19;5~", { key: ["ctrl", "f8"] })).toBe(true);
-        expect(checkParse("\x1b[20;5~", { key: ["ctrl", "f9"] })).toBe(true);
-        expect(checkParse("\x1b[21;5~", { key: ["ctrl", "f10"] })).toBe(true);
-        expect(checkParse("\x1b[23;5~", { key: ["ctrl", "f11"] })).toBe(true);
-        expect(checkParse("\x1b[24;5~", { key: ["ctrl", "f12"] })).toBe(true);
+    test("CSI 1 ; <ctrl> + letter", () => {
+        expect(checkParse("\x1b[1;5A", { key: ["ctrl", "up"] })).toBe(true);
+        expect(checkParse("\x1b[1;5B", { key: ["ctrl", "down"] })).toBe(true);
+        expect(checkParse("\x1b[1;5C", { key: ["ctrl", "right"] })).toBe(true);
+        expect(checkParse("\x1b[1;5D", { key: ["ctrl", "left"] })).toBe(true);
+        expect(checkParse("\x1b[1;5F", { key: ["ctrl", "end"] })).toBe(true);
+        expect(checkParse("\x1b[1;5H", { key: ["ctrl", "home"] })).toBe(true);
+        expect(checkParse("\x1b[1;5P", { key: ["ctrl", "f1"] })).toBe(true);
+        expect(checkParse("\x1b[1;5Q", { key: ["ctrl", "f2"] })).toBe(true);
+        expect(checkParse("\x1b[1;5R", { key: ["ctrl", "f3"] })).toBe(true);
+        expect(checkParse("\x1b[1;5S", { key: ["ctrl", "f4"] })).toBe(true);
+    })
 
+    test("CSI 1 ; <alt + ctrl> + letter", () => {
+        expect(checkParse("\x1b[1;7A", { key: ["ctrl", "alt", "up"] })).toBe(true);
+        expect(checkParse("\x1b[1;7B", { key: ["ctrl", "alt", "down"] })).toBe(true);
+        expect(checkParse("\x1b[1;7C", { key: ["ctrl", "alt", "right"] })).toBe(true);
+        expect(checkParse("\x1b[1;7D", { key: ["ctrl", "alt", "left"] })).toBe(true);
+        expect(checkParse("\x1b[1;7F", { key: ["ctrl", "alt", "end"] })).toBe(true);
+        expect(checkParse("\x1b[1;7H", { key: ["ctrl", "alt", "home"] })).toBe(true);
+        expect(checkParse("\x1b[1;7P", { key: ["ctrl", "alt", "f1"] })).toBe(true);
+        expect(checkParse("\x1b[1;7Q", { key: ["ctrl", "alt", "f2"] })).toBe(true);
+        expect(checkParse("\x1b[1;7R", { key: ["ctrl", "alt", "f3"] })).toBe(true);
+        expect(checkParse("\x1b[1;7S", { key: ["ctrl", "alt", "f4"] })).toBe(true);
+    })
+
+    test("CSI number ; <alt> + ~", () => {
         expect(checkParse("\x1b[15;3~", { key: ["alt", "f5"] })).toBe(true);
         expect(checkParse("\x1b[17;3~", { key: ["alt", "f6"] })).toBe(true);
         expect(checkParse("\x1b[18;3~", { key: ["alt", "f7"] })).toBe(true);
@@ -300,5 +306,39 @@ describe("legacy non-modifier keys", () => {
         expect(checkParse("\x1b[21;3~", { key: ["alt", "f10"] })).toBe(true);
         expect(checkParse("\x1b[23;3~", { key: ["alt", "f11"] })).toBe(true);
         expect(checkParse("\x1b[24;3~", { key: ["alt", "f12"] })).toBe(true);
-    });
-});
+        expect(checkParse("\x1b[2;3~", { key: ["alt", "insert"] })).toBe(true);
+        expect(checkParse("\x1b[3;3~", { key: ["alt", "delete"] })).toBe(true);
+        expect(checkParse("\x1b[5;3~", { key: ["alt", "pageUp"] })).toBe(true);
+        expect(checkParse("\x1b[6;3~", { key: ["alt", "pageDown"] })).toBe(true);
+    })
+
+    test("CSI number ; <ctrl> + ~", () => {
+        expect(checkParse("\x1b[15;5~", { key: ["ctrl", "f5"] })).toBe(true);
+        expect(checkParse("\x1b[17;5~", { key: ["ctrl", "f6"] })).toBe(true);
+        expect(checkParse("\x1b[18;5~", { key: ["ctrl", "f7"] })).toBe(true);
+        expect(checkParse("\x1b[19;5~", { key: ["ctrl", "f8"] })).toBe(true);
+        expect(checkParse("\x1b[20;5~", { key: ["ctrl", "f9"] })).toBe(true);
+        expect(checkParse("\x1b[21;5~", { key: ["ctrl", "f10"] })).toBe(true);
+        expect(checkParse("\x1b[23;5~", { key: ["ctrl", "f11"] })).toBe(true);
+        expect(checkParse("\x1b[24;5~", { key: ["ctrl", "f12"] })).toBe(true);
+        expect(checkParse("\x1b[2;5~", { key: ["ctrl", "insert"] })).toBe(true);
+        expect(checkParse("\x1b[3;5~", { key: ["ctrl", "delete"] })).toBe(true);
+        expect(checkParse("\x1b[5;5~", { key: ["ctrl", "pageUp"] })).toBe(true);
+        expect(checkParse("\x1b[6;5~", { key: ["ctrl", "pageDown"] })).toBe(true);
+    })
+
+    test("CSI number ; <ctrl + alt> + ~", () => {
+        expect(checkParse("\x1b[15;7~", { key: ["ctrl", "alt", "f5"] })).toBe(true);
+        expect(checkParse("\x1b[17;7~", { key: ["ctrl", "alt", "f6"] })).toBe(true);
+        expect(checkParse("\x1b[18;7~", { key: ["ctrl", "alt", "f7"] })).toBe(true);
+        expect(checkParse("\x1b[19;7~", { key: ["ctrl", "alt", "f8"] })).toBe(true);
+        expect(checkParse("\x1b[20;7~", { key: ["ctrl", "alt", "f9"] })).toBe(true);
+        expect(checkParse("\x1b[21;7~", { key: ["ctrl", "alt", "f10"] })).toBe(true);
+        expect(checkParse("\x1b[23;7~", { key: ["ctrl", "alt", "f11"] })).toBe(true);
+        expect(checkParse("\x1b[24;7~", { key: ["ctrl", "alt", "f12"] })).toBe(true);
+        expect(checkParse("\x1b[2;7~", { key: ["ctrl", "alt", "insert"] })).toBe(true);
+        expect(checkParse("\x1b[3;7~", { key: ["ctrl", "alt", "delete"] })).toBe(true);
+        expect(checkParse("\x1b[5;7~", { key: ["ctrl", "alt", "pageUp"] })).toBe(true);
+        expect(checkParse("\x1b[6;7~", { key: ["ctrl", "alt", "pageDown"] })).toBe(true);
+    })
+})
