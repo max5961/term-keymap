@@ -226,3 +226,40 @@ describe("legacy alt + character === 27 + ascii code", () => {
         expect(checkParse([27, 41], { key: "alt", input: ")" })).toBe(true);
     });
 });
+
+describe("legacy non-modifier keys", () => {
+    test("non-modifier keys only", () => {
+        // This gets handled since \x7F === byte 127
+        expect(checkParse("\x7F", { key: "backspace" })).toBe(false);
+
+        expect(checkParse("\x1bOP", { key: "f1" })).toBe(true);
+        expect(checkParse("\x1bOQ", { key: "f2" })).toBe(true);
+        expect(checkParse("\x1bOR", { key: "f3" })).toBe(true);
+        expect(checkParse("\x1bOS", { key: "f4" })).toBe(true);
+        expect(checkParse("\x1b[15~", { key: "f5" })).toBe(true);
+        expect(checkParse("\x1b[17~", { key: "f6" })).toBe(true);
+        expect(checkParse("\x1b[18~", { key: "f7" })).toBe(true);
+        expect(checkParse("\x1b[19~", { key: "f8" })).toBe(true);
+        expect(checkParse("\x1b[20~", { key: "f9" })).toBe(true);
+        expect(checkParse("\x1b[21~", { key: "f10" })).toBe(true);
+        expect(checkParse("\x1b[23~", { key: "f11" })).toBe(true);
+        expect(checkParse("\x1b[24~", { key: "f12" })).toBe(true);
+        expect(checkParse("\x1b[3~", { key: "delete" })).toBe(true);
+        expect(checkParse("\x1b[2~", { key: "insert" })).toBe(true);
+        expect(checkParse("\x1b[A", { key: "up" })).toBe(true);
+        expect(checkParse("\x1b[B", { key: "down" })).toBe(true);
+        expect(checkParse("\x1b[C", { key: "right" })).toBe(true);
+        expect(checkParse("\x1b[D", { key: "left" })).toBe(true);
+        expect(checkParse("\x1b[5~", { key: "pageUp" })).toBe(true);
+        expect(checkParse("\x1b[6~", { key: "pageDown" })).toBe(true);
+        expect(checkParse("\x1b[F", { key: "end" })).toBe(true);
+        expect(checkParse("\x1b[8~", { key: "end" })).toBe(true);
+        expect(checkParse("\x1b[H", { key: "home" })).toBe(true);
+        expect(checkParse("\x1b[7~", { key: "home" })).toBe(true);
+    });
+
+    // Todo alt + key, ctrl + key
+    test("alt|ctrl + modifier appends ;<modifier>~", () => {
+        //
+    });
+});
