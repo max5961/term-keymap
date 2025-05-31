@@ -23,20 +23,26 @@ export function parseBuffer(buf: Buffer): Data {
         },
     };
 
+    const stripLockKeys = (data: Data) => {
+        data.key.delete("numLock");
+        data.key.delete("capsLock");
+        return data;
+    };
+
     if (CsiRegex.isMouseEvent(data.raw.utf)) {
         parseMouseData(data);
-        return data;
+        return stripLockKeys(data);
     }
 
     if (CsiRegex.isKittyProtocol(data.raw.utf)) {
         parseKittyProtocol(data);
-        return data;
+        return stripLockKeys(data);
     }
 
     // Ctrl character
     if (buf[0] in CtrlMap) {
         parseCtrlChar(buf, data);
-        return data;
+        return stripLockKeys(data);
     }
 
     // Esc alone or alt + esc
@@ -48,18 +54,18 @@ export function parseBuffer(buf: Buffer): Data {
 
         if (buf[1] === 27) data.key.add("alt");
 
-        return data;
+        return stripLockKeys(data);
     }
 
     // Special Keys
     if (data.raw.utf in LegacyKeys) {
         parseLegacyKeys(data);
-        return data;
+        return stripLockKeys(data);
     }
 
     // Special Keys + ctrl|alt
     if (parseLegacyModifierSequence(data)) {
-        return data;
+        return stripLockKeys(data);
     }
 
     // Alt key
@@ -73,12 +79,12 @@ export function parseBuffer(buf: Buffer): Data {
             data.input.add(String.fromCharCode(buf[1]));
         }
 
-        return data;
+        return stripLockKeys(data);
     }
 
     // Default
     if (data.raw.utf && !new RegExp(/^\x1b/).test(data.raw.utf)) {
         data.input.add(data.raw.utf);
     }
-    return data;
+    return stripLockKeys(data);
 }

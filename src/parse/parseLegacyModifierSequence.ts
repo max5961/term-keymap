@@ -1,4 +1,5 @@
 import { CsiRegex } from "../helpers/CsiRegex.js";
+import { getModifiers } from "../helpers/modifiers.js";
 import { CsiChars } from "../maps/CsiChars.js";
 import { TildeKeys } from "../maps/TildeKeys.js";
 import type { Data, Key } from "../types.js";
@@ -16,15 +17,12 @@ export function parseLegacyModifierSequence(data: Data): boolean {
     });
 
     const letter = seq[2] as string;
-    const key: Key[] =
-        seq[1] === 5
-            ? ["ctrl"]
-            : seq[1] === 3
-              ? ["alt"]
-              : seq[1] === 7
-                ? ["ctrl", "alt"]
-                : [];
-    key.forEach((k) => data.key.add(k));
+    const mods = getModifiers(Number(seq[1] ?? 1));
+    Object.entries(mods).forEach(([key, bool]) => {
+        if (bool) {
+            data.key.add(key as Key);
+        }
+    });
 
     if (seq[0] === 1) {
         const key = CsiChars[letter];

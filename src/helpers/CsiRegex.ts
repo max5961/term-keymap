@@ -3,6 +3,7 @@
 function isKittyProtocol(utf: string) {
     const codeOnlyRegex = /^\x1b\[\d+u/gm;
     const withModifierRegex = /^\x1b\[\d+;\d+u/gm;
+    // const keyRegex = /^\x1b\[\d+;\d\d\d\w/gm;
     return codeOnlyRegex.test(utf) || withModifierRegex.test(utf);
 }
 
