@@ -66,7 +66,7 @@ export function configureStdin(opts: Opts) {
     return Object.freeze({
         stdout: opts.stdout,
         enableMouse: enableMouse,
-        get kittySupported() {
+        kittySupported() {
             return kittyEnabled;
         },
     });
