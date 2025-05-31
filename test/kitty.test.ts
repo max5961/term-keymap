@@ -1,0 +1,62 @@
+import { describe, test, expect } from "vitest";
+import { checkParse } from "./helpers/helpers";
+
+describe("Kitty protocol", () => {
+    test("Lowercase alphabet", () => {
+        expect(checkParse("\x1b[97;129u", { input: "a" })).toBe(true);
+        expect(checkParse("\x1b[98;129u", { input: "b" })).toBe(true);
+        expect(checkParse("\x1b[99;129u", { input: "c" })).toBe(true);
+        expect(checkParse("\x1b[100;129u", { input: "d" })).toBe(true);
+        expect(checkParse("\x1b[101;129u", { input: "e" })).toBe(true);
+        expect(checkParse("\x1b[102;129u", { input: "f" })).toBe(true);
+        expect(checkParse("\x1b[103;129u", { input: "g" })).toBe(true);
+        expect(checkParse("\x1b[104;129u", { input: "h" })).toBe(true);
+        expect(checkParse("\x1b[105;129u", { input: "i" })).toBe(true);
+        expect(checkParse("\x1b[106;129u", { input: "j" })).toBe(true);
+        expect(checkParse("\x1b[107;129u", { input: "k" })).toBe(true);
+        expect(checkParse("\x1b[108;129u", { input: "l" })).toBe(true);
+        expect(checkParse("\x1b[109;129u", { input: "m" })).toBe(true);
+        expect(checkParse("\x1b[110;129u", { input: "n" })).toBe(true);
+        expect(checkParse("\x1b[111;129u", { input: "o" })).toBe(true);
+        expect(checkParse("\x1b[112;129u", { input: "p" })).toBe(true);
+        expect(checkParse("\x1b[113;129u", { input: "q" })).toBe(true);
+        expect(checkParse("\x1b[114;129u", { input: "r" })).toBe(true);
+        expect(checkParse("\x1b[115;129u", { input: "s" })).toBe(true);
+        expect(checkParse("\x1b[116;129u", { input: "t" })).toBe(true);
+        expect(checkParse("\x1b[117;129u", { input: "u" })).toBe(true);
+        expect(checkParse("\x1b[118;129u", { input: "v" })).toBe(true);
+        expect(checkParse("\x1b[119;129u", { input: "w" })).toBe(true);
+        expect(checkParse("\x1b[120;129u", { input: "x" })).toBe(true);
+        expect(checkParse("\x1b[121;129u", { input: "y" })).toBe(true);
+        expect(checkParse("\x1b[122;129u", { input: "z" })).toBe(true);
+    });
+
+    test("Uppercase alphabet (char codes stay the same but bit field is changed)", () => {
+        expect(checkParse("\x1b[97;130u", { input: "A" })).toBe(true);
+        expect(checkParse("\x1b[98;130u", { input: "B" })).toBe(true);
+        expect(checkParse("\x1b[99;130u", { input: "C" })).toBe(true);
+        expect(checkParse("\x1b[100;130u", { input: "D" })).toBe(true);
+        expect(checkParse("\x1b[101;130u", { input: "E" })).toBe(true);
+        expect(checkParse("\x1b[102;130u", { input: "F" })).toBe(true);
+        expect(checkParse("\x1b[103;130u", { input: "G" })).toBe(true);
+        expect(checkParse("\x1b[104;130u", { input: "H" })).toBe(true);
+        expect(checkParse("\x1b[105;130u", { input: "I" })).toBe(true);
+        expect(checkParse("\x1b[106;130u", { input: "J" })).toBe(true);
+        expect(checkParse("\x1b[107;130u", { input: "K" })).toBe(true);
+        expect(checkParse("\x1b[108;130u", { input: "L" })).toBe(true);
+        expect(checkParse("\x1b[109;130u", { input: "M" })).toBe(true);
+        expect(checkParse("\x1b[110;130u", { input: "N" })).toBe(true);
+        expect(checkParse("\x1b[111;130u", { input: "O" })).toBe(true);
+        expect(checkParse("\x1b[112;130u", { input: "P" })).toBe(true);
+        expect(checkParse("\x1b[113;130u", { input: "Q" })).toBe(true);
+        expect(checkParse("\x1b[114;130u", { input: "R" })).toBe(true);
+        expect(checkParse("\x1b[115;130u", { input: "S" })).toBe(true);
+        expect(checkParse("\x1b[116;130u", { input: "T" })).toBe(true);
+        expect(checkParse("\x1b[117;130u", { input: "U" })).toBe(true);
+        expect(checkParse("\x1b[118;130u", { input: "V" })).toBe(true);
+        expect(checkParse("\x1b[119;130u", { input: "W" })).toBe(true);
+        expect(checkParse("\x1b[120;130u", { input: "X" })).toBe(true);
+        expect(checkParse("\x1b[121;130u", { input: "Y" })).toBe(true);
+        expect(checkParse("\x1b[122;130u", { input: "Z" })).toBe(true);
+    });
+});
