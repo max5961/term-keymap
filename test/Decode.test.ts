@@ -62,7 +62,7 @@ describe("Detects mouse CSI sequences", () => {
     });
 });
 
-describe("Fails CSI/SS3 checks and defaults to xterm", () => {
+describe("Falls through CSI/SS3 checks and defaults to xterm", () => {
     test("chars", () => {
         expect(Decode.getEncoding("a")).toBe("xterm");
         expect(Decode.getEncoding("b")).toBe("xterm");

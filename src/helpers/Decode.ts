@@ -17,30 +17,91 @@ export type LetterKey =
     | "S";
 
 export class Decode {
+    private static Rgx = {
+        Kitty: {
+            get withMods() {
+                return /^\x1b\[(\d+);(\d+)u/;
+            },
+            get woMods() {
+                return /^\x1b\[(\d+)u/;
+            },
+        },
+        Legacy: {
+            get numWithMod() {
+                return /^\x1b\[(\d+);(\d+)([~ABCDEFHPQRS])/;
+            },
+            get numOnly() {
+                return /^\x1b\[(\d+)(~)/;
+            },
+            get letterOnly() {
+                return /^\x1b\[([ABCDEFHPQRS])/;
+            },
+            get ss3() {
+                return /^\x1b(O)([ABCDEFHPQRS~])/;
+            },
+        },
+        get Mouse() {
+            return /^\x1b\[<(\d+);(\d+);(\d+)([mM])/;
+        },
+    };
+
     private static isKittyEncoded(utf: string): boolean {
-        const codeOnly = /^\x1b\[\d+u/g;
-        const withModifier = /^\x1b\[\d+;\d+u/g;
-
-        return codeOnly.test(utf) || withModifier.test(utf);
-    }
-
-    private static isLegacyEncoded(utf: string): boolean {
-        const numWithMod = /^\x1b\[\d+;\d+[~ABCDEFHPQRS]/g;
-        const numOnly = /^\x1b\[\d+~/g;
-        const letterOnly = /^\x1b\[[ABCDEFHPQRS]/g;
-        const ss3 = /^\x1b[O][ABCDEFHPQRS~]/g;
-
         return (
-            numWithMod.test(utf) ||
-            numOnly.test(utf) ||
-            letterOnly.test(utf) ||
-            ss3.test(utf)
+            this.Rgx.Kitty.woMods.test(utf) || this.Rgx.Kitty.withMods.test(utf)
         );
     }
 
+    public static getKittyCaptures(utf: string) {
+        // prettier-ignore
+        return Array.from(
+            this.Rgx.Kitty.withMods.exec(utf) ||
+            this.Rgx.Kitty.woMods.exec(utf) ||
+            []
+        )
+            .slice(1)
+            .map(m => Number(m));
+    }
+
+    private static isLegacyEncoded(utf: string): boolean {
+        return (
+            this.Rgx.Legacy.numWithMod.test(utf) ||
+            this.Rgx.Legacy.numOnly.test(utf) ||
+            this.Rgx.Legacy.letterOnly.test(utf) ||
+            this.Rgx.Legacy.ss3.test(utf)
+        );
+    }
+
+    public static getLegacyCaptures(utf: string) {
+        // prettier-ignore
+        return Array.from(
+            this.Rgx.Legacy.letterOnly.exec(utf) ||
+            this.Rgx.Legacy.ss3.exec(utf) ||
+            this.Rgx.Legacy.numOnly.exec(utf) ||
+            this.Rgx.Legacy.numWithMod.exec(utf) ||
+            [],
+        )
+            .slice(1)
+            .map(m => {
+                const num = Number(m);
+                return Number.isNaN(num) ? m : num;
+            })
+    }
+
     private static isMouseEncoded(utf: string): boolean {
-        const regex = /^\x1b\[<\d+;\d+;\d+[mM]/;
-        return regex.test(utf);
+        return this.Rgx.Mouse.test(utf);
+    }
+
+    public static getMouseCaptures(utf: string) {
+        // prettier-ignore
+        return Array.from(
+            this.Rgx.Mouse.exec(utf) ||
+            []
+        )
+            .slice(1)
+            .map(m => {
+                const num = Number(m)
+                return Number.isNaN(num) ? m : num;
+            })
     }
 
     /**

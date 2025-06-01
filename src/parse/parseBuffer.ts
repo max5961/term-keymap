@@ -8,6 +8,7 @@ import { CsiRegex } from "../helpers/CsiRegex.js";
 import { CtrlMap } from "../maps/CtrlKeyMap.js";
 import { parseLegacyKeys } from "./parseLegacyKeys.js";
 import { parseLegacyModifierSequence } from "./parseLegacyModifierSequence.js";
+import { Decode } from "../helpers/Decode.js";
 
 /**
  * @param buf the buffer from the stdin event to parse
@@ -23,26 +24,36 @@ export function parseBuffer(buf: Buffer): Data {
         },
     };
 
-    const stripLockKeys = (data: Data) => {
-        data.key.delete("numLock");
-        data.key.delete("capsLock");
-        return data;
-    };
+    const encoding = Decode.getEncoding(data.raw.utf);
+
+    if (encoding === "kitty") {
+        // parseKitty
+    } else if (encoding === "legacy") {
+        // parseLegacy
+    } else if (encoding === "mouse") {
+        // parseMouse
+    } else {
+        // parseXterm
+    }
+
+    data.key.delete("numLock");
+    data.key.delete("capsLock");
+    if (data.input.size) data.key.delete("shift");
 
     if (CsiRegex.isMouseEvent(data.raw.utf)) {
         parseMouseData(data);
-        return stripLockKeys(data);
+        return data;
     }
 
     if (CsiRegex.isKittyProtocol(data.raw.utf)) {
         parseKittyProtocol(data);
-        return stripLockKeys(data);
+        return data;
     }
 
     // Ctrl character
     if (buf[0] in CtrlMap) {
         parseCtrlChar(buf, data);
-        return stripLockKeys(data);
+        return data;
     }
 
     // Esc alone or alt + esc
@@ -54,18 +65,18 @@ export function parseBuffer(buf: Buffer): Data {
 
         if (buf[1] === 27) data.key.add("alt");
 
-        return stripLockKeys(data);
+        return data;
     }
 
     // Special Keys
     if (data.raw.utf in LegacyKeys) {
         parseLegacyKeys(data);
-        return stripLockKeys(data);
+        return data;
     }
 
     // Special Keys + ctrl|alt
     if (parseLegacyModifierSequence(data)) {
-        return stripLockKeys(data);
+        return data;
     }
 
     // Alt key
@@ -79,12 +90,13 @@ export function parseBuffer(buf: Buffer): Data {
             data.input.add(String.fromCharCode(buf[1]));
         }
 
-        return stripLockKeys(data);
+        return data;
     }
 
     // Default
     if (data.raw.utf && !new RegExp(/^\x1b/).test(data.raw.utf)) {
         data.input.add(data.raw.utf);
     }
-    return stripLockKeys(data);
+
+    return data;
 }
