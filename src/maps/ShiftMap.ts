@@ -1,4 +1,4 @@
-export const ShiftMap = {
+export const ShiftMap: Record<string, string> = {
     ["`"]: "~",
     ["1"]: "!",
     ["2"]: "@",

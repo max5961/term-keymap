@@ -119,3 +119,22 @@ describe("Falls through CSI/SS3 checks and defaults to xterm", () => {
         expect(Decode.getEncoding(Buffer.from([32]).toString("utf-8"))).toBe("xterm");
     })
 });
+
+describe("Regex captures kitty correctly", () => {
+    // prettier-ignore
+    test("CSI + code ; modifier u", () => {
+        expect(Decode.getKittyCaptures("\x1b[107;5u")).toEqual([107, 5]);
+        expect(Decode.getKittyCaptures("\x1b[97;65u")).toEqual([97, 65]);
+        expect(Decode.getKittyCaptures("\x1b[98;133u")).toEqual([98, 133]);
+        expect(Decode.getKittyCaptures("\x1b[12345;56789u")).toEqual([12345, 56789]);
+    });
+
+    test("CSI + code u", () => {
+        expect(Decode.getKittyCaptures("\x1b[97u")).toEqual([97]);
+        expect(Decode.getKittyCaptures("\x1b[105u")).toEqual([105]);
+    });
+
+    test("Invalid kitty codes === empty array", () => {
+        expect(Decode.getKittyCaptures("\x1b[105")).toEqual([]);
+    });
+});
