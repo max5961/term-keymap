@@ -4,6 +4,7 @@
  */
 export function getModifiers(num: number | undefined) {
     num = (num ?? 1) - 1;
+    num = Number.isNaN(num) ? 0 : num;
     return {
         shift: (num & 1) !== 0,
         alt: (num & 2) !== 0,
