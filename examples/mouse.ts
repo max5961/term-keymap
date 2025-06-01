@@ -12,6 +12,7 @@ process.stdin.on("data", (buf) => {
 
     if (data.mouse) {
         console.clear();
+        console.log({ utf: data.raw.utf });
         console.log(data.mouse);
     }
 

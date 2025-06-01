@@ -3,7 +3,6 @@
 function isKittyProtocol(utf: string) {
     const codeOnlyRegex = /^\x1b\[\d+u/gm;
     const withModifierRegex = /^\x1b\[\d+;\d+u/gm;
-    // const keyRegex = /^\x1b\[\d+;\d\d\d\w/gm;
     return codeOnlyRegex.test(utf) || withModifierRegex.test(utf);
 }
 
@@ -35,7 +34,7 @@ function getKittyChar(utf: string) {
  * - matches \x1b[1;3A, \x1b[15;3~
  */
 function getLegacyModifierSequence(utf: string) {
-    const regex = /^\x1b\[(\d+);(\d+)([ABCDEFHPQRSA~])/gm;
+    const regex = /^\x1b\[(\d+);(\d+)([ABCDEFHPQRS~])/gm;
     return regex.exec(utf);
 }
 

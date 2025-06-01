@@ -1,6 +1,9 @@
 import type { Key } from "../types.js";
 
 export const KittyKey: Record<number, Key> = {
+    9: "tab",
+    13: "return",
+    127: "backspace",
     /* KITTY_KEY_ESCAPE               = */ 57344: "esc",
     /* KITTY_KEY_ENTER                = */ 57345: "return",
     /* KITTY_KEY_TAB                  = */ 57346: "tab",
