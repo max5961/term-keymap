@@ -1,5 +1,5 @@
-import { Decode } from "../util/Decode.js";
 import type { Data } from "../types.js";
+import { Decode } from "../util/Decode.js";
 
 /**
  * If the data is revealed to be a mouse event, the event is parsed and data
@@ -16,8 +16,6 @@ export function parseMouse(data: Data) {
     const x = Number(captures[1]) - 1;
     const y = Number(captures[2]) - 1;
     const down = captures[3] === "M";
-
-    console.log({ captures });
 
     data.mouse = {
         x,

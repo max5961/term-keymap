@@ -1,9 +1,9 @@
+import type { Data, Key } from "../types.js";
 import { Decode } from "../util/Decode.js";
-import { getModifiers } from "../util/modifiers.js";
+import { getModifiers } from "../util/getModifiers.js";
 import { LegacyKeyMap } from "../maps/LegacyKeyMap.js";
 import { LetterMap } from "../maps/LetterMap.js";
 import { TildeMap } from "../maps/TildeMap.js";
-import type { Data, Key } from "../types.js";
 
 export function parseLegacy(data: Data): void {
     if (data.raw.utf in LegacyKeyMap) {
@@ -26,12 +26,16 @@ export function parseLegacy(data: Data): void {
         if (bool) data.key.add(key as Key);
     });
 
+    // CSI 1 ; modifier {ABCDHFQPRS}
+    // Modifier + Key represented by a letter in LetterMap
     if (code === 1 && letter in LetterMap) {
         const key = LetterMap[letter];
         data.key.add(key);
         return;
     }
 
+    // CSI number ; modifier ~
+    // Modifier + key represented by a number in TildeMap
     if (letter === "~" && code in TildeMap) {
         const fkey = TildeMap[code];
         data.key.add(fkey);

@@ -1,9 +1,9 @@
+import type { Data } from "../types.js";
 import { PeekSet } from "../util/PeekSet.js";
 import { Decode } from "../util/Decode.js";
 import { parseKitty } from "./parseKitty.js";
 import { parseLegacy } from "./parseLegacy.js";
 import { parseMouse } from "./parseMouse.js";
-import type { Data } from "../types.js";
 import { parseXterm } from "./parseXterm.js";
 
 /**
