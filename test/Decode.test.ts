@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { Decode } from "../src/helpers/Decode.js";
+import { Decode } from "../src/util/Decode.js";
 import { LetterMap } from "../src/maps/LetterMap.js";
 
 describe("Detects kitty CSI sequences", () => {

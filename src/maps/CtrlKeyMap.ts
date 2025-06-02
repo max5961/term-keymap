@@ -13,7 +13,7 @@ import { PeekSet } from "../util/PeekSet.js";
  * - `<C-3>` = `esc` = `<C-[>`
  * - `<C-8>` = `backspace`
  */
-export const CtrlMap: Record<number, PeekSet<string>> = {
+export const CtrlKeyMap: Record<number, PeekSet<string>> = {
     0: new PeekSet([" ", "2"]),
     1: new PeekSet("a"),
     2: new PeekSet("b"),
