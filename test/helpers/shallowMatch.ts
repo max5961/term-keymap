@@ -1,16 +1,5 @@
-import { parseBuffer } from "../../src/parse/parseBuffer.js";
-import { KeyMap, match } from "../../src/stateful/match.js";
-import { Data } from "../../src/types.js";
-
-export function checkParse(buffer: number[] | string, keymap: KeyMap): boolean {
-    const buf =
-        typeof buffer === "string"
-            ? Buffer.from(buffer, "utf-8")
-            : Buffer.from(buffer);
-
-    const data = parseBuffer(buf);
-    return match(keymap, data);
-}
+import { type Data } from "../../src/types";
+import { type KeyMap } from "../../src/stateful/match";
 
 export type ShortData = Pick<Data, "key" | "input">;
 
