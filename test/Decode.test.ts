@@ -1,16 +1,30 @@
 import { describe, test, expect } from "vitest";
 import { Decode } from "../src/util/Decode.js";
 import { LetterMap } from "../src/maps/LetterMap.js";
+import { testEachCsi } from "./helpers/testEachCsi.js";
 
-describe("Detects kitty CSI sequences", () => {
-    test("kitty: CSI number u", () => {
-        expect(Decode.getEncoding("\x1b[97u")).toBe("kitty");
-        expect(Decode.getEncoding("\x1b[57442u")).toBe("kitty");
+describe("Decode kitty CSI sequences", () => {
+    testEachCsi({
+        tests: [
+            ["\x1b[97u", "kitty"],
+            ["\x1b[57442u", "kitty"],
+        ],
+        title: (csi, encoding) => `CSI number u should be ${encoding} (${csi})`,
+        cb: (csi, encoding) => {
+            expect(Decode.getEncoding(csi)).toBe(encoding);
+        },
     });
 
-    test("kitty: CSI number ; modifier u", () => {
-        expect(Decode.getEncoding("\x1b[97;5u")).toBe("kitty");
-        expect(Decode.getEncoding("\x1b[97;133u")).toBe("kitty");
+    testEachCsi({
+        tests: [
+            ["\x1b[97;5u", "kitty"],
+            ["\x1b[97;133u", "kitty"],
+        ],
+        title: (csi, encoding) =>
+            `CSI number ; modifer u should be ${encoding} (${csi})`,
+        cb: (csi, encoding) => {
+            expect(Decode.getEncoding(csi)).toBe(encoding);
+        },
     });
 });
 
