@@ -1,8 +1,9 @@
-import type { PeekSet } from "./helpers/PeekSet.js";
+import type { PeekSet } from "./util/PeekSet.js";
 
 export type Key =
     | "ctrl"
     | "alt"
+    | "shift"
     | "super"
     | "hyper"
     | "meta"
@@ -13,7 +14,6 @@ export type Key =
     | "esc"
     | "insert"
     | "return"
-    | "sigint"
     | "tab"
     | "up"
     | "down"
@@ -58,9 +58,11 @@ export type Key =
     | "pageDown"
     | "home"
     | "end"
-    | "insert"
-    | "delete"
+    | "scrollLock"
+    | "printScreen"
     | "begin"
+    | "pause"
+    | "menu"
     | "mediaPlay"
     | "mediaPause"
     | "mediaPlayPause"
@@ -73,21 +75,7 @@ export type Key =
     | "mediaRecord"
     | "mediaLowerVolume"
     | "mediaRaiseVolume"
-    | "mediaMuteVolume"
-    | "shift"
-    | "ctrl"
-    | "alt"
-    | "super"
-    | "hyper"
-    | "meta"
-    | "shift"
-    | "ctrl"
-    | "alt"
-    | "super"
-    | "hyper"
-    | "meta"
-    | "shift"
-    | "shift";
+    | "mediaMuteVolume";
 
 export type Data = {
     key: PeekSet<Key>;

@@ -2,7 +2,7 @@ import type { Data, Key } from "../types.js";
 import type { EnhancedKeyMap } from "./createKeymap.js";
 import { CircularQueue } from "./CircularQueue.js";
 import { match } from "./match.js";
-import { PeekSet } from "../helpers/PeekSet.js";
+import { PeekSet } from "../util/PeekSet.js";
 import { parseBuffer } from "../parse/parseBuffer.js";
 
 export class InputState {

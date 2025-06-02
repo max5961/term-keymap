@@ -1,4 +1,4 @@
-import { Decode } from "../helpers/Decode.js";
+import { Decode } from "../util/Decode.js";
 import type { Data } from "../types.js";
 
 /**
