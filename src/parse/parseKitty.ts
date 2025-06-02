@@ -3,6 +3,7 @@ import { getModifiers } from "../util/modifiers.js";
 import { KittyKey } from "../maps/KittyMap.js";
 import { ShiftMap } from "../maps/ShiftMap.js";
 import type { Data, Key } from "../types.js";
+import { KittyNumLockMap } from "../maps/KittyNumLockMap.js";
 
 export function parseKitty(data: Data): void {
     const captures = Decode.getKittyCaptures(data.raw.utf);
@@ -16,6 +17,10 @@ export function parseKitty(data: Data): void {
     });
 
     if (!char) return;
+
+    if (code in KittyNumLockMap) {
+        data.input.add(KittyNumLockMap[code]);
+    }
 
     if (modifiers.shift && char in ShiftMap) {
         data.input.add(ShiftMap[char]);

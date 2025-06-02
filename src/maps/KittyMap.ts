@@ -60,30 +60,12 @@ export const KittyKey: Record<number, Key> = {
     57397: "f34",
     57398: "f35",
 
-    // Need to handle these differently since they should send to input, rather than
-    // update keys
-    // /* kitty_key_kp_0                 = */ 57399: "alt",
-    // /* kitty_key_kp_1                 = */ 57400: "alt",
-    // /* kitty_key_kp_2                 = */ 57401: "alt",
-    // /* kitty_key_kp_3                 = */ 57402: "alt",
-    // /* kitty_key_kp_4                 = */ 57403: "alt",
-    // /* kitty_key_kp_5                 = */ 57404: "alt",
-    // /* kitty_key_kp_6                 = */ 57405: "alt",
-    // /* kitty_key_kp_7                 = */ 57406: "alt",
-    // /* kitty_key_kp_8                 = */ 57407: "alt",
-    // /* kitty_key_kp_9                 = */ 57408: "alt",
-    // /* KITTY_KEY_KP_DECIMAL           = */ 57409: "alt",
-    // /* KITTY_KEY_KP_DIVIDE            = */ 57410: "alt",
-    // /* KITTY_KEY_KP_MULTIPLY          = */ 57411: "alt",
-    // /* KITTY_KEY_KP_SUBTRACT          = */ 57412: "alt",
-    // /* KITTY_KEY_KP_ADD               = */ 57413: "alt",
-    // /* KITTY_KEY_KP_ENTER             = */ 57414: "alt",
-    // /* KITTY_KEY_KP_EQUAL             = */ 57415: "alt",
-    // /* KITTY_KEY_KP_SEPARATOR         = */ 57416: "alt",
-    // /* KITTY_KEY_KP_LEFT              = */ 57417: "alt",
-    // /* KITTY_KEY_KP_RIGHT             = */ 57418: "alt",
-    // /* KITTY_KEY_KP_UP                = */ 57419: "alt",
-    // /* KITTY_KEY_KP_DOWN              = */ 57420: "alt",
+    // num lock
+    57414: "return",
+    57417: "left",
+    57418: "right",
+    57419: "up",
+    57420: "down",
 
     57421: "pageUp",
     57422: "pageDown",
@@ -105,16 +87,16 @@ export const KittyKey: Record<number, Key> = {
     57438: "mediaLowerVolume",
     57439: "mediaRaiseVolume",
     57440: "mediaMuteVolume",
-    57441: "shift",
-    57442: "ctrl",
-    57443: "alt",
-    57444: "super",
+    57441: "shift", // left shift
+    57442: "ctrl", // left ctrl
+    57443: "alt", // left alt
+    57444: "super", // left super?
     57445: "hyper",
     57446: "meta",
-    57447: "shift",
-    57448: "ctrl",
-    57449: "alt",
-    57450: "super",
+    57447: "shift", // right shift
+    57448: "ctrl", // right ctrl
+    57449: "alt", // right alt
+    57450: "super", // right super?
     57451: "hyper",
     57452: "meta",
     57453: "shift",
