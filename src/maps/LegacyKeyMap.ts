@@ -1,6 +1,6 @@
 import { type Key } from "../types.js";
 
-export const LegacyKeys: Record<string, Key> = {
+export const LegacyKeyMap: Record<string, Key> = {
     "\x1B[3~": "delete",
     "\x7F": "backspace",
     "\x1B[2~": "insert",

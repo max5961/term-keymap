@@ -4,7 +4,7 @@ import { KittyKey } from "../maps/KittyMap.js";
 import { ShiftMap } from "../maps/ShiftMap.js";
 import type { Data, Key } from "../types.js";
 
-export function parseKitty(data: Data) {
+export function parseKitty(data: Data): void {
     const captures = Decode.getKittyCaptures(data.raw.utf);
 
     const code = captures[0];
@@ -18,16 +18,20 @@ export function parseKitty(data: Data) {
     if (!char) return;
 
     if (modifiers.shift && char in ShiftMap) {
-        return data.input.add(ShiftMap[char]);
+        data.input.add(ShiftMap[char]);
+        return;
     }
     if (modifiers.capsLock && code >= 97 && code <= 122) {
-        return data.input.add(ShiftMap[char]);
+        data.input.add(ShiftMap[char]);
+        return;
     }
     if (code in KittyKey) {
-        return data.key.add(KittyKey[code]);
+        data.key.add(KittyKey[code]);
+        return;
     }
     if (code <= 255) {
-        return data.input.add(char);
+        data.input.add(char);
+        return;
     }
     return;
 }
