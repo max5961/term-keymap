@@ -1,4 +1,4 @@
-import { CsiRegex } from "../helpers/CsiRegex.js";
+import { Decode } from "../helpers/Decode.js";
 import type { Data } from "../types.js";
 
 /**
@@ -8,14 +8,16 @@ import type { Data } from "../types.js";
  * @returns boolean indicating whether or not it was a mouse event so that the
  * calling block can either return or continue
  */
-export function parseMouseData(data: Data) {
-    const matches = CsiRegex.getMouseEvent(data.raw.utf);
-    if (!matches.length) return;
+export function parseMouse(data: Data) {
+    const captures = Decode.getMouseCaptures(data.raw.utf);
+    if (!captures.length) return;
 
-    const event = Number(matches[1]);
-    const x = Number(matches[2]) - 1;
-    const y = Number(matches[3]) - 1;
-    const down = matches[4] === "M";
+    const event = Number(captures[0]);
+    const x = Number(captures[1]) - 1;
+    const y = Number(captures[2]) - 1;
+    const down = captures[3] === "M";
+
+    console.log({ captures });
 
     data.mouse = {
         x,

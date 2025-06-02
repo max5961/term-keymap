@@ -1,5 +1,5 @@
-import { Decode } from "../helpers/Decode.js";
-import { getModifiers } from "../helpers/modifiers.js";
+import { Decode } from "../util/Decode.js";
+import { getModifiers } from "../util/modifiers.js";
 import { LegacyKeyMap } from "../maps/LegacyKeyMap.js";
 import { LetterMap } from "../maps/LetterMap.js";
 import { TildeMap } from "../maps/TildeMap.js";

@@ -1,8 +1,9 @@
 import { PeekSet } from "../helpers/PeekSet.js";
-import { parseKitty } from "./parseKitty.js";
-import type { Data } from "../types.js";
 import { Decode } from "../helpers/Decode.js";
+import { parseKitty } from "./parseKitty.js";
 import { parseLegacy } from "./parseLegacy.js";
+import { parseMouse } from "./parseMouse.js";
+import type { Data } from "../types.js";
 
 /**
  * @param buf the buffer from the stdin event to parse
@@ -25,7 +26,7 @@ export function parseBuffer(buf: Buffer): Data {
     } else if (encoding === "legacy") {
         parseLegacy(data);
     } else if (encoding === "mouse") {
-        // parseMouse
+        parseMouse(data);
     } else {
         // parseXterm
     }

@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { Decode } from "../src/helpers/Decode.js";
+import { LetterMap } from "../src/maps/LetterMap.js";
 
 describe("Detects kitty CSI sequences", () => {
     test("kitty: CSI number u", () => {
@@ -14,7 +15,7 @@ describe("Detects kitty CSI sequences", () => {
 });
 
 describe("Detects legacy CSI sequences", () => {
-    const letters = Object.keys(Decode.LetterMap);
+    const letters = Object.keys(LetterMap);
 
     test("legacy: ss3 (\\x1b + O)", () => {
         expect(Decode.getEncoding("\x1bOP")).toBe("legacy");
@@ -136,5 +137,39 @@ describe("Regex captures kitty correctly", () => {
 
     test("Invalid kitty codes === empty array", () => {
         expect(Decode.getKittyCaptures("\x1b[105")).toEqual([]);
+    });
+});
+
+describe("Regex captures legacy keys correctly", () => {
+    test("CSI letter", () => {
+        for (const letter in LetterMap) {
+            // prettier-ignore
+            expect(Decode.getLegacyCaptures(`\x1b[${letter}`)).toEqual([letter]);
+        }
+    });
+
+    test("SS3 letter", () => {
+        for (const letter in LetterMap) {
+            // prettier-ignore
+            expect(Decode.getLegacyCaptures(`\x1bO${letter}`)).toEqual(["O", letter]);
+        }
+    });
+
+    test("CSI number ~", () => {
+        expect(Decode.getLegacyCaptures("\x1b[15~")).toEqual([15, "~"]);
+        expect(Decode.getLegacyCaptures("\x1b[5~")).toEqual([5, "~"]);
+    });
+
+    test("CSI number ; modifier ~", () => {
+        expect(Decode.getLegacyCaptures("\x1b[15;5~")).toEqual([15, 5, "~"]);
+        expect(Decode.getLegacyCaptures("\x1b[5;133~")).toEqual([5, 133, "~"]);
+    });
+});
+
+// prettier-ignore
+describe("Regex captures mouse correctly", () => {
+    test("CSI < event ; x ; y [mM]", () => {
+        expect(Decode.getMouseCaptures("\x1b[<35;10;15M")).toEqual([35, 10, 15, "M"])
+        expect(Decode.getMouseCaptures("\x1b[<0;0;0m")).toEqual([0, 0, 0, "m"])
     });
 });

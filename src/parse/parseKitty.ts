@@ -1,5 +1,5 @@
-import { Decode } from "../helpers/Decode.js";
-import { getModifiers } from "../helpers/modifiers.js";
+import { Decode } from "../util/Decode.js";
+import { getModifiers } from "../util/modifiers.js";
 import { KittyKey } from "../maps/KittyMap.js";
 import { ShiftMap } from "../maps/ShiftMap.js";
 import type { Data, Key } from "../types.js";
