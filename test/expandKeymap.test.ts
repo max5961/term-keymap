@@ -3,72 +3,89 @@ import { expandKeymap } from "../src/stateful/expandKeymap.js";
 import { KeyMap } from "../src/stateful/match.js";
 
 describe("expandKeymap", () => {
-    const seq1: KeyMap = { key: ["ctrl", "alt", "meta"], input: "a" };
-    const seq2: KeyMap = { key: ["ctrl", "alt", "meta"], input: "abc" };
-    const seq3: KeyMap[] = [{ input: "a" }, { input: "b" }, { input: "c" }];
-    const seq4: KeyMap[] = [
-        { key: "ctrl", input: "aaa" },
-        { key: "alt", input: "bbb" },
-    ];
-    const seq5: KeyMap[] = [
-        { key: "ctrl" },
-        { key: "meta" },
-        { key: "alt" },
-        { input: "a" },
-        { input: "b" },
-        { input: "c" },
-    ];
+    test.each<[string, KeyMap | KeyMap[], KeyMap[]]>([
+        ["Empty KeyMap", {}, [{}]],
 
-    const seq6: KeyMap = {};
-    const seq7: KeyMap[] = [];
+        ["Empty KeyMap[]", [], []],
 
-    test(JSON.stringify(seq1), () => {
-        expect(expandKeymap(seq1)).toEqual([seq1]);
-    });
+        [
+            "Nothing to expand, but array-ifies object",
+            { key: "ctrl", input: "a" },
+            [{ key: "ctrl", input: "a" }],
+        ],
 
-    test(JSON.stringify(seq2), () => {
-        expect(expandKeymap(seq2)).toEqual([
+        [
+            "Handles variable amount of keys",
             { key: ["ctrl", "alt", "meta"], input: "a" },
-            { key: ["ctrl", "alt", "meta"], input: "b" },
-            { key: ["ctrl", "alt", "meta"], input: "c" },
-        ]);
-    });
+            [{ key: ["ctrl", "alt", "meta"], input: "a" }],
+        ],
 
-    test(JSON.stringify(seq3), () => {
-        expect(expandKeymap(seq3)).toEqual([
-            { input: "a" },
-            { input: "b" },
-            { input: "c" },
-        ]);
-    });
+        [
+            "Accepts arguments already in expanded form",
+            [{ input: "f" }, { input: "o" }, { input: "o" }],
+            [{ input: "f" }, { input: "o" }, { input: "o" }],
+        ],
 
-    test(JSON.stringify(seq4), () => {
-        expect(expandKeymap(seq4)).toEqual([
-            { key: "ctrl", input: "a" },
-            { key: "ctrl", input: "a" },
-            { key: "ctrl", input: "a" },
-            { key: "alt", input: "b" },
-            { key: "alt", input: "b" },
-            { key: "alt", input: "b" },
-        ]);
-    });
+        [
+            "Input length > 1 forces expansion",
+            { input: "foo" },
+            [{ input: "f" }, { input: "o" }, { input: "o" }],
+        ],
 
-    test(JSON.stringify(seq5), () => {
-        expect(expandKeymap(seq5)).toEqual([
-            { key: "ctrl" },
-            { key: "meta" },
-            { key: "alt" },
-            { input: "a" },
-            { input: "b" },
-            { input: "c" },
-        ]);
-    });
+        [
+            "Input length > 1 w/ keys forces expansion",
+            { key: "ctrl", input: "foo" },
+            [
+                { key: "ctrl", input: "f" },
+                { key: "ctrl", input: "o" },
+                { key: "ctrl", input: "o" },
+            ],
+        ],
 
-    test(JSON.stringify(seq6), () => {
-        expect(expandKeymap(seq6)).toEqual([{}]);
-    });
+        [
+            "Expands with variable amount of keys",
+            { key: ["ctrl", "alt", "super"], input: "foo" },
+            [
+                { key: ["ctrl", "alt", "super"], input: "f" },
+                { key: ["ctrl", "alt", "super"], input: "o" },
+                { key: ["ctrl", "alt", "super"], input: "o" },
+            ],
+        ],
 
-    test(JSON.stringify(seq7), () => {
-        expect(expandKeymap(seq7)).toEqual([]);
+        [
+            "KeyMap[] where each child needs expanding",
+            [
+                { key: "ctrl", input: "foo" },
+                { key: "alt", input: "BAR" },
+            ],
+            [
+                { key: "ctrl", input: "f" },
+                { key: "ctrl", input: "o" },
+                { key: "ctrl", input: "o" },
+                { key: "alt", input: "B" },
+                { key: "alt", input: "A" },
+                { key: "alt", input: "R" },
+            ],
+        ],
+
+        [
+            "Fully expanded already",
+            [
+                { key: ["ctrl", "alt"] },
+                { key: "super" },
+                { key: ["ctrl"], input: "f" },
+                { input: "o" },
+                { input: "o" },
+            ],
+            [
+                { key: ["ctrl", "alt"] },
+                { key: "super" },
+                { key: ["ctrl"], input: "f" },
+                { input: "o" },
+                { input: "o" },
+            ],
+        ],
+    ])("%s ' %o '", (_, compacted, expanded) => {
+        expect(expandKeymap(compacted)).toEqual(expanded);
     });
 });
