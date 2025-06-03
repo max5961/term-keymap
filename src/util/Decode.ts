@@ -4,39 +4,69 @@ export type Encoding = "kitty" | "legacy" | "xterm" | "mouse";
 export class Decode {
     private static Rgx = {
         Kitty: {
+            /**
+             * @example
+             * \x1b[97;4u
+             */
             get withMods() {
                 return /^\x1b\[(\d+);(\d+)u/;
             },
+            /**
+             * @example
+             * \x1b[97u
+             */
             get woMods() {
                 return /^\x1b\[(\d+)u/;
             },
         },
         Legacy: {
+            /**
+             * @example
+             * \x1b[17;5~
+             * \x1b[1;3A
+             */
             get numWithMod() {
                 return /^\x1b\[(\d+);(\d+)([~ABCDEFHPQRS])/;
             },
+            /**
+             * @example
+             * \x1b[17~
+             */
             get numOnly() {
                 return /^\x1b\[(\d+)(~)/;
             },
+            /**
+             * @example
+             * \x1b[A
+             */
             get letterOnly() {
                 return /^\x1b\[([ABCDEFHPQRS])/;
             },
+
+            /**
+             * @example
+             * \x1b[OP
+             */
             get ss3() {
                 return /^\x1b(O)([ABCDEFHPQRS~])/;
             },
         },
+        /**
+         * @example
+         * \x1b[<35;5;10M
+         */
         get Mouse() {
             return /^\x1b\[<(\d+);(\d+);(\d+)([mM])/;
         },
     };
 
-    private static isKittyEncoded(utf: string): boolean {
+    private static isKittyEncoded = (utf: string): boolean => {
         return (
             this.Rgx.Kitty.woMods.test(utf) || this.Rgx.Kitty.withMods.test(utf)
         );
-    }
+    };
 
-    public static getKittyCaptures(utf: string) {
+    public static getKittyCaptures = (utf: string) => {
         // prettier-ignore
         return Array.from(
             this.Rgx.Kitty.withMods.exec(utf) ||
@@ -45,18 +75,18 @@ export class Decode {
         )
             .slice(1)
             .map(m => Number(m));
-    }
+    };
 
-    private static isLegacyEncoded(utf: string): boolean {
+    private static isLegacyEncoded = (utf: string): boolean => {
         return (
             this.Rgx.Legacy.numWithMod.test(utf) ||
             this.Rgx.Legacy.numOnly.test(utf) ||
             this.Rgx.Legacy.letterOnly.test(utf) ||
             this.Rgx.Legacy.ss3.test(utf)
         );
-    }
+    };
 
-    public static getLegacyCaptures(utf: string) {
+    public static getLegacyCaptures = (utf: string) => {
         // prettier-ignore
         return Array.from(
             this.Rgx.Legacy.letterOnly.exec(utf) ||
@@ -70,13 +100,13 @@ export class Decode {
                 const num = Number(m);
                 return Number.isNaN(num) ? m : num;
             })
-    }
+    };
 
-    private static isMouseEncoded(utf: string): boolean {
+    private static isMouseEncoded = (utf: string): boolean => {
         return this.Rgx.Mouse.test(utf);
-    }
+    };
 
-    public static getMouseCaptures(utf: string) {
+    public static getMouseCaptures = (utf: string) => {
         // prettier-ignore
         return Array.from(
             this.Rgx.Mouse.exec(utf) ||
@@ -87,7 +117,7 @@ export class Decode {
                 const num = Number(m)
                 return Number.isNaN(num) ? m : num;
             })
-    }
+    };
 
     /**
      * Kitty:

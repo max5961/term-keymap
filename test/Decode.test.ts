@@ -3,69 +3,86 @@ import { Decode } from "../src/util/Decode.js";
 import { LetterMap } from "../src/maps/LetterMap.js";
 import { testEachCsi } from "./helpers/testEachCsi.js";
 
-describe("Decode kitty CSI sequences", () => {
+type TestCases = [string, ...unknown[]][];
+
+const testHelper = (testCases: TestCases) => {
     testEachCsi({
-        tests: [
+        tests: testCases,
+        title: (csi, encoding) => `${csi} should be ${encoding}`,
+        cb: (csi, encoding) => {
+            expect(Decode.getEncoding(csi)).toBe(encoding);
+        },
+    });
+};
+
+describe("Decode kitty CSI sequences", () => {
+    describe("CSI keycode u", () => {
+        testHelper([
             ["\x1b[97u", "kitty"],
             ["\x1b[57442u", "kitty"],
-        ],
-        title: (csi, encoding) => `CSI number u should be ${encoding} (${csi})`,
-        cb: (csi, encoding) => {
-            expect(Decode.getEncoding(csi)).toBe(encoding);
-        },
+        ]);
     });
 
-    testEachCsi({
-        tests: [
+    describe("CSI keycode ; modifier u", () => {
+        testHelper([
             ["\x1b[97;5u", "kitty"],
             ["\x1b[97;133u", "kitty"],
-        ],
-        title: (csi, encoding) =>
-            `CSI number ; modifer u should be ${encoding} (${csi})`,
-        cb: (csi, encoding) => {
-            expect(Decode.getEncoding(csi)).toBe(encoding);
-        },
+        ]);
     });
 });
 
-describe("Detects legacy CSI sequences", () => {
-    const letters = Object.keys(LetterMap);
-
-    test("legacy: ss3 (\\x1b + O)", () => {
-        expect(Decode.getEncoding("\x1bOP")).toBe("legacy");
-        expect(Decode.getEncoding("\x1bOQ")).toBe("legacy");
-        expect(Decode.getEncoding("\x1bOR")).toBe("legacy");
-        expect(Decode.getEncoding("\x1bOS")).toBe("legacy");
+describe("Decode legacy CSI sequences", () => {
+    describe("ss3 (\\x1b + O)", () => {
+        testHelper([
+            ["\x1bOP", "legacy"],
+            ["\x1bOQ", "legacy"],
+            ["\x1bOR", "legacy"],
+            ["\x1bOS", "legacy"],
+        ]);
     });
 
-    test("legacy: num + ~", () => {
-        expect(Decode.getEncoding("\x1b[15~")).toBe("legacy");
-        expect(Decode.getEncoding("\x1b[17~")).toBe("legacy");
+    describe("CSI num ~", () => {
+        testHelper([
+            ["\x1b[6~", "legacy"],
+            ["\x1b[15~", "legacy"],
+        ]);
     });
 
-    test("legacy: letter only", () => {
-        for (const letter of letters) {
-            expect(Decode.getEncoding(`\x1b[${letter}`)).toBe("legacy");
-        }
+    describe("CSI {ABCDHF}", () => {
+        testHelper([
+            ["\x1b[A", "legacy"],
+            ["\x1b[B", "legacy"],
+            ["\x1b[C", "legacy"],
+            ["\x1b[D", "legacy"],
+            ["\x1b[H", "legacy"],
+            ["\x1b[F", "legacy"],
+        ]);
     });
 
-    test("legacy: with modifier", () => {
-        for (const letter of letters) {
-            expect(Decode.getEncoding(`\x1b[1;5${letter}`)).toBe("legacy");
-        }
-        expect(Decode.getEncoding("\x1b[1;5A")).toBe("legacy");
-        expect(Decode.getEncoding("\x1b[6;5~")).toBe("legacy");
-        expect(Decode.getEncoding("\x1b[18;129~")).toBe("legacy");
+    describe("CSI (1 | number) ; modifier {ABCDHFPQRS~}", () => {
+        testHelper([
+            ["\x1b[1;5A", "legacy"],
+            ["\x1b[1;5B", "legacy"],
+            ["\x1b[1;5C", "legacy"],
+            ["\x1b[1;5D", "legacy"],
+            ["\x1b[1;5H", "legacy"],
+            ["\x1b[1;5F", "legacy"],
+            ["\x1b[5;5~", "legacy"],
+            ["\x1b[18;129~", "legacy"],
+        ]);
     });
 });
 
-describe("Detects mouse CSI sequences", () => {
-    test("Single", () => {
-        expect(Decode.getEncoding("\x1b[<35;3;17M")).toBe("mouse");
-        expect(Decode.getEncoding("\x1b[<35;3;17m")).toBe("mouse");
-        expect(Decode.getEncoding("\x1b[<1;25;25M")).toBe("mouse");
-        expect(Decode.getEncoding("\x1b[<12345;12345;12345m")).toBe("mouse");
-    });
+describe("Decode mouse CSI sequences", () => {
+    testHelper([
+        ["\x1b[<0;0;0M", "mouse"],
+        ["\x1b[<2;0;0m", "mouse"],
+        ["\x1b[<35;5;5M", "mouse"],
+        ["\x1b[<35;15;15M", "mouse"],
+        ["\x1b[<35;15;15m", "mouse"],
+        ["\x1b[<35;12345;12345M", "mouse"],
+        ["\x1b[<35;12345;12345m", "mouse"],
+    ]);
 
     test("concat sequences", () => {
         // prettier-ignore
@@ -77,113 +94,182 @@ describe("Detects mouse CSI sequences", () => {
     });
 });
 
-describe("Falls through CSI/SS3 checks and defaults to xterm", () => {
-    test("chars", () => {
-        expect(Decode.getEncoding("a")).toBe("xterm");
-        expect(Decode.getEncoding("b")).toBe("xterm");
-        expect(Decode.getEncoding("c")).toBe("xterm");
-        expect(Decode.getEncoding("A")).toBe("xterm");
-        expect(Decode.getEncoding("B")).toBe("xterm");
-        expect(Decode.getEncoding("C")).toBe("xterm");
-        expect(Decode.getEncoding("1")).toBe("xterm");
-        expect(Decode.getEncoding("2")).toBe("xterm");
-        expect(Decode.getEncoding("3")).toBe("xterm");
-        expect(Decode.getEncoding("!")).toBe("xterm");
-        expect(Decode.getEncoding("@")).toBe("xterm");
-        expect(Decode.getEncoding("#")).toBe("xterm");
+describe("Decode.getEncoding defaults to xterm", () => {
+    test.each([
+        ["a", "xterm"],
+        ["b", "xterm"],
+        ["c", "xterm"],
+        ["A", "xterm"],
+        ["B", "xterm"],
+        ["C", "xterm"],
+        ["1", "xterm"],
+        ["2", "xterm"],
+        ["3", "xterm"],
+        ["!", "xterm"],
+        ["@", "xterm"],
+        ["#", "xterm"],
+        ["foo", "xterm"],
+    ])("Characters and strings: %s should be %s", (utf, encoding) => {
+        expect(Decode.getEncoding(utf)).toBe(encoding);
     });
 
-    test("strings", () => {
-        expect(Decode.getEncoding("foo")).toBe("xterm");
+    [
+        [0, "xterm"],
+        [1, "xterm"],
+        [2, "xterm"],
+        [3, "xterm"],
+        [4, "xterm"],
+        [5, "xterm"],
+        [6, "xterm"],
+        [7, "xterm"],
+        [8, "xterm"],
+        [9, "xterm"],
+        [10, "xterm"],
+        [11, "xterm"],
+        [12, "xterm"],
+        [13, "xterm"],
+        [14, "xterm"],
+        [15, "xterm"],
+        [16, "xterm"],
+        [17, "xterm"],
+        [18, "xterm"],
+        [19, "xterm"],
+        [20, "xterm"],
+        [21, "xterm"],
+        [22, "xterm"],
+        [23, "xterm"],
+        [24, "xterm"],
+        [25, "xterm"],
+        [26, "xterm"],
+        [27, "xterm"],
+        [28, "xterm"],
+        [29, "xterm"],
+        [30, "xterm"],
+        [31, "xterm"],
+        [32, "xterm"],
+    ].forEach(([num, encoding]) => {
+        test(`Control characters - [${num}] is ${encoding}`, () => {
+            expect(
+                Decode.getEncoding(Buffer.from([num as number]).toString()),
+            ).toBe(encoding);
+        });
     });
+});
 
-    // prettier-ignore
-    test("ctrl characters", ()=> {
-        expect(Decode.getEncoding(Buffer.from([0]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([1]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([2]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([3]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([4]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([5]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([6]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([7]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([8]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([9]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([10]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([11]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([12]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([13]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([14]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([15]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([16]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([17]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([18]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([19]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([20]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([21]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([22]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([23]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([24]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([25]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([26]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([27]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([28]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([29]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([30]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([31]).toString("utf-8"))).toBe("xterm");
-        expect(Decode.getEncoding(Buffer.from([32]).toString("utf-8"))).toBe("xterm");
-    })
+const captureTestHelper = (
+    testCases: TestCases,
+    method: (csi: string) => unknown[],
+) => {
+    testEachCsi({
+        tests: testCases,
+        title: (csi, expected) =>
+            `${csi} should equal [${expected.toString()}]`,
+        cb: (csi, expected) => {
+            expect(method(csi)).toEqual(expected);
+        },
+    });
+};
+
+describe("Invalid sequences that don't capture anything return empty arrays", () => {
+    const invalid = "\x1b";
+    test("Invalid kitty", () => {
+        expect(Decode.getKittyCaptures(invalid)).toEqual([]);
+    });
+    test("Invalid legacy", () => {
+        expect(Decode.getLegacyCaptures(invalid)).toEqual([]);
+    });
+    test("Invalid mouse", () => {
+        expect(Decode.getMouseCaptures(invalid)).toEqual([]);
+    });
 });
 
 describe("Regex captures kitty correctly", () => {
-    // prettier-ignore
-    test("CSI + code ; modifier u", () => {
-        expect(Decode.getKittyCaptures("\x1b[107;5u")).toEqual([107, 5]);
-        expect(Decode.getKittyCaptures("\x1b[97;65u")).toEqual([97, 65]);
-        expect(Decode.getKittyCaptures("\x1b[98;133u")).toEqual([98, 133]);
-        expect(Decode.getKittyCaptures("\x1b[12345;56789u")).toEqual([12345, 56789]);
+    describe("CSI code ; modifier u", () => {
+        captureTestHelper(
+            [
+                ["\x1b[97;5u", [97, 5]],
+                ["\x1b[97;65u", [97, 65]],
+                ["\x1b[123;456u", [123, 456]],
+                ["\x1b[0;5u", [0, 5]],
+            ],
+            Decode.getKittyCaptures,
+        );
     });
 
-    test("CSI + code u", () => {
-        expect(Decode.getKittyCaptures("\x1b[97u")).toEqual([97]);
-        expect(Decode.getKittyCaptures("\x1b[105u")).toEqual([105]);
-    });
-
-    test("Invalid kitty codes === empty array", () => {
-        expect(Decode.getKittyCaptures("\x1b[105")).toEqual([]);
+    describe("CSI code u", () => {
+        captureTestHelper(
+            [
+                ["\x1b[0u", [0]],
+                ["\x1b[97u", [97]],
+                ["\x1b[105u", [105]],
+            ],
+            Decode.getKittyCaptures,
+        );
     });
 });
 
 describe("Regex captures legacy keys correctly", () => {
-    test("CSI letter", () => {
-        for (const letter in LetterMap) {
-            // prettier-ignore
-            expect(Decode.getLegacyCaptures(`\x1b[${letter}`)).toEqual([letter]);
-        }
+    describe("CSI {ABCDHF}", () => {
+        captureTestHelper(
+            [
+                ["\x1b[A", ["A"]],
+                ["\x1b[B", ["B"]],
+                ["\x1b[C", ["C"]],
+                ["\x1b[D", ["D"]],
+                ["\x1b[H", ["H"]],
+                ["\x1b[F", ["F"]],
+            ],
+            Decode.getLegacyCaptures,
+        );
     });
 
-    test("SS3 letter", () => {
-        for (const letter in LetterMap) {
-            // prettier-ignore
-            expect(Decode.getLegacyCaptures(`\x1bO${letter}`)).toEqual(["O", letter]);
-        }
+    describe("SS3 letter", () => {
+        captureTestHelper(
+            [
+                ["\x1bOP", ["O", "P"]],
+                ["\x1bOQ", ["O", "Q"]],
+                ["\x1bOR", ["O", "R"]],
+                ["\x1bOS", ["O", "S"]],
+            ],
+            Decode.getLegacyCaptures,
+        );
     });
 
-    test("CSI number ~", () => {
-        expect(Decode.getLegacyCaptures("\x1b[15~")).toEqual([15, "~"]);
-        expect(Decode.getLegacyCaptures("\x1b[5~")).toEqual([5, "~"]);
+    describe("CSI number ~", () => {
+        captureTestHelper(
+            [
+                ["\x1b[2~", [2, "~"]],
+                ["\x1b[3~", [3, "~"]],
+                ["\x1b[6~", [6, "~"]],
+                ["\x1b[15~", [15, "~"]],
+            ],
+            Decode.getLegacyCaptures,
+        );
     });
 
-    test("CSI number ; modifier ~", () => {
-        expect(Decode.getLegacyCaptures("\x1b[15;5~")).toEqual([15, 5, "~"]);
-        expect(Decode.getLegacyCaptures("\x1b[5;133~")).toEqual([5, 133, "~"]);
+    describe("CSI number ; modifier ~", () => {
+        captureTestHelper(
+            [
+                ["\x1b[2;5~", [2, 5, "~"]],
+                ["\x1b[3;5~", [3, 5, "~"]],
+                ["\x1b[6;65~", [6, 65, "~"]],
+                ["\x1b[15;133~", [15, 133, "~"]],
+            ],
+            Decode.getLegacyCaptures,
+        );
     });
 });
 
 // prettier-ignore
 describe("Regex captures mouse correctly", () => {
-    test("CSI < event ; x ; y [mM]", () => {
-        expect(Decode.getMouseCaptures("\x1b[<35;10;15M")).toEqual([35, 10, 15, "M"])
-        expect(Decode.getMouseCaptures("\x1b[<0;0;0m")).toEqual([0, 0, 0, "m"])
-    });
+    captureTestHelper([
+        ["\x1b[<0;0;0M", [0, 0, 0, "M"]],
+        ["\x1b[<1;2;3M", [1, 2, 3, "M"]],
+        ["\x1b[<35;10;15M", [35, 10, 15, "M"]],
+        ["\x1b[<111;222;333M", [111, 222, 333, "M"]],
+        ["\x1b[<0;0;0m", [0, 0, 0, "m"]],
+        ["\x1b[<1;2;3m", [1, 2, 3, "m"]],
+        ["\x1b[<35;10;15m", [35, 10, 15, "m"]],
+        ["\x1b[<111;222;333m", [111, 222, 333, "m"]],
+    ], Decode.getMouseCaptures);
 });
