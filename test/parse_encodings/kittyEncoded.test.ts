@@ -1,146 +1,273 @@
 import { describe, test, expect } from "vitest";
 import { checkParse } from "../helpers/checkParse.js";
+import { KeyMap } from "../../src/stateful/match.js";
+import { parseBuffer } from "../../src/parse/parseBuffer.js";
+
+const CSI = "\x1b[";
 
 describe("Kitty protocol", () => {
-    test("Lowercase alphabet", () => {
-        expect(checkParse("\x1b[97u", { input: "a" })).toBe(true);
-        expect(checkParse("\x1b[98u", { input: "b" })).toBe(true);
-        expect(checkParse("\x1b[99u", { input: "c" })).toBe(true);
-        expect(checkParse("\x1b[100u", { input: "d" })).toBe(true);
-        expect(checkParse("\x1b[101u", { input: "e" })).toBe(true);
-        expect(checkParse("\x1b[102u", { input: "f" })).toBe(true);
-        expect(checkParse("\x1b[103u", { input: "g" })).toBe(true);
-        expect(checkParse("\x1b[104u", { input: "h" })).toBe(true);
-        expect(checkParse("\x1b[105u", { input: "i" })).toBe(true);
-        expect(checkParse("\x1b[106u", { input: "j" })).toBe(true);
-        expect(checkParse("\x1b[107u", { input: "k" })).toBe(true);
-        expect(checkParse("\x1b[108u", { input: "l" })).toBe(true);
-        expect(checkParse("\x1b[109u", { input: "m" })).toBe(true);
-        expect(checkParse("\x1b[110u", { input: "n" })).toBe(true);
-        expect(checkParse("\x1b[111u", { input: "o" })).toBe(true);
-        expect(checkParse("\x1b[112u", { input: "p" })).toBe(true);
-        expect(checkParse("\x1b[113u", { input: "q" })).toBe(true);
-        expect(checkParse("\x1b[114u", { input: "r" })).toBe(true);
-        expect(checkParse("\x1b[115u", { input: "s" })).toBe(true);
-        expect(checkParse("\x1b[116u", { input: "t" })).toBe(true);
-        expect(checkParse("\x1b[117u", { input: "u" })).toBe(true);
-        expect(checkParse("\x1b[118u", { input: "v" })).toBe(true);
-        expect(checkParse("\x1b[119u", { input: "w" })).toBe(true);
-        expect(checkParse("\x1b[120u", { input: "x" })).toBe(true);
-        expect(checkParse("\x1b[121u", { input: "y" })).toBe(true);
-        expect(checkParse("\x1b[122u", { input: "z" })).toBe(true);
-    });
-
-    test("Uppercase alphabet (shift added to modifiers bit field but not to data.key)", () => {
-        expect(checkParse("\x1b[97;2u", { input: "A" })).toBe(true);
-        expect(checkParse("\x1b[98;2u", { input: "B" })).toBe(true);
-        expect(checkParse("\x1b[99;2u", { input: "C" })).toBe(true);
-        expect(checkParse("\x1b[100;2u", { input: "D" })).toBe(true);
-        expect(checkParse("\x1b[101;2u", { input: "E" })).toBe(true);
-        expect(checkParse("\x1b[102;2u", { input: "F" })).toBe(true);
-        expect(checkParse("\x1b[103;2u", { input: "G" })).toBe(true);
-        expect(checkParse("\x1b[104;2u", { input: "H" })).toBe(true);
-        expect(checkParse("\x1b[105;2u", { input: "I" })).toBe(true);
-        expect(checkParse("\x1b[106;2u", { input: "J" })).toBe(true);
-        expect(checkParse("\x1b[107;2u", { input: "K" })).toBe(true);
-        expect(checkParse("\x1b[108;2u", { input: "L" })).toBe(true);
-        expect(checkParse("\x1b[109;2u", { input: "M" })).toBe(true);
-        expect(checkParse("\x1b[110;2u", { input: "N" })).toBe(true);
-        expect(checkParse("\x1b[111;2u", { input: "O" })).toBe(true);
-        expect(checkParse("\x1b[112;2u", { input: "P" })).toBe(true);
-        expect(checkParse("\x1b[113;2u", { input: "Q" })).toBe(true);
-        expect(checkParse("\x1b[114;2u", { input: "R" })).toBe(true);
-        expect(checkParse("\x1b[115;2u", { input: "S" })).toBe(true);
-        expect(checkParse("\x1b[116;2u", { input: "T" })).toBe(true);
-        expect(checkParse("\x1b[117;2u", { input: "U" })).toBe(true);
-        expect(checkParse("\x1b[118;2u", { input: "V" })).toBe(true);
-        expect(checkParse("\x1b[119;2u", { input: "W" })).toBe(true);
-        expect(checkParse("\x1b[120;2u", { input: "X" })).toBe(true);
-        expect(checkParse("\x1b[121;2u", { input: "Y" })).toBe(true);
-        expect(checkParse("\x1b[122;2u", { input: "Z" })).toBe(true);
-    });
-
-    // prettier-ignore
-    test("Numeric and symbol keys", () => {
-        expect(checkParse("\x1b[32u", { input: String.fromCharCode(32) })).toBe(true);
-        expect(checkParse("\x1b[33u", { input: String.fromCharCode(33) })).toBe(true);
-        expect(checkParse("\x1b[34u", { input: String.fromCharCode(34) })).toBe(true);
-        expect(checkParse("\x1b[35u", { input: String.fromCharCode(35) })).toBe(true);
-        expect(checkParse("\x1b[36u", { input: String.fromCharCode(36) })).toBe(true);
-        expect(checkParse("\x1b[37u", { input: String.fromCharCode(37) })).toBe(true);
-        expect(checkParse("\x1b[38u", { input: String.fromCharCode(38) })).toBe(true);
-        expect(checkParse("\x1b[39u", { input: String.fromCharCode(39) })).toBe(true);
-        expect(checkParse("\x1b[40u", { input: String.fromCharCode(40) })).toBe(true);
-        expect(checkParse("\x1b[41u", { input: String.fromCharCode(41) })).toBe(true);
-        expect(checkParse("\x1b[42u", { input: String.fromCharCode(42) })).toBe(true);
-        expect(checkParse("\x1b[43u", { input: String.fromCharCode(43) })).toBe(true);
-        expect(checkParse("\x1b[44u", { input: String.fromCharCode(44) })).toBe(true);
-        expect(checkParse("\x1b[45u", { input: String.fromCharCode(45) })).toBe(true);
-        expect(checkParse("\x1b[46u", { input: String.fromCharCode(46) })).toBe(true);
-        expect(checkParse("\x1b[47u", { input: String.fromCharCode(47) })).toBe(true);
-        expect(checkParse("\x1b[48u", { input: String.fromCharCode(48) })).toBe(true);
-        expect(checkParse("\x1b[49u", { input: String.fromCharCode(49) })).toBe(true);
-        expect(checkParse("\x1b[50u", { input: String.fromCharCode(50) })).toBe(true);
-        expect(checkParse("\x1b[51u", { input: String.fromCharCode(51) })).toBe(true);
-        expect(checkParse("\x1b[52u", { input: String.fromCharCode(52) })).toBe(true);
-        expect(checkParse("\x1b[53u", { input: String.fromCharCode(53) })).toBe(true);
-        expect(checkParse("\x1b[54u", { input: String.fromCharCode(54) })).toBe(true);
-        expect(checkParse("\x1b[55u", { input: String.fromCharCode(55) })).toBe(true);
-        expect(checkParse("\x1b[56u", { input: String.fromCharCode(56) })).toBe(true);
-        expect(checkParse("\x1b[57u", { input: String.fromCharCode(57) })).toBe(true);
-        expect(checkParse("\x1b[58u", { input: String.fromCharCode(58) })).toBe(true);
-        expect(checkParse("\x1b[59u", { input: String.fromCharCode(59) })).toBe(true);
-        expect(checkParse("\x1b[60u", { input: String.fromCharCode(60) })).toBe(true);
-        expect(checkParse("\x1b[61u", { input: String.fromCharCode(61) })).toBe(true);
-        expect(checkParse("\x1b[62u", { input: String.fromCharCode(62) })).toBe(true);
-        expect(checkParse("\x1b[63u", { input: String.fromCharCode(63) })).toBe(true);
-        expect(checkParse("\x1b[64u", { input: String.fromCharCode(64) })).toBe(true);
-
-        expect(checkParse("\x1b[91u", { input: String.fromCharCode(91) })).toBe(true);
-        expect(checkParse("\x1b[92u", { input: String.fromCharCode(92) })).toBe(true);
-        expect(checkParse("\x1b[93u", { input: String.fromCharCode(93) })).toBe(true);
-        expect(checkParse("\x1b[94u", { input: String.fromCharCode(94) })).toBe(true);
-        expect(checkParse("\x1b[95u", { input: String.fromCharCode(95) })).toBe(true);
-        expect(checkParse("\x1b[96u", { input: String.fromCharCode(96) })).toBe(true);
-
-        expect(checkParse("\x1b[123u", { input: String.fromCharCode(123) })).toBe(true);
-        expect(checkParse("\x1b[124u", { input: String.fromCharCode(124) })).toBe(true);
-        expect(checkParse("\x1b[125u", { input: String.fromCharCode(125) })).toBe(true);
-        expect(checkParse("\x1b[126u", { input: String.fromCharCode(126) })).toBe(true);
-    });
-
-    describe("capsLock modifies letters but is not added to data.keys", () => {
-        test("Letter with capsLock", () => {
-            expect(checkParse("\x1b[97;65u", { input: "A" })).toBe(true);
+    describe("Lowercase alphabet", () => {
+        test.each([
+            ["97u", { input: "a" }],
+            ["98u", { input: "b" }],
+            ["99u", { input: "c" }],
+            ["100u", { input: "d" }],
+            ["101u", { input: "e" }],
+            ["102u", { input: "f" }],
+            ["103u", { input: "g" }],
+            ["104u", { input: "h" }],
+            ["105u", { input: "i" }],
+            ["106u", { input: "j" }],
+            ["107u", { input: "k" }],
+            ["108u", { input: "l" }],
+            ["109u", { input: "m" }],
+            ["110u", { input: "n" }],
+            ["111u", { input: "o" }],
+            ["112u", { input: "p" }],
+            ["113u", { input: "q" }],
+            ["114u", { input: "r" }],
+            ["115u", { input: "s" }],
+            ["116u", { input: "t" }],
+            ["117u", { input: "u" }],
+            ["118u", { input: "v" }],
+            ["119u", { input: "w" }],
+            ["120u", { input: "x" }],
+            ["121u", { input: "y" }],
+            ["122u", { input: "z" }],
+        ])("\\x1b%s => %o", (csi, keymap) => {
+            expect(checkParse(CSI + csi, keymap)).toBe(true);
         });
-        test("Number with capsLock", () => {
+    });
+
+    describe("Uppcase alphabet shift is part of modifier bitfield but not added to data.key", () => {
+        test.each([
+            ["97;2u", { input: "A" }],
+            ["98;2u", { input: "B" }],
+            ["99;2u", { input: "C" }],
+            ["100;2u", { input: "D" }],
+            ["101;2u", { input: "E" }],
+            ["102;2u", { input: "F" }],
+            ["103;2u", { input: "G" }],
+            ["104;2u", { input: "H" }],
+            ["105;2u", { input: "I" }],
+            ["106;2u", { input: "J" }],
+            ["107;2u", { input: "K" }],
+            ["108;2u", { input: "L" }],
+            ["109;2u", { input: "M" }],
+            ["110;2u", { input: "N" }],
+            ["111;2u", { input: "O" }],
+            ["112;2u", { input: "P" }],
+            ["113;2u", { input: "Q" }],
+            ["114;2u", { input: "R" }],
+            ["115;2u", { input: "S" }],
+            ["116;2u", { input: "T" }],
+            ["117;2u", { input: "U" }],
+            ["118;2u", { input: "V" }],
+            ["119;2u", { input: "W" }],
+            ["120;2u", { input: "X" }],
+            ["121;2u", { input: "Y" }],
+            ["122;2u", { input: "Z" }],
+        ])("\\x1b%s => %o", (csi, keymap) => {
+            expect(checkParse(CSI + csi, keymap)).toBe(true);
+        });
+    });
+
+    describe("Numeric and symbol keys", () => {
+        test.each([
+            ["32u", { input: String.fromCharCode(32) }],
+            ["33u", { input: String.fromCharCode(33) }],
+            ["34u", { input: String.fromCharCode(34) }],
+            ["35u", { input: String.fromCharCode(35) }],
+            ["36u", { input: String.fromCharCode(36) }],
+            ["37u", { input: String.fromCharCode(37) }],
+            ["38u", { input: String.fromCharCode(38) }],
+            ["39u", { input: String.fromCharCode(39) }],
+            ["40u", { input: String.fromCharCode(40) }],
+            ["41u", { input: String.fromCharCode(41) }],
+            ["42u", { input: String.fromCharCode(42) }],
+            ["43u", { input: String.fromCharCode(43) }],
+            ["44u", { input: String.fromCharCode(44) }],
+            ["45u", { input: String.fromCharCode(45) }],
+            ["46u", { input: String.fromCharCode(46) }],
+            ["47u", { input: String.fromCharCode(47) }],
+            ["48u", { input: String.fromCharCode(48) }],
+            ["49u", { input: String.fromCharCode(49) }],
+            ["50u", { input: String.fromCharCode(50) }],
+            ["51u", { input: String.fromCharCode(51) }],
+            ["52u", { input: String.fromCharCode(52) }],
+            ["53u", { input: String.fromCharCode(53) }],
+            ["54u", { input: String.fromCharCode(54) }],
+            ["55u", { input: String.fromCharCode(55) }],
+            ["56u", { input: String.fromCharCode(56) }],
+            ["57u", { input: String.fromCharCode(57) }],
+            ["58u", { input: String.fromCharCode(58) }],
+            ["59u", { input: String.fromCharCode(59) }],
+            ["60u", { input: String.fromCharCode(60) }],
+            ["61u", { input: String.fromCharCode(61) }],
+            ["62u", { input: String.fromCharCode(62) }],
+            ["63u", { input: String.fromCharCode(63) }],
+            ["64u", { input: String.fromCharCode(64) }],
+
+            ["91u", { input: String.fromCharCode(91) }],
+            ["92u", { input: String.fromCharCode(92) }],
+            ["93u", { input: String.fromCharCode(93) }],
+            ["94u", { input: String.fromCharCode(94) }],
+            ["95u", { input: String.fromCharCode(95) }],
+            ["96u", { input: String.fromCharCode(96) }],
+
+            ["123u", { input: String.fromCharCode(123) }],
+            ["124u", { input: String.fromCharCode(124) }],
+            ["125u", { input: String.fromCharCode(125) }],
+            ["126u", { input: String.fromCharCode(126) }],
+        ])("\\x1b%s => %s", (csi, keymap) => {
+            expect(checkParse(CSI + csi, keymap)).toBe(true);
+        });
+    });
+
+    describe("capsLock as a modifier (never gets added to data.key)", () => {
+        test.each([
+            // capsLock only modifier
+            ["97;65u", { input: "A" }],
+            ["98;65u", { input: "B" }],
+            ["99;65u", { input: "C" }],
+            ["100;65u", { input: "D" }],
+            ["101;65u", { input: "E" }],
+            ["102;65u", { input: "F" }],
+            ["103;65u", { input: "G" }],
+            ["104;65u", { input: "H" }],
+            ["105;65u", { input: "I" }],
+            ["106;65u", { input: "J" }],
+            ["107;65u", { input: "K" }],
+            ["108;65u", { input: "L" }],
+            ["109;65u", { input: "M" }],
+            ["110;65u", { input: "N" }],
+            ["111;65u", { input: "O" }],
+            ["112;65u", { input: "P" }],
+            ["113;65u", { input: "Q" }],
+            ["114;65u", { input: "R" }],
+            ["115;65u", { input: "S" }],
+            ["116;65u", { input: "T" }],
+            ["117;65u", { input: "U" }],
+            ["118;65u", { input: "V" }],
+            ["119;65u", { input: "W" }],
+            ["120;65u", { input: "X" }],
+            ["121;65u", { input: "Y" }],
+            ["122;65u", { input: "Z" }],
+
+            // capsLock + numLock modifier
+            ["97;193u", { input: "A" }],
+            ["98;193u", { input: "B" }],
+            ["99;193u", { input: "C" }],
+            ["100;193u", { input: "D" }],
+            ["101;193u", { input: "E" }],
+            ["102;193u", { input: "F" }],
+            ["103;193u", { input: "G" }],
+            ["104;193u", { input: "H" }],
+            ["105;193u", { input: "I" }],
+            ["106;193u", { input: "J" }],
+            ["107;193u", { input: "K" }],
+            ["108;193u", { input: "L" }],
+            ["109;193u", { input: "M" }],
+            ["110;193u", { input: "N" }],
+            ["111;193u", { input: "O" }],
+            ["112;193u", { input: "P" }],
+            ["113;193u", { input: "Q" }],
+            ["114;193u", { input: "R" }],
+            ["115;193u", { input: "S" }],
+            ["116;193u", { input: "T" }],
+            ["117;193u", { input: "U" }],
+            ["118;193u", { input: "V" }],
+            ["119;193u", { input: "W" }],
+            ["120;193u", { input: "X" }],
+            ["121;193u", { input: "Y" }],
+            ["122;193u", { input: "Z" }],
+        ])(
+            "capsLock (w/ or wo numLock upper cases letters \\x1b[%s %o",
+            (csi, keymap) => {
+                expect(checkParse(CSI + csi, keymap)).toBe(true);
+            },
+        );
+
+        test("no effect on number", () => {
             expect(checkParse("\x1b[49;65u", { input: "1" })).toBe(true);
         });
 
-        test("Letter with capsLock & numLock", () => {
+        test("no effect on symbol", () => {
+            expect(checkParse("\x1b[92;65u", { input: "\\" })).toBe(true);
+        });
+
+        test("capsLock && numLock together upercases letters", () => {
             expect(checkParse("\x1b[97;193u", { input: "A" })).toBe(true);
         });
 
-        test("Number with capsLock & numLock", () => {
+        test("capsLock && numLock no effect on numbers", () => {
             expect(checkParse("\x1b[49;193u", { input: "1" })).toBe(true);
         });
     });
 
-    // prettier-ignore
-    test("CSI keycode ; modifier u", () => {
-        expect(checkParse("\x1b[97;3u", { key: "alt", input: "a" })).toBe(true);
-        expect(checkParse("\x1b[97;4u", { key: "alt", input: "A" })).toBe(true);
-        expect(checkParse("\x1b[97;5u", { key: "ctrl", input: "a" })).toBe(true);
-        expect(checkParse("\x1b[97;6u", { key: "ctrl", input: "A" })).toBe(true);
-        expect(checkParse("\x1b[97;7u", { key: ["ctrl", "alt"], input: "a" })).toBe(true);
+    // TODO - add more
+    describe("CSI keycode ; modifier u", () => {
+        test.each<[string, KeyMap]>([
+            ["97;3u", { key: "alt", input: "a" }],
+            ["97;4u", { key: "alt", input: "A" }],
+            ["97;5u", { key: "ctrl", input: "a" }],
+            ["97;6u", { key: "ctrl", input: "A" }],
+            ["97;7u", { key: ["ctrl", "alt"], input: "a" }],
+            ["97;15u", { key: ["ctrl", "alt", "super"], input: "a" }],
+            ["97;16u", { key: ["ctrl", "alt", "super"], input: "A" }],
+        ])("\\x1b[%s => %o", (csi, keymap) => {
+            expect(checkParse(CSI + csi, keymap)).toBe(true);
+        });
+    });
+
+    describe("CSI keycode ; modifier u (w/ capsLock)", () => {
+        test.each<[string, KeyMap]>([
+            ["97;65u", { input: "A" }],
+            ["98;65u", { input: "B" }],
+            ["99;65u", { input: "C" }],
+        ])("\\x1b[%s => %o", (csi, keymap) => {
+            expect(checkParse(CSI + csi, keymap)).toBe(true);
+        });
+    });
+
+    describe("CSI keycode ; modifier u (numLock combinations)", () => {
+        test.each<[string, KeyMap]>([
+            ["97;129u", { input: "a" }],
+            ["98;129u", { input: "b" }],
+            ["99;129u", { input: "c" }],
+        ])("\\x1b[%s => %o", (csi, keymap) => {
+            expect(checkParse(CSI + csi, keymap)).toBe(true);
+        });
+    });
+
+    describe("capsLock when paired with other modifiers besides numLock should not uppercase", () => {
+        test.each<[string, KeyMap]>([
+            ["97;69u", { key: "ctrl", input: "a" }],
+            ["97;71u", { key: ["ctrl", "alt"], input: "a" }],
+            ["97;79u", { key: ["ctrl", "alt", "super"], input: "a" }],
+        ])("\\x1b[%s => %o", (csi, keymap) => {
+            expect(checkParse(CSI + csi, keymap)).toBe(true);
+        });
+    });
+
+    test("capsLock w/ only numLock uppercases letters", () => {
+        expect(checkParse("\x1b[97;193u", { input: "A" })).toBe(true);
     });
 
     // prettier-ignore
-    describe("keys part of modifier byte, but are selectively applied to data.keys", () => {
+    describe("Modifiers are selectively applied to data.keys", () => {
+        test("numLock as a single keypress is not added", () => {
+            const data = parseBuffer(Buffer.from("\x1b[57360u"));
+            expect(!data.key.size && !data.input.size).toBe(true);
+        });
+        test("capsLock as a single keypress is not added", () => { 
+            const data = parseBuffer(Buffer.from("\x1b[57358u"));
+            expect(!data.key.size && !data.input.size).toBe(true);
+        });
         test("shift without input is added", () => {
             expect(checkParse("\x1b[57441u", { key: "shift" })).toBe(true);
         });
-        test("shift is added when combined with other keys", () => {
+        test("shift is added when combined with other keys and no input is given", () => {
             expect(checkParse("\x1b[1;4A", { key: ["shift", "alt", "up"] })).toBe(true);
         });
         test("shift with input is not added", () => {
@@ -148,12 +275,6 @@ describe("Kitty protocol", () => {
         });
         test("numLock as a modifier is not added", () => {
             expect(checkParse("\x1b[97;129u", { input: "a" })).toBe(true);
-        });
-        test("numLock as a single keypress is not added", () => {
-            expect(checkParse("\x1b57360u", {})).toBe(true);
-        });
-        test("capsLock as a modifier is not added", () => {
-            expect(checkParse("\x1b[57358u", {})).toBe(true);
         });
         test("capsLock as a modifier is not added", () => {
             expect(checkParse("\x1b[97;65u", { input: "A" })).toBe(true);

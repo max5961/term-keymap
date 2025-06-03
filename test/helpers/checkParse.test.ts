@@ -1,17 +1,23 @@
 import { describe, test, expect } from "vitest";
 import { checkParse } from "./checkParse";
+import { KeyMap } from "../../src/stateful/match";
 
 describe("checkParse test helper", () => {
-    test("Hanldes utf", () => {
-        expect(checkParse("a", { input: "a" })).toBe(true);
-        expect(checkParse("a", { input: "b" })).toBe(false);
-        expect(checkParse("a", { input: "a", key: "ctrl" })).toBe(false);
+    test.each<[boolean, string, KeyMap]>([
+        [true, "a", { input: "a" }],
+        [false, "a", { input: "b" }],
+        [false, "a", { input: "a", key: "ctrl" }],
+    ])("Handles utf argument %s", (result, utf, keymap) => {
+        expect(checkParse(utf, keymap)).toBe(result);
     });
 
-    test("Handles num array and converts to buffer", () => {
-        expect(checkParse([97], { input: "a" })).toBe(true);
-        expect(checkParse([97], { input: "b" })).toBe(false);
-        expect(checkParse([97], { input: "a", key: "ctrl" })).toBe(false);
-        expect(checkParse([1], { input: "a", key: "ctrl" })).toBe(true);
+    test.each<[boolean, number[], KeyMap]>([
+        [true, [97], { input: "a" }],
+        [false, [97], { input: "b" }],
+        [true, [27, 97], { input: "a", key: "alt" }],
+        [false, [27, 97], { input: "a", key: "ctrl" }],
+        [true, [1], { input: "a", key: "ctrl" }],
+    ])("Handles num array argument $o", (result, buf, keymap) => {
+        expect(checkParse(buf, keymap)).toBe(result);
     });
 });

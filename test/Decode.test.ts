@@ -1,6 +1,5 @@
 import { describe, test, expect } from "vitest";
 import { Decode } from "../src/util/Decode.js";
-import { LetterMap } from "../src/maps/LetterMap.js";
 import { testEachCsi } from "./helpers/testEachCsi.js";
 
 type TestCases = [string, ...unknown[]][];

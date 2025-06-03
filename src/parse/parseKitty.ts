@@ -12,8 +12,14 @@ export function parseKitty(data: Data): void {
     const char = String.fromCharCode(code);
     const modifiers = getModifiers(captures[1]);
 
+    let realModCount = 0;
     Object.entries(modifiers).forEach(([key, bool]) => {
-        if (bool) data.key.add(key as Key);
+        if (bool) {
+            data.key.add(key as Key);
+            if ((key as Key) !== "capsLock" && (key as Key) !== "numLock") {
+                ++realModCount;
+            }
+        }
     });
 
     if (!char) return;
@@ -27,7 +33,7 @@ export function parseKitty(data: Data): void {
         data.input.add(ShiftMap[char]);
         return;
     }
-    if (modifiers.capsLock && code >= 97 && code <= 122) {
+    if (!realModCount && modifiers.capsLock && code >= 97 && code <= 122) {
         data.input.add(ShiftMap[char]);
         return;
     }
