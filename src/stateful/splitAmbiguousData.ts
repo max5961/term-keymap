@@ -158,7 +158,10 @@ export function splitAmbiguousData({ key, input }: Data): ShortData[] {
         }
     }
 
-    return Array.from(input.values() as Iterable<string>).map((input) => {
-        return toMatch([...key.values()], input);
-    });
+    return [
+        {
+            key: new PeekSet(key),
+            input: new PeekSet(input),
+        },
+    ];
 }

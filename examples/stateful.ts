@@ -9,13 +9,13 @@ configureStdin({
 });
 
 const keymaps = [
-    createKeymap({
-        keymap: [{ key: "tab" }, { key: "tab" }],
-        name: "TAB_TEST",
-        callback() {
-            console.log((this.name ?? "BROOOOOOO") + "matched!");
-        },
-    }),
+    // createKeymap({
+    //     keymap: [{ key: "tab" }, { key: "tab" }],
+    //     name: "TAB_TEST",
+    //     callback() {
+    //         console.log(this.name + " - matched!");
+    //     },
+    // }),
     createKeymap({
         keymap: [
             { key: "ctrl", input: "d" },
@@ -24,7 +24,7 @@ const keymaps = [
         ],
         name: "KITTY_TAB_MATCH",
         callback() {
-            console.log((this.name ?? "BROOOOOOO") + " - success!");
+            console.log(this.name + " - matched!");
         },
     }),
 ];
