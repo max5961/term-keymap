@@ -9,14 +9,14 @@ export class Decode {
              * \x1b[97;4u
              */
             get withMods() {
-                return /^\x1b\[(\d+);(\d+)u/;
+                return /\x1b\[(\d+);(\d+)u$/;
             },
             /**
              * @example
              * \x1b[97u
              */
             get woMods() {
-                return /^\x1b\[(\d+)u/;
+                return /\x1b\[(\d+)u$/;
             },
         },
         Legacy: {
@@ -26,21 +26,21 @@ export class Decode {
              * \x1b[1;3A
              */
             get numWithMod() {
-                return /^\x1b\[(\d+);(\d+)([~ABCDEFHPQRS])/;
+                return /\x1b\[(\d+);(\d+)([~ABCDEFHPQRS])$/;
             },
             /**
              * @example
              * \x1b[17~
              */
             get numOnly() {
-                return /^\x1b\[(\d+)(~)/;
+                return /\x1b\[(\d+)(~)$/;
             },
             /**
              * @example
              * \x1b[A
              */
             get letterOnly() {
-                return /^\x1b\[([ABCDEFHPQRS])/;
+                return /\x1b\[([ABCDEFHPQRS])$/;
             },
 
             /**
@@ -48,7 +48,7 @@ export class Decode {
              * \x1b[OP
              */
             get ss3() {
-                return /^\x1b(O)([ABCDEFHPQRS~])/;
+                return /\x1b(O)([ABCDEFHPQRS~])$/;
             },
         },
         /**
@@ -56,7 +56,7 @@ export class Decode {
          * \x1b[<35;5;10M
          */
         get Mouse() {
-            return /^\x1b\[<(\d+);(\d+);(\d+)([mM])/;
+            return /\x1b\[<(\d+);(\d+);(\d+)([mM])$/;
         },
     };
 
