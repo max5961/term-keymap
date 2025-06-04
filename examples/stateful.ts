@@ -1,6 +1,6 @@
 import { configureStdin } from "../src/configureStdin.js";
-import { InputState } from "../src/stateful/InputState.js";
 import { createKeymap } from "../src/stateful/createKeymap.js";
+import { InputTree } from "../src/stateful/InputTree.js";
 
 configureStdin({
     stdout: process.stdout,
@@ -10,45 +10,32 @@ configureStdin({
 
 const keymaps = [
     createKeymap({
-        name: "foo",
-        keymap: { input: "foo" },
-        callback: () => console.log("callback: foo"),
+        keymap: [{ key: "tab" }, { key: "tab" }],
+        name: "TAB_TEST",
+        callback() {
+            console.log((this.name ?? "BROOOOOOO") + "matched!");
+        },
     }),
     createKeymap({
-        name: "bar",
-        keymap: { input: "b" },
-        callback: () => console.log("callback: bar"),
-    }),
-    createKeymap({
-        name: "baz",
-        keymap: [{ key: ["super", "ctrl"], input: "Dd" }, { input: "dd" }],
-        callback: () => console.log("callback: baz"),
-    }),
-    createKeymap({
-        name: "ban",
         keymap: [
-            { key: "alt", input: "j" },
-            { key: "ctrl", input: "dddd" },
+            { key: "ctrl", input: "d" },
+            { key: "tab" },
+            { key: "ctrl", input: "i" },
         ],
-        callback: () => console.log("<A-j><C-d><C-d><C-d><C-d>"),
-    }),
-    createKeymap({
-        name: "foobar",
-        keymap: Array.from({ length: 5 }).map(() => ({ key: "backspace" })),
-        callback: () => console.log("callback: 5 <BS>"),
-    }),
-    createKeymap({
-        name: "exit",
-        keymap: { key: "ctrl", input: "c" },
-        callback: () => process.exit(),
+        name: "KITTY_TAB_MATCH",
+        callback() {
+            console.log((this.name ?? "BROOOOOOO") + " - success!");
+        },
     }),
 ];
 
-const ip = new InputState();
+const ip = new InputTree(50);
 
 process.stdin.on("data", (buf: Buffer) => {
+    if (buf[0] === 3) process.exit();
+
     console.clear();
-    const { data, keymap } = ip.process(buf, keymaps);
+    const { data, name } = ip.process(buf, keymaps);
 
     if (data.key.only("ctrl") && data.input.only("c")) process.exit();
 
@@ -57,9 +44,7 @@ process.stdin.on("data", (buf: Buffer) => {
         input: data.input.values(),
     });
 
-    if (keymap?.name) {
-        console.log(keymap.name);
-    }
+    console.log(name ?? "no match");
 });
 
 console.clear();
