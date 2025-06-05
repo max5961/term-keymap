@@ -42,6 +42,8 @@ export class InputState {
 
             if (!onlyModifiers || data.input.size) {
                 this.appendData(data);
+            } else {
+                return { data };
             }
         }
 

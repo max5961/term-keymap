@@ -88,7 +88,7 @@ describe("stateful", () => {
         ]);
     });
 
-    test.todo("Invalid sequences do not corrupt state", () => {
+    test("Invalid sequences do not corrupt state (mouse CSI)", () => {
         const ip = new InputState(10);
         const keymaps = [
             createKeymap({
@@ -109,7 +109,7 @@ describe("stateful", () => {
         expect(matches).toEqual([undefined, undefined, "foo"]);
     });
 
-    test.todo("Modifier only keys do not corrupt state", () => {
+    test("Modifier only keys do not corrupt state (kitty shift only)", () => {
         const ip = new InputState(10);
         const keymaps = [
             createKeymap({

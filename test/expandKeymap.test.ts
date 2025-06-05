@@ -53,6 +53,12 @@ describe("expandKeymap", () => {
         ],
 
         [
+            "KeyMap[] with only single child, but that child needs expanding",
+            [{ input: "abc" }],
+            [{ input: "a" }, { input: "b" }, { input: "c" }],
+        ],
+
+        [
             "KeyMap[] where each child needs expanding",
             [
                 { key: "ctrl", input: "foo" },

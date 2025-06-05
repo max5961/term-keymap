@@ -10,7 +10,12 @@ import type { KeyMap } from "./match.js";
  * */
 export function expandKeymap(keymap: KeyMap | KeyMap[]): KeyMap[] {
     if (Array.isArray(keymap)) {
-        if (keymap.length <= 1) return keymap;
+        if (
+            keymap.length <= 1 &&
+            (!keymap[0] || (keymap[0].input && keymap[0].input.length < 1))
+        ) {
+            return keymap;
+        }
 
         const result: KeyMap[] = [];
         for (const km of keymap) {
