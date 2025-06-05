@@ -1,6 +1,6 @@
 import { configureStdin } from "../src/configureStdin.js";
 import { createKeymap } from "../src/stateful/createKeymap.js";
-import { InputTree } from "../src/stateful/InputTree.js";
+import { InputState } from "../src/stateful/InputState.js";
 
 configureStdin({
     stdout: process.stdout,
@@ -9,13 +9,6 @@ configureStdin({
 });
 
 const keymaps = [
-    // createKeymap({
-    //     keymap: [{ key: "tab" }, { key: "tab" }],
-    //     name: "TAB_TEST",
-    //     callback() {
-    //         console.log(this.name + " - matched!");
-    //     },
-    // }),
     createKeymap({
         keymap: [
             { key: "ctrl", input: "d" },
@@ -27,9 +20,26 @@ const keymaps = [
             console.log(this.name + " - matched!");
         },
     }),
+    createKeymap({
+        keymap: { input: "foobar" },
+        name: "FOOBAR",
+        callback() {
+            console.log(this.name + " - matched!");
+        },
+    }),
+    createKeymap({
+        keymap: [
+            { key: ["super", "ctrl"], input: "Dd" },
+            { key: "alt", input: "cc" },
+        ],
+        name: "long",
+        callback() {
+            console.log(this.name + " - matched!");
+        },
+    }),
 ];
 
-const ip = new InputTree(50);
+const ip = new InputState(50);
 
 process.stdin.on("data", (buf: Buffer) => {
     if (buf[0] === 3) process.exit();

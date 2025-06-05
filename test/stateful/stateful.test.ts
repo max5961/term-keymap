@@ -1,9 +1,440 @@
 import { describe, expect, test } from "vitest";
-import { InputTree } from "../../src/stateful/InputTree.js";
+import { InputState } from "../../src/stateful/InputState.js";
 import { createKeymap } from "../../src/stateful/createKeymap.js";
+import { encodeMods } from "../helpers/encodeMods.js";
 
 describe("stateful", () => {
-    const ip = new InputTree(50);
+    test("previous input does not effect matches", () => {
+        const ip = new InputState(5);
+        ip.process(Buffer.from([97]), []);
+        ip.process(Buffer.from([97]), []);
+        ip.process(Buffer.from([97]), []);
+        ip.process(Buffer.from([97]), []);
+        const match = ip.process(Buffer.from([98]), [
+            createKeymap({ name: "foo", keymap: { input: "b" } }),
+        ]);
+
+        expect(match.name).toBe("foo");
+    });
+
+    test("Handles abc", () => {
+        const ip = new InputState(5);
+        const keymap = [
+            createKeymap({ name: "foo", keymap: { input: "abc" } }),
+        ];
+
+        const matches = [] as (string | undefined)[];
+
+        let match = ip.process(Buffer.from([97]), keymap);
+        matches.push(match.name);
+
+        match = ip.process(Buffer.from([98]), keymap);
+        matches.push(match.name);
+
+        match = ip.process(Buffer.from([99]), keymap);
+        matches.push(match.name);
+
+        expect(matches).toEqual([undefined, undefined, "foo"]);
+    });
+
+    test("Shorter inputs take precedence", () => {
+        const ip = new InputState(5);
+        const keymaps = [
+            createKeymap({ name: "foo", keymap: { input: "abc" } }),
+            createKeymap({ name: "bar", keymap: { input: "ab" } }),
+            createKeymap({ name: "baz", keymap: { input: "a" } }),
+        ];
+
+        const matches = [] as (string | undefined)[];
+
+        let match = ip.process(Buffer.from([97]), keymaps);
+        matches.push(match.name);
+
+        match = ip.process(Buffer.from([98]), keymaps);
+        matches.push(match.name);
+
+        match = ip.process(Buffer.from([99]), keymaps);
+        matches.push(match.name);
+
+        match = ip.process(Buffer.from([97]), keymaps);
+        matches.push(match.name);
+
+        expect(matches).toEqual(["baz", undefined, undefined, "baz"]);
+    });
+
+    test("Handles concatenation of flattened sequences", () => {
+        const ip = new InputState(10);
+        const keymaps = [
+            createKeymap({
+                name: "foo",
+                keymap: [{ input: "abc" }, { input: "def" }],
+            }),
+        ];
+
+        const matches = [] as (string | undefined)[];
+
+        let match: ReturnType<typeof ip.process>;
+        for (let i = 97; i < 103; ++i) {
+            match = ip.process(Buffer.from([i]), keymaps);
+            matches.push(match.name);
+        }
+        expect(matches).toEqual([
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            "foo",
+        ]);
+    });
+
+    test.todo("Invalid sequences do not corrupt state", () => {
+        const ip = new InputState(10);
+        const keymaps = [
+            createKeymap({
+                name: "foo",
+                keymap: [{ input: "abc" }],
+            }),
+        ];
+
+        const matches = [] as (string | undefined)[];
+
+        let match: ReturnType<typeof ip.process>;
+        for (let i = 97; i < 100; ++i) {
+            ip.process(Buffer.from("\x1b[<35;1;1M"), keymaps); // mouse escape code
+
+            match = ip.process(Buffer.from([i]), keymaps);
+            matches.push(match.name);
+        }
+        expect(matches).toEqual([undefined, undefined, "foo"]);
+    });
+
+    test.todo("Modifier only keys do not corrupt state", () => {
+        const ip = new InputState(10);
+        const keymaps = [
+            createKeymap({
+                name: "foo",
+                keymap: [{ input: "abc" }],
+            }),
+        ];
+
+        const matches = [] as (string | undefined)[];
+
+        let match: ReturnType<typeof ip.process>;
+        for (let i = 97; i < 100; ++i) {
+            ip.process(Buffer.from("\x1b[57441u"), keymaps); // shift only
+
+            match = ip.process(Buffer.from([i]), keymaps);
+            matches.push(match.name);
+        }
+        expect(matches).toEqual([undefined, undefined, "foo"]);
+    });
+
+    describe("ambiguous legacy keycodes", () => {
+        test("<C-i><C-i>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [
+                        { key: "ctrl", input: "i" },
+                        { key: "ctrl", input: "i" },
+                    ],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([9]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([9]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, "foo"]);
+        });
+        test("<Tab><Tab>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [{ key: "tab" }, { key: "tab" }],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([9]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([9]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, "foo"]);
+        });
+        test("<C-i><Tab> fails", () => {
+            /**
+             * This is impossible to match because InputState creates compatible
+             * paths based on the ambiguity of the buffer it receives.  For example,
+             * because keycode 9 is ambiguous with Tab and Ctrl + i, the tree will
+             * split at the leaf nodes and create two separate paths (if they don't
+             * already exist).  Each path will interpret keycode 9 in one of the
+             * two possible interpretations.  Therefore Ctrl + i cannot exist on the
+             * same path as Tab.
+             *
+             * NOTE: The path only splits when an ambiguous *buffer* is
+             * processed.  Kitty sends unambiguous buffers, so the Kitty protocol
+             * allows for Ctrl + i and Tab to be on the same path.
+             */
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [{ key: "ctrl", input: "i" }, { key: "tab" }],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([9]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([9]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, undefined]);
+        });
+        test("<C-m><C-m>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [
+                        { key: "ctrl", input: "m" },
+                        { key: "ctrl", input: "m" },
+                    ],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([13]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([13]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, "foo"]);
+        });
+        test("<CR><CR>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [{ key: "return" }, { key: "return" }],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([13]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([13]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, "foo"]);
+        });
+        test("<CR><C-m> fails", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [{ key: "return" }, { key: "ctrl", input: "m" }],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([13]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([13]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, undefined]);
+        });
+        test("<C-' '><C-' '>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [
+                        { key: "ctrl", input: " " },
+                        { key: "ctrl", input: " " },
+                    ],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([0]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([0]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, "foo"]);
+        });
+        test("<C-2><C-2>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [
+                        { key: "ctrl", input: " " },
+                        { key: "ctrl", input: " " },
+                    ],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([0]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([0]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, "foo"]);
+        });
+        test("<C-2><C-' '> fails", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [
+                        { key: "ctrl", input: "2" },
+                        { key: "ctrl", input: " " },
+                    ],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([0]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([0]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, undefined]);
+        });
+        test("<Esc><Esc><Esc>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [{ key: "esc" }, { key: "esc" }, { key: "esc" }],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, undefined, "foo"]);
+        });
+        test("<C-3><C-3><C-3>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [
+                        { key: "ctrl", input: "3" },
+                        { key: "ctrl", input: "3" },
+                        { key: "ctrl", input: "3" },
+                    ],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, undefined, "foo"]);
+        });
+        test("<C-[><C-[><C-[>", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [
+                        { key: "ctrl", input: "[" },
+                        { key: "ctrl", input: "[" },
+                        { key: "ctrl", input: "[" },
+                    ],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, undefined, "foo"]);
+        });
+        test("<Esc><C-3><C-[> fails", () => {
+            const keymaps = [
+                createKeymap({
+                    name: "foo",
+                    keymap: [
+                        { key: "esc" },
+                        { key: "ctrl", input: "3" },
+                        { key: "ctrl", input: "[" },
+                    ],
+                }),
+            ];
+
+            const ip = new InputState(50);
+            const matches = [] as (string | undefined)[];
+
+            let match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            match = ip.process(Buffer.from([27]), keymaps);
+            matches.push(match.name);
+
+            expect(matches).toEqual([undefined, undefined, undefined]);
+        });
+    });
+});
+
+describe("stateful", () => {
+    const ip = new InputState(50);
 
     const getKeymaps = () => [
         createKeymap({
@@ -19,48 +450,125 @@ describe("stateful", () => {
             const match = ip.process(Buffer.from([9]), keymaps);
             expect(match.name).toBe("TAB_TEST");
         });
-
-        test("tab concat ctrl + i", () => {
-            /**
-             * This is impossible to match because InputTree creates compatible
-             * paths based on the ambiguity of the buffer it receives.  For example,
-             * because keycode 9 is ambiguous with Tab and Ctrl + i, the tree will
-             * split at the leaf nodes and create two separate paths (if they don't
-             * already exist) where keycode 9 means only one of the possiblities.
-             * Therefore, Ctrl + i cannot exist on the same path as Tab.
-             *
-             * NOTE: The path only splits when an ambiguous **buffer** is
-             * processed.  Kitty sends unambiguous buffers, so the Kitty protocol
-             * allows for Ctrl + i and Tab to be on the same path.
-             */
-            const keymaps = [
-                createKeymap({
-                    name: "IMPOSSIBLE",
-                    keymap: [{ key: "tab" }, { key: "ctrl", input: "i" }],
-                }),
-            ];
-
-            ip.process(Buffer.from([9]), keymaps);
-            const match = ip.process(Buffer.from([9]), keymaps);
-
-            expect(match.name).toBe(undefined);
-        });
     });
 
     describe("Kitty", () => {
-        test.todo("double tab /wo clear", () => {
+        test("double tab /w previous ambiguous keys", () => {
+            ip.clear();
+
+            // Send ambiguous keycodes for Tab, Ctrl + i
+            ip.process(Buffer.from([9]), []);
+            ip.process(Buffer.from([9]), []);
+
             const keymaps = getKeymaps();
-            ip.process(Buffer.from("\x1b[9u"), keymaps);
+
+            // Send kitty CSI sequences for Tab (we already sent 2 unhandled for
+            // keycode 9, so should match after just 1 kitty Tab)
             const match = ip.process(Buffer.from("\x1b[9u"), keymaps);
             expect(match.name).toBe("TAB_TEST");
         });
 
-        test("double tab w/ clear before", () => {
+        test("double tab", () => {
             ip.clear();
             const keymaps = getKeymaps();
             ip.process(Buffer.from("\x1b[9u"), keymaps);
             const match = ip.process(Buffer.from("\x1b[9u"), keymaps);
             expect(match.name).toBe("TAB_TEST");
+        });
+
+        // prettier-ignore
+        test("long sequence", () => {
+            const keymap = [
+                createKeymap({
+                    keymap: [
+                        { key: ["super", "ctrl"], input: "Aa" },
+                        { key: "alt", input: "ccc" },
+                    ],
+                    name: "foobar",
+                }),
+            ];
+
+            // Load input state
+            ip.process(Buffer.from(`\x1b[97;${encodeMods(["super", "ctrl", "shift"])}u`), []);
+            ip.process(Buffer.from(`\x1b[97;${encodeMods(["super", "ctrl"])}u`), []);
+            ip.process(Buffer.from(`\x1b[99;${encodeMods(["alt"])}u`), []);
+            ip.process(Buffer.from(`\x1b[99;${encodeMods(["alt"])}u`), []);
+
+            // inject keymap on final <A-c>
+            const match = 
+                ip.process(Buffer.from(`\x1b[99;${encodeMods(["alt"])}u`), keymap);
+
+            expect(match.name).toBe("foobar");
+        });
+
+        test("Sequence over size of input state fails", () => {
+            const ip = new InputState(5);
+
+            const keymaps = [
+                createKeymap({
+                    keymap: { input: "aaaaaa" },
+                    name: "foobar",
+                }),
+            ];
+
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            const match = ip.process(Buffer.from("\x1b[97u"), keymaps);
+
+            expect(match.name).toBe(undefined);
+        });
+
+        test("Sequence same size of input state matches", () => {
+            const ip = new InputState(6);
+
+            const keymaps = [
+                createKeymap({
+                    keymap: { input: "aaaaaa" },
+                    name: "foobar",
+                }),
+            ];
+
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            ip.process(Buffer.from("\x1b[97u"), keymaps);
+            const match = ip.process(Buffer.from("\x1b[97u"), keymaps);
+
+            expect(match.name).toBe("foobar");
+        });
+
+        test("Smaller concats take precedence", () => {
+            const keymaps = [
+                createKeymap({
+                    keymap: { input: "aaa" },
+                    name: "",
+                }),
+                createKeymap({
+                    keymap: { input: "aa" },
+                    name: "bar",
+                }),
+                createKeymap({
+                    keymap: { input: "a" },
+                    name: "baz",
+                }),
+            ];
+
+            const matches: string[] = [];
+
+            let match = ip.process(Buffer.from("\x1b[97u"), keymaps);
+            if (match.name) matches.push(match.name);
+
+            match = ip.process(Buffer.from("\x1b[97u"), keymaps);
+            if (match.name) matches.push(match.name);
+
+            match = ip.process(Buffer.from("\x1b[97u"), keymaps);
+            if (match.name) matches.push(match.name);
+
+            expect(matches).toEqual(["baz", "baz", "baz"]);
         });
     });
 });
