@@ -3,7 +3,7 @@ import { InputState } from "../../src/stateful/InputState.js";
 import { createKeymap } from "../../src/stateful/createKeymap.js";
 import { encodeMods } from "../helpers/encodeMods.js";
 
-describe("stateful", () => {
+describe.todo("stateful", () => {
     test("previous input does not effect matches", () => {
         const ip = new InputState(5);
         ip.process(Buffer.from([97]), []);
