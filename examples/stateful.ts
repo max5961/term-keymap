@@ -1,6 +1,6 @@
 import { configureStdin } from "../src/configureStdin.js";
 import { createKeymap } from "../src/stateful/createKeymap.js";
-import { InputLine } from "../src/stateful/InputLine.js";
+import { InputState } from "../src/stateful/InputState.js";
 
 configureStdin({
     stdout: process.stdout,
@@ -43,7 +43,7 @@ const keymaps = [
     }),
 ];
 
-const ip = new InputLine(50);
+const ip = new InputState(50);
 
 process.stdin.on("data", (buf: Buffer) => {
     if (buf[0] === 3) process.exit();

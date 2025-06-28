@@ -1,22 +1,45 @@
-import type { Data, Key } from "../types.js";
-import type { EnhancedKeyMap } from "./createKeymap.js";
-import type { KeyMap } from "./match.js";
-import { match } from "./match.js";
 import { parseBuffer } from "../parse/parseBuffer.js";
+import type { Data, Key } from "../types.js";
 import { PeekSet } from "../util/PeekSet.js";
-import { splitAmbiguousData, type ShortData } from "./splitAmbiguousData.js";
+import type { EnhancedKeyMap } from "./createKeymap.js";
+import { match, type KeyMap } from "./match.js";
+import type { ShortData } from "./splitAmbiguousData.js";
+import { splitAmbiguousData } from "./splitAmbiguousData.js";
 
 export class InputState {
     private maxDepth: number;
-    private depth: number;
-    private firstChildren: Node[];
-    private leafs: Node[];
+    private size: number;
+    private root: Node | null;
+    private head: Node | null;
 
     constructor(maxDepth: number) {
         this.maxDepth = maxDepth;
-        this.depth = 0;
-        this.firstChildren = [];
-        this.leafs = [];
+        this.size = 0;
+        this.root = null;
+        this.head = null;
+    }
+
+    private appendData(data: Data) {
+        const splitData = splitAmbiguousData(data);
+        const node = new Node(splitData);
+        ++this.size;
+
+        if (!this.root || !this.head) {
+            this.root = node;
+            this.head = node;
+        } else {
+            this.head.next = node;
+            node.prev = this.head;
+            this.head = node;
+        }
+
+        if (this.size > this.maxDepth) {
+            this.root = this.root.next;
+            if (this.root) {
+                this.root.prev = null;
+                --this.size;
+            }
+        }
     }
 
     public process(
@@ -60,22 +83,20 @@ export class InputState {
 
         for (const length of lengths) {
             for (const ekm of bucket[length]) {
-                for (const leaf of this.leafs) {
-                    const matched = this.checkMatch(
-                        ekm,
-                        ekm.keymap.length - 1,
-                        leaf,
-                    );
+                const matched = this.checkMatch(
+                    ekm,
+                    ekm.keymap.length - 1,
+                    this.head,
+                );
 
-                    if (matched) {
-                        this.clear();
-                        ekm.callback?.();
-                        return {
-                            data: data,
-                            name: ekm.name,
-                            keymap: ekm.keymap,
-                        };
-                    }
+                if (matched) {
+                    this.clear();
+                    ekm.callback?.();
+                    return {
+                        data: data,
+                        name: ekm.name,
+                        keymap: ekm.keymap,
+                    };
                 }
             }
         }
@@ -86,140 +107,39 @@ export class InputState {
     private checkMatch(
         ekm: EnhancedKeyMap,
         idx: number,
-        curr: Node | null,
+        node: Node | null,
     ): boolean {
-        if (idx < 0 || idx > this.depth || curr === null) return false;
+        if (!node) return false;
+        if (ekm.keymap.length > this.size) return false;
+        if (idx < 0) return false;
 
-        if (match(ekm.keymap[idx--], curr.data)) {
+        if (node.data.some((d) => match(ekm.keymap[idx], d))) {
+            --idx;
             if (idx < 0) {
                 return true;
             } else {
-                return this.checkMatch(ekm, idx, curr.prev);
+                return this.checkMatch(ekm, idx, node.prev);
             }
         }
 
         return false;
     }
 
-    private appendData(data: Data): void {
-        // Split data into ShortData[]
-        const splitData = splitAmbiguousData(data);
-        const isAmbigData = splitData.length > 1;
-
-        // Get the possible invalid sets
-        const invalid = !isAmbigData
-            ? new Set<string>()
-            : splitData.reduce((a: Set<string>, c: ShortData) => {
-                  const stringified = this.stringifyAmbig(c);
-                  a.add(stringified);
-                  return a;
-              }, new Set<string>());
-
-        // Create the nodes, each having a unique invalid set from the other in the
-        // splitData
-        const nextLeafs = splitData.map((data) => {
-            const uniqueInvalid = new Set(invalid);
-            let pathId = "";
-            if (isAmbigData) {
-                pathId = this.stringifyAmbig(data);
-                uniqueInvalid.delete(pathId);
-            }
-            return new Node(data, uniqueInvalid, pathId);
-        });
-
-        // Append the next leaf nodes.  If the Q is empty, we can just replace
-        // the firstChildren and leafs
-        if (!this.firstChildren.length && !this.leafs.length) {
-            this.firstChildren = nextLeafs;
-            this.leafs = nextLeafs;
-
-            for (const leaf of this.leafs) {
-                leaf.prev = null;
-            }
-            ++this.depth;
-        }
-
-        // Q is not empty
-        else if (this.firstChildren.length && this.leafs.length) {
-            const prevLeafs = this.leafs;
-
-            for (const prevLeaf of prevLeafs) {
-                for (const nextLeaf of nextLeafs) {
-                    prevLeaf.tryAppendChild(nextLeaf);
-                }
-            }
-
-            this.leafs = nextLeafs;
-            ++this.depth;
-        }
-
-        // Resize if too deep
-        if (this.depth > this.maxDepth) {
-            const nextFirstChildren: Node[] = [];
-
-            for (const child of this.firstChildren) {
-                child.next.forEach((nextChild) => {
-                    nextChild.prev = null;
-                    nextFirstChildren.push(nextChild);
-                });
-            }
-
-            this.firstChildren = nextFirstChildren;
-            --this.depth;
-        }
-    }
-
-    public clear() {
-        this.firstChildren = [];
-        this.leafs = [];
-        this.depth = 0;
-    }
-
-    private stringifyAmbig(shortData: ShortData): string {
-        const append = (set: PeekSet) => {
-            Array.from(set.values())
-                .sort()
-                .forEach((v) => (invalidAmbig += v));
-        };
-
-        let invalidAmbig = "k:";
-        append(shortData.key);
-        invalidAmbig += ":i:";
-        append(shortData.input);
-
-        return invalidAmbig;
+    private clear() {
+        this.root = null;
+        this.head = null;
+        this.size = 0;
     }
 }
 
 class Node {
-    public prev: Node | null;
-    public next: Node[];
-    public data: ShortData;
-    public invalid: Set<string>;
-    public pathId: string;
+    public prev: null | Node;
+    public next: null | Node;
+    public data: ShortData[];
 
-    constructor(data: ShortData, invalid: Set<string>, pathId: string) {
+    constructor(data: ShortData[]) {
         this.data = data;
-        this.invalid = invalid;
-        this.pathId = pathId;
         this.prev = null;
-        this.next = [];
-    }
-
-    /**
-     * Ensures that:
-     * - nodes that are not on this Node's path are not appended
-     * - child nodes inherit this Node's invalid set
-     * - sets the parent of the child to this Node
-     */
-    public tryAppendChild(node: Node): boolean {
-        if (node.pathId && this.invalid.has(node.pathId)) return false;
-
-        for (const value of this.invalid) {
-            node.invalid.add(value);
-        }
-        this.next.push(node);
-        node.prev = this;
-        return true;
+        this.next = null;
     }
 }
