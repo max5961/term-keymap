@@ -11,6 +11,7 @@ keystrokes.*
 ## Handling Raw Data
 
 ```typescript
+// parseBuffer is not dependent on configureStdin, so this is not always necessary
 configureStdin({
     stdout: process.stdout,
     enableMouse: false,
