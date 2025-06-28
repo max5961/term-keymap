@@ -13,9 +13,10 @@ export type Opts = {
      * @default process.stdout
      */
     stdout?: NodeJS.WriteStream;
+
     /**
-     * One reason you might *not* want this on is that many terminals alter the
-     * cursor and might prevent copying text.
+     * One reason you might *not* want this on is that is may alter the cusor in
+     * many terminals and prevent copying text
      * @default true
      */
     enableMouse?: boolean;
@@ -33,6 +34,8 @@ export type Opts = {
      *
      * `configureStdin` returns `{ kittySupported }` which must be passed to
      * parseBuffer in order to parse Kitty protocol sequences
+     *
+     * @default true (if the terminal does not support it, it does nothing)
      */
     enableKittyProtocol?: boolean;
 };
@@ -64,8 +67,24 @@ export function configureStdin(opts: Opts) {
     });
 
     return Object.freeze({
+        /**
+         * The stdout stream chosen in the configuration options
+         */
         stdout: opts.stdout,
+
+        /**
+         * Represents is has been enabled in the configuration options
+         */
         enableMouse: enableMouse,
+
+        /**
+         * @returns `boolean` representing whether or not the Kitty Protocol is
+         * enabled and supported.
+         *
+         * **NOTE:** This function relies on an async operation that queries the
+         * terminal, so calling immediately after configuration will always return
+         * `false`
+         */
         kittySupported() {
             return kittyEnabled;
         },
