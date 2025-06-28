@@ -56,29 +56,29 @@ configureStdin({
     enableKittyProtocol: true,
 });
 
-const keymaps = [
-    createKeymap({
+const keymaps = createKeymaps([
+    {
         keymap: { key: "ctrl", input: "c" },
         name: "quit",
         callback() {
             process.exit();
         }
-    }),
-    createKeymap({
+    },
+    {
         keymap: { input: "a" },
         name: "shortest keymap wins",
         callback() {
             console.log(this.name + " - match")
         }
-    }),
-    createKeymap({
+    },
+    {
         keymap: { input: "abc" },
         name: "Impossible, because 'a' will always match before this",
         callback() {
             console.log(this.name);
         }
-    }),
-    createKeymap({
+    },
+    {
         keymap: [
             { key: "ctrl", input: "foo" },
             { key: "super", input: "BAR" },
@@ -87,8 +87,8 @@ const keymaps = [
         callback() {
             console.log(this.name + " - matched!");
         },
-    }),
-];
+    },
+]);
 
 const state = new InputState();
 

@@ -16,7 +16,8 @@ import { splitAmbiguousData, type ShortData } from "./splitAmbiguousData.js";
  * After writing this, I can't recall *WHY* this is any better in any situation than
  * the more simple solution, so this is not being exported.  Even though I don't
  * think this solves any real problems and just creates issues on legacy terms, I'm
- * keeping it anyways because it was fun to write and think its a cool idea.
+ * keeping it anyways because it was fun to write and it might possibly have future
+ * use?
  */
 export class CursedInputState {
     private maxDepth: number;
@@ -73,21 +74,21 @@ export class CursedInputState {
             .sort();
 
         for (const length of lengths) {
-            for (const ekm of bucket[length]) {
+            for (const safekm of bucket[length]) {
                 for (const leaf of this.leafs) {
                     const matched = this.checkMatch(
-                        ekm,
-                        ekm.keymap.length - 1,
+                        safekm,
+                        safekm.keymap.length - 1,
                         leaf,
                     );
 
                     if (matched) {
                         this.clear();
-                        ekm.callback?.();
+                        safekm.callback?.();
                         return {
                             data: data,
-                            name: ekm.name,
-                            keymap: ekm.keymap,
+                            name: safekm.name,
+                            keymap: safekm.keymap,
                         };
                     }
                 }
@@ -98,17 +99,17 @@ export class CursedInputState {
     }
 
     private checkMatch(
-        ekm: SafeKeyMapMetaData,
+        safekm: SafeKeyMapMetaData,
         idx: number,
         curr: Node | null,
     ): boolean {
         if (idx < 0 || idx > this.depth || curr === null) return false;
 
-        if (match(ekm.keymap[idx--], curr.data)) {
+        if (match(safekm.keymap[idx--], curr.data)) {
             if (idx < 0) {
                 return true;
             } else {
-                return this.checkMatch(ekm, idx, curr.prev);
+                return this.checkMatch(safekm, idx, curr.prev);
             }
         }
 
