@@ -1,5 +1,5 @@
 import { configureStdin } from "../src/configureStdin.js";
-import { createKeymap } from "../src/stateful/createKeymap.js";
+import { createKeymaps } from "../src/stateful/createKeymaps.js";
 import { InputState } from "../src/stateful/InputState.js";
 
 configureStdin({
@@ -8,12 +8,12 @@ configureStdin({
     enableKittyProtocol: true,
 });
 
-const keymaps = [
-    createKeymap({
+const keymaps = createKeymaps([
+    {
         keymap: { input: "a" },
         name: "shortest wins",
-    }),
-    createKeymap({
+    },
+    {
         keymap: [
             { key: "ctrl", input: "d" },
             { key: "tab" },
@@ -23,15 +23,15 @@ const keymaps = [
         callback() {
             console.log(this.name + " - matched!");
         },
-    }),
-    createKeymap({
+    },
+    {
         keymap: { input: "foobar" },
         name: "FOOBAR",
         callback() {
             console.log(this.name + " - matched!");
         },
-    }),
-    createKeymap({
+    },
+    {
         keymap: [
             { key: ["super", "ctrl"], input: "Dd" },
             { key: "alt", input: "cc" },
@@ -40,8 +40,8 @@ const keymaps = [
         callback() {
             console.log(this.name + " - matched!");
         },
-    }),
-];
+    },
+]);
 
 const ip = new InputState(50);
 

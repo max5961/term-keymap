@@ -1,5 +1,5 @@
 import type { Data, Key } from "../types.js";
-import type { EnhancedKeyMap } from "./createKeymap.js";
+import type { InputReadyKeyMaps, SafeKeyMapMetaData } from "./createKeymaps.js";
 import type { KeyMap } from "./match.js";
 import { match } from "./match.js";
 import { parseBuffer } from "../parse/parseBuffer.js";
@@ -33,8 +33,10 @@ export class CursedInputState {
 
     public process(
         buf: Buffer,
-        keymaps: EnhancedKeyMap[],
+        keymaps: InputReadyKeyMaps,
     ): { data: Data; keymap?: KeyMap[]; name?: string } {
+        const safeKeymaps = keymaps.keymaps;
+
         const data = parseBuffer(buf);
 
         if (data.key.size || data.input.size) {
@@ -59,9 +61,9 @@ export class CursedInputState {
             }
         }
 
-        const bucket: Record<number, EnhancedKeyMap[]> = {};
+        const bucket: Record<number, SafeKeyMapMetaData[]> = {};
 
-        keymaps.forEach((km) => {
+        safeKeymaps.forEach((km) => {
             if (!bucket[km.keymap.length]) bucket[km.keymap.length] = [];
             bucket[km.keymap.length].push(km);
         });
@@ -96,7 +98,7 @@ export class CursedInputState {
     }
 
     private checkMatch(
-        ekm: EnhancedKeyMap,
+        ekm: SafeKeyMapMetaData,
         idx: number,
         curr: Node | null,
     ): boolean {

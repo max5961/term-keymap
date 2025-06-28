@@ -1,18 +1,18 @@
 import { describe, expect, test } from "vitest";
 import { InputState } from "../../src/stateful/InputState.js";
-import { createKeymap } from "../../src/stateful/createKeymap.js";
+import { createKeymaps } from "../../src/stateful/createKeymaps.js";
 import { encodeMods } from "../helpers/encodeMods.js";
 
 describe("stateful legacy", () => {
     test("previous input does not effect matches", () => {
+        const dummy = createKeymaps([]);
+        const real = createKeymaps([{ name: "foo", keymap: { input: "b" } }]);
         const ip = new InputState(5);
-        ip.process(Buffer.from([97]), []);
-        ip.process(Buffer.from([97]), []);
-        ip.process(Buffer.from([97]), []);
-        ip.process(Buffer.from([97]), []);
-        const match = ip.process(Buffer.from([98]), [
-            createKeymap({ name: "foo", keymap: { input: "b" } }),
-        ]);
+        ip.process(Buffer.from([97]), dummy);
+        ip.process(Buffer.from([97]), dummy);
+        ip.process(Buffer.from([97]), dummy);
+        ip.process(Buffer.from([97]), dummy);
+        const match = ip.process(Buffer.from([98]), real);
 
         expect(match.name).toBe("foo");
     });

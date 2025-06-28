@@ -1,19 +1,23 @@
 import { parseBuffer } from "../parse/parseBuffer.js";
 import type { Data, Key } from "../types.js";
 import { PeekSet } from "../util/PeekSet.js";
-import type { EnhancedKeyMap } from "./createKeymap.js";
+import type { InputReadyKeyMaps, SafeKeyMapMetaData } from "./createKeymaps.js";
 import { match, type KeyMap } from "./match.js";
 import type { ShortData } from "./splitAmbiguousData.js";
 import { splitAmbiguousData } from "./splitAmbiguousData.js";
 
+/**
+ * @constructor @param maxDepth *number*.  Determines the longest possible sequence that
+ * can be matched.
+ */
 export class InputState {
     private maxDepth: number;
     private size: number;
     private root: Node | null;
     private head: Node | null;
 
-    constructor(maxDepth: number) {
-        this.maxDepth = maxDepth;
+    constructor(maxDepth?: number) {
+        this.maxDepth = maxDepth ?? 50;
         this.size = 0;
         this.root = null;
         this.head = null;
@@ -44,8 +48,10 @@ export class InputState {
 
     public process(
         buf: Buffer,
-        keymaps: EnhancedKeyMap[],
+        keymaps: InputReadyKeyMaps,
     ): { data: Data; keymap?: KeyMap[]; name?: string } {
+        const safeKeymaps = keymaps.keymaps;
+
         const data = parseBuffer(buf);
 
         if (data.key.size || data.input.size) {
@@ -70,9 +76,9 @@ export class InputState {
             }
         }
 
-        const bucket: Record<number, EnhancedKeyMap[]> = {};
+        const bucket: Record<number, SafeKeyMapMetaData[]> = {};
 
-        keymaps.forEach((km) => {
+        safeKeymaps.forEach((km) => {
             if (!bucket[km.keymap.length]) bucket[km.keymap.length] = [];
             bucket[km.keymap.length].push(km);
         });
@@ -82,20 +88,20 @@ export class InputState {
             .sort();
 
         for (const length of lengths) {
-            for (const ekm of bucket[length]) {
+            for (const safekm of bucket[length]) {
                 const matched = this.checkMatch(
-                    ekm,
-                    ekm.keymap.length - 1,
+                    safekm,
+                    safekm.keymap.length - 1,
                     this.head,
                 );
 
                 if (matched) {
                     this.clear();
-                    ekm.callback?.();
+                    safekm.callback?.();
                     return {
                         data: data,
-                        name: ekm.name,
-                        keymap: ekm.keymap,
+                        name: safekm.name,
+                        keymap: safekm.keymap,
                     };
                 }
             }
@@ -104,21 +110,28 @@ export class InputState {
         return { data };
     }
 
+    /**
+     * Recurses from the last index of node's flattened keymap, and checks if
+     * every part of the sequence matches the data history starting at most recent.
+     *
+     * `node.data.some` because each node.data must be an array in order to store
+     * possibilities for ambiguous keycodes that are appended to the data history
+     */
     private checkMatch(
-        ekm: EnhancedKeyMap,
+        safekm: SafeKeyMapMetaData,
         idx: number,
         node: Node | null,
     ): boolean {
         if (!node) return false;
-        if (ekm.keymap.length > this.size) return false;
+        if (safekm.keymap.length > this.size) return false;
         if (idx < 0) return false;
 
-        if (node.data.some((d) => match(ekm.keymap[idx], d))) {
+        if (node.data.some((d) => match(safekm.keymap[idx], d))) {
             --idx;
             if (idx < 0) {
                 return true;
             } else {
-                return this.checkMatch(ekm, idx, node.prev);
+                return this.checkMatch(safekm, idx, node.prev);
             }
         }
 
