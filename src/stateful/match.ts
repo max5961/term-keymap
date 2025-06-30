@@ -3,6 +3,7 @@ import type { Data, Key } from "../types.js";
 export type KeyMap = {
     key?: Key | Key[];
     input?: string;
+    leader?: boolean;
 };
 
 export function match<T extends Pick<Data, "key" | "input">>(

@@ -1,6 +1,7 @@
 import type { PeekSet } from "./util/PeekSet.js";
 
 export type Key =
+    | "leader"
     | "ctrl"
     | "alt"
     | "shift"

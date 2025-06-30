@@ -43,7 +43,7 @@ const keymaps = createKeymaps([
     },
 ]);
 
-const ip = new InputState(50);
+const ip = new InputState();
 
 process.stdin.on("data", (buf: Buffer) => {
     if (buf[0] === 3) process.exit();
