@@ -1,12 +1,12 @@
 import type { PeekSet } from "./util/PeekSet.js";
 
+export type Modifier = "ctrl" | "alt" | "shift" | "super" | "hyper" | "meta";
+
 export type Key =
-    | "ctrl"
-    | "alt"
-    | "shift"
-    | "super"
-    | "hyper"
-    | "meta"
+    | Modifier
+
+    // capsLock & numLock are technically modifiers since they modify the kitty
+    // modifier bit, but aren't typically used in combination with other keys
     | "capsLock"
     | "numLock"
     | "backspace"
