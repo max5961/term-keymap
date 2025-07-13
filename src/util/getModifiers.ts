@@ -13,7 +13,7 @@ export function getModifiers(num: number | undefined) {
         hyper: (num & 16) !== 0,
         meta: (num & 32) !== 0,
         capsLock: (num & 64) !== 0,
-        numLock: (num && 128) !== 0,
+        numLock: (num & 128) !== 0,
     } as const;
 }
 

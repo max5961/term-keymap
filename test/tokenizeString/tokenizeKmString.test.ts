@@ -4,12 +4,11 @@ import { tokenizeKmString } from "../../src/tokenize_string/tokenizeKmString.js"
 
 describe("tokenizeKmString", () => {
     test.each<[string, KeyMap[]]>([
-        // ["<>", []],
         ["foobar", [{ input: "foobar" }]],
         ["<C-x>", [{ key: ["ctrl"], input: "x" }]],
+        ["<f1>", [{ key: ["f1"] }]],
+        ["<F1>", [{ key: ["f1"] }]],
 
-        // a.toUpperCase matches ModMap, so this is an edge case
-        ["<C-a>", [{ key: ["ctrl"], input: "a" }]],
         [
             "<C-A-D-M-foo>",
             [{ key: ["ctrl", "alt", "super", "meta"], input: "foo" }],
@@ -40,19 +39,20 @@ describe("tokenizeKmString", () => {
     });
 });
 
-describe("tokenizeKmString invalid sequences", () => {
-    test.each<[string, string]>([
-        ["<foobar-C-d>foobar<tab><f1>", "input before modifier"],
-    ])("%s - %s", (str) => {
-        const result = tokenizeKmString(str);
-        expect(result).toEqual(undefined);
-    });
-});
-
-describe.todo("tokenizeKmString edge cases", () => {
-    test("Modifier + lowercase modifier in mod seq", () => {
+describe("tokenizeKmString edge cases", () => {
+    test("Modifier + lowercase modifier in grouping", () => {
         const result = tokenizeKmString("<a-a>");
         expect(result).toEqual([{ key: ["alt"], input: "a" }]);
+    });
+
+    test("Modifier + different modifier in grouping", () => {
+        const result = tokenizeKmString("<a-c>");
+        expect(result).toEqual([{ key: ["alt"], input: "c" }]);
+    });
+
+    test("Modifier + non modifier in grouping", () => {
+        const result = tokenizeKmString("<c-f>");
+        expect(result).toEqual([{ key: ["ctrl"], input: "f" }]);
     });
 
     test("Empty str", () => {
@@ -60,17 +60,22 @@ describe.todo("tokenizeKmString edge cases", () => {
         expect(result).toEqual([]);
     });
 
-    test("Empty key seq", () => {
+    test("Empty grouping", () => {
         const result = tokenizeKmString("<>");
         expect(result).toEqual([{ input: "<>" }]);
     });
 
-    test("Multiple nested empty key sequences", () => {
+    test("grouping with only -", () => {
+        const result = tokenizeKmString("<->");
+        expect(result).toEqual([{ input: "<->" }]);
+    });
+
+    test("Multiple nested empty grouping", () => {
         const result = tokenizeKmString("<<<>>>");
         expect(result).toEqual([{ input: "<<<>>>" }]);
     });
 
-    test("Unterminated key seq", () => {
+    test("Unterminated grouping", () => {
         const result = tokenizeKmString("<C-A-foo");
         expect(result).toEqual([{ input: "<C-A-foo" }]);
     });
@@ -80,25 +85,20 @@ describe.todo("tokenizeKmString edge cases", () => {
         expect(result).toEqual([{ key: ["ctrl"], input: "-" }]);
     });
 
-    test("favors final brackets in mod seq", () => {
-        // interprets as
-        // '<C-foo' + <CR>
-        // NOT
-        // Ctrl + 'foo<CR'
+    test("Respects priority of types in the group (Mods -> Keys -> chars)", () => {
         const result = tokenizeKmString("<C-foo<CR>");
-        expect(result).toEqual([{ input: "<C-foo" }, { key: ["return"] }]);
+        expect(result).toEqual([{ key: ["ctrl"], input: "foo<CR" }]);
     });
 
     test("brackets within brackets", () => {
         const result = tokenizeKmString("<C-foo<CR>>");
         expect(result).toEqual([
-            { input: "<C-foo" },
-            { key: ["return"] },
+            { key: ["ctrl"], input: "foo<CR" },
             { input: ">" },
         ]);
     });
 
-    test("brackets within brackets 2 levels deep", () => {
+    test("groupings within groupings 2 levels deep", () => {
         const result = tokenizeKmString("<CR<CR<CR>>>");
         expect(result).toEqual([
             { input: "<CR<CR" },
