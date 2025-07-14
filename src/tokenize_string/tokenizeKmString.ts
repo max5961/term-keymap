@@ -5,40 +5,43 @@ import { ModMap, KeySet, KeyAliases } from "./helpers.js";
 export type ArrayOnlyKeyMap = KeyMap & { key?: Key[] };
 
 /**
- * VALID GROUPING RULES - if any of these are not true, we interpret the < as a char
+ * VALID GROUPING RULES - if any of these are not true, we interpret the '<' as
+ * the literal char and the grouping becomes a string literal.
  *
  * - The first '>' character closes the grouping
  *
+ * - Members of the group (except those discovered during input phase - see rule
+ *   below) are separated by '-' chars.
+ *
+ * - Valid groupings must be ordered in the following way:
+ *   Modifiers -> Keys -> Input (non-special-chars)
+ *
+ * - The group is parsed in 'phases'.  If a member *can* be interpreted as a Modifier,
+ *   then it will be, otherwise the phase is downgraded to either Key or Input.
+ *
  * - The first member of the sequence must be either a Mod or a Key.  If it is a
- *   Mod, it **must** be paired with something else.  If it paired with only Mods,
- *   then the final mod will be interpreted as the string literal
+ *   Mod, it **must** be paired with something else.  Mods cannot exist alone
  *
- * - Must be followed immediately by a modifier WITH a counterpart
- *   (key or non-special-char).  Modifiers cannot exist alone
+ * - Modifiers and Keys can be of any casing
  *
- * - Valid groupings must be ordered in the following priority order:
- *   Modifiers -> Keys -> non-special-chars
+ * - A group is considered *invalid* if it consists of only a single Modifer,
+ *   only non-special-chars, or only Keys mixed w/ non-special-chars.
  *
- * - Keys must be separated by '-' characters
+ * - If `getGroup` generates a group not deemed valid, it is gc'd and we
+ *   interpret the group as a string literal.  By design, there are no errors
+ *   or warnings.  While '<<C-a>' is probably a typo, its possible that the person
+ *   mapping it wanted that literally.
  *
- * HANDLING EDGE CASES
+ * GROUPING EDGE CASES TO CONSIDER
  *
- * Modifiers are represented by single characters and can be upper or lowercase.
- * This means that <A-a> could be interpreted as Alt + Alt but what we want is
- * Alt + 'a'. To handle this:
+ * - Modifiers are represented by single characters and can be upper or
+ *   lowercase. This means that <A-a> could be interpreted as Alt + Alt but
+ *   what we want is Alt + 'a'. Because of this, once we parse a possible
+ *   modifier we have already stored, we immediately shift into Input phase
  *
- * - Mods cannot be repeated.  So we need to keep a Set of used mods.  This solves
- *   the <A-a> problem, but not <A-c>
- *
- * - When iterating over a group, we keep a tally of which priority group we are
- *   in.  Mods|Keys|Chars.  If we are past the Mods priority grouping, then we know
- *   the character 'a' must be interpreted as a char
- *
- * - If we come across an ambiguous char like a|c, if there is no next, then it MUST
- *   be interpreted as a char and not a mod.
- *
- * - If getGrouping does not add any keys, then we know this grouping in invalid
- *   and the '<' char will no longer be interpreted as a group starter
+ * - A grouping that ends in Modifier Phase with a modifier must be interpreted
+ *   as the literal char to allow for mappings that could otherwise be interpreted
+ *   as Mod + Mod.  i.e.: `<C-A>` should be `Ctrl + A`, not `Ctrl + Alt`
  */
 export function tokenizeKmString(s: string): KeyMap[] | undefined {
     const res = [] as ArrayOnlyKeyMap[];
@@ -51,23 +54,20 @@ export function tokenizeKmString(s: string): KeyMap[] | undefined {
 
     for (let i = 0; i < s.length; ++i) {
         if (s[i] === "<") {
-            // Determine the end idx if the grouping is valid.  If its not a valid
-            // grouping, then we fallthrough and interpret it as a literal < char
+            // Returns null if there is no closing tag
             const eidx = findEidx(s, i + 1);
 
             if (eidx) {
                 const { mods, keys, input } = getGrouping(s, i + 1, eidx);
 
-                // As long as it has modifiers or keys, it **can** be a valid
-                // grouping. If it is, it will be converted to a KeyMap and added
-                // to the result.  Otherwise, we fall through and default to
-                // adding input to the current
+                // If mods or keys, it **can** be a valid grouping.  If it is,
+                // convert it to a KeyMap and push to the results.  If invalid, the
+                // '<' treated as any other character and the grouping becomes a string
+                // literal
                 if (mods.size || keys.size) {
-                    // Must be either Mod + (Keys || non-special-chars) or
-                    // Keys with no input
                     if (
                         (mods.size && (keys.size || input.length)) ||
-                        keys.size
+                        (keys.size && !input.length)
                     ) {
                         pushCurr();
 
@@ -92,13 +92,19 @@ export function tokenizeKmString(s: string): KeyMap[] | undefined {
     return res;
 }
 
+/** Phase Enum */
+const P = {
+    /** Modifier Phase */
+    Mod: 3,
+    /** Key Phase */
+    Key: 2,
+    /** Input Phase (non-special-chars) */
+    Input: 1,
+} as const;
+
 /**
- * We need to handle edge cases such as <C-f--o>.  Since f cannnot be interpreted
- * as a Mod (or key), everything after must be a string literal, so if we split
- * on '-' after f, we would lose a -.
- *
- * This does not validate if the grouping is valid.  All it does is interpret the
- * grouping sequence.  The results will tell us if it is valid
+ * The generates a grouping regardless of its validity. The validity of the result
+ * should be determined before its use.
  */
 function getGrouping(
     s: string,
@@ -114,22 +120,23 @@ function getGrouping(
     const keys = new Set<Key>();
     let input = "";
 
-    // Loop trackers
+    // Loop Trackers
     let acc = "";
-    let priority = 3;
+    let phase = P.Mod as number;
     for (let i = sidx; i <= eidx; ++i) {
         const checkAcc = s[i] === "-" || i === eidx;
         const possibleMod = i !== eidx;
 
-        if (priority > 1 && checkAcc) {
+        if (phase > P.Input && checkAcc) {
             const upper = acc.toUpperCase();
             const lower = acc.toLowerCase();
 
-            if (priority === 3 && upper in ModMap && possibleMod) {
+            if (phase === P.Mod && upper in ModMap && possibleMod) {
                 if (mods.has(ModMap[upper])) {
-                    // Sequence has already used this mod, so we interpret as a char and downgrade priority
-                    input += acc;
-                    priority = 1;
+                    // The grouping already contains this Mod.  Interpret the Mod
+                    // and hyphen as if we are in Input Phase
+                    input += acc += "-";
+                    phase = P.Input;
                 } else {
                     mods.add(ModMap[upper]);
                 }
@@ -138,23 +145,25 @@ function getGrouping(
                 continue;
             }
 
-            // Priority must be >= 2 here.  We either add a Key, or we downgrade
-            // priority so this entire block is never re-executed
+            // Phase must be >= 2 here.
             if (KeySet.has(lower as Key) || upper in KeyAliases) {
-                priority = 2;
+                phase = P.Key;
                 keys.add(KeyAliases[upper] || lower);
 
                 acc = "";
                 continue;
             }
 
-            priority = 1;
+            // Key check failed, so we must be in Input Phase
+            phase = P.Input;
+            input += acc;
+            acc = "";
         }
 
-        // If there are any straggler acc's, we need to run through the loop
-        // again to check them, but we don't want to reaccumulate them.
+        // NOTE: for loop iterates to `<= eidx` to force an extra loop and handle
+        // possible acc chunks that could be Keys.
         if (i < eidx) {
-            if (priority === 1) {
+            if (phase === P.Input) {
                 input += s[i];
             } else {
                 acc += s[i];
@@ -165,7 +174,7 @@ function getGrouping(
     return {
         mods,
         keys,
-        input: input + acc,
+        input,
     };
 }
 
