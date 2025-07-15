@@ -73,6 +73,10 @@ export class InputState {
         }
 
         if (data.key.size || data.input.size) {
+            // Since the leader can be just a single sequence, or a long sequence
+            // of keymaps, we need to append the most recent data in order to check
+            // against the leader (not doing that here, but it needs to be done)
+
             const modifiers = new PeekSet<Key>([
                 "shift",
                 "alt",
@@ -99,11 +103,13 @@ export class InputState {
                 this.startLeaderTimeout(keymaps.leaderTimeout);
             }
 
-            // The only pathway forward is removing from head or returning data,
-            // so of course its impossible to match anything.
-            if (!leaderMatch && onlyModifiers && !data.input.size) {
+            const removeFromHead =
+                !leaderMatch && onlyModifiers && !data.input.size;
+            const appendData = leaderMatch || data.input.size || !onlyModifiers;
+
+            if (removeFromHead) {
                 this.removeFromHead();
-            } else if (!onlyModifiers || data.input.size || leaderMatch) {
+            } else if (appendData) {
                 this.appendData(data);
             } else {
                 return { data };
