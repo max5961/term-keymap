@@ -45,7 +45,7 @@ export class InputReadyKeyMaps {
 }
 
 export function createKeymapsWithLeader(
-    leader?: KeyMap | KeyMap[],
+    leader?: Omit<KeyMap, "leader"> | Omit<KeyMap, "leader">[],
     leaderTimeout?: number,
 ) {
     return (keymaps: KeyMapMetaData[]): InputReadyKeyMaps => {
@@ -58,6 +58,7 @@ export function createKeymapsWithLeader(
             const kmArr = toArray(km.keymap);
             const result = [] as KeyMap[];
             for (let i = 0; i < kmArr.length; ++i) {
+                // leader being set prepends leader keymap to current iteration
                 if (leaderKeymap && kmArr[i].leader) {
                     result.push(...leaderKeymap);
                 }
@@ -75,3 +76,5 @@ export function createKeymapsWithLeader(
         return new InputReadyKeyMaps(safeKeymaps, leaderKeymap, leaderTimeout);
     };
 }
+
+export const createKeymaps = createKeymapsWithLeader();

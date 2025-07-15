@@ -11,7 +11,7 @@ export class InputState {
     private size: number;
     private root: Node | null;
     private head: Node | null;
-    private leaderMode: boolean;
+    private leaderTimeoutMode: boolean;
     private leaderTimeoutID: ReturnType<typeof setTimeout> | undefined;
 
     constructor(
@@ -25,7 +25,7 @@ export class InputState {
         this.size = 0;
         this.root = null;
         this.head = null;
-        this.leaderMode = false;
+        this.leaderTimeoutMode = false;
         this.leaderTimeoutID = undefined;
     }
 
@@ -68,17 +68,11 @@ export class InputState {
         const data = parseBuffer(buf);
         const safeKeymaps = keymaps.keymaps;
 
-        if (this.leaderMode) {
+        if (this.leaderTimeoutMode) {
             this.startLeaderTimeout(keymaps.leaderTimeout);
         }
 
-        // Append the data now, but if the keypress event is contains only modifier
-        // keys, then this will be removed.  However, its possible for the leader
-        // key to be just a modifier alone or any specified keymap.  Regardless of
-        // the data, if the appended data causes a match with the leader, then the
-        // newly appended data is not removed.
         if (data.key.size || data.input.size) {
-            this.appendData(data);
             const modifiers = new PeekSet<Key>([
                 "shift",
                 "alt",
@@ -96,28 +90,33 @@ export class InputState {
                 keymaps.leader &&
                 this.checkMatch(
                     { keymap: keymaps.leader },
-                    keymaps.leader.length,
+                    keymaps.leader.length - 1,
                     this.head,
                 );
 
             if (leaderMatch) {
-                // Once the leader keymap is pressed, then the queue behaves in
-                // timer mode, where each keypress must come within <keymap.leaderTimeout>ms
-                // or the Q will be cleared, which also puts the Q back into the
-                // default 'any amount of time is allowed between keypresses'.  Once
-                // a keymap other than the leader keymap is matched, this also puts
-                // the Q back into the default handling.
-                this.leaderMode = true;
+                this.leaderTimeoutMode = true;
                 this.startLeaderTimeout(keymaps.leaderTimeout);
             }
 
+            // The only pathway forward is removing from head or returning data,
+            // so of course its impossible to match anything.
             if (!leaderMatch && onlyModifiers && !data.input.size) {
                 this.removeFromHead();
+            } else if (!onlyModifiers || data.input.size || leaderMatch) {
+                this.appendData(data);
             } else {
                 return { data };
             }
         }
 
+        return this.checkKeymapMatch(safeKeymaps, data);
+    }
+
+    private checkKeymapMatch(
+        safeKeymaps: InputReadyKeyMaps["keymaps"],
+        data: Data,
+    ): ReturnType<InputState["process"]> {
         const bucket: Record<number, SafeKeyMapMetaData[]> = {};
 
         safeKeymaps.forEach((km) => {
@@ -184,7 +183,7 @@ export class InputState {
         clearTimeout(this.leaderTimeoutID);
 
         this.leaderTimeoutID = setTimeout(() => {
-            this.leaderMode = false;
+            this.leaderTimeoutMode = false;
             this.clear();
         }, leaderTimeout);
     }
