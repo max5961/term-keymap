@@ -129,7 +129,7 @@ describe("stateful legacy", () => {
         expect(matches).toEqual([undefined, undefined, "foo"]);
     });
 
-    describe.todo("ambiguous legacy keycodes", () => {
+    describe("ambiguous legacy keycodes", () => {
         test("<C-i><C-i>", () => {
             const keymaps = createActions([
                 {
@@ -419,7 +419,7 @@ describe("stateful legacy", () => {
     });
 });
 
-describe.todo("stateful kitty", () => {
+describe("stateful kitty", () => {
     const ip = new InputState({ maxDepth: 50 });
 
     const getKeymaps = () =>
