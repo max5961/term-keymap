@@ -1,9 +1,10 @@
 import { toArray } from "../util/toArray.js";
 import { expandKeymap } from "./expandKeymap.js";
 import { type KeyMap } from "../types.js";
+import { tokenize } from "../tokenize/tokenize.js";
 
 export type Action = {
-    keymap: KeyMap | KeyMap[];
+    keymap: KeyMap | KeyMap[] | string;
     name?: string;
     callback?: () => unknown;
 };
@@ -41,8 +42,9 @@ export class UserConfig {
         });
     }
 
-    private sanitizeKeymap(keymap: KeyMap | KeyMap[]): KeyMap[] {
-        const sequence = toArray(keymap);
+    private sanitizeKeymap(keymap: KeyMap | KeyMap[] | string): KeyMap[] {
+        const sequence =
+            typeof keymap === "string" ? tokenize(keymap) : toArray(keymap);
         const result = [] as KeyMap[];
 
         for (let i = 0; i < sequence.length; ++i) {

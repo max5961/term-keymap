@@ -43,7 +43,7 @@ export type ArrayOnlyKeyMap = KeyMap & { key?: Key[] };
  *   as the literal char to allow for mappings that could otherwise be interpreted
  *   as Mod + Mod.  i.e.: `<C-A>` should be `Ctrl + A`, not `Ctrl + Alt`
  */
-export function tokenize(s: string): KeyMap[] | undefined {
+export function tokenize(s: string): KeyMap[] {
     const res = [] as ArrayOnlyKeyMap[];
     let curr = {} as ArrayOnlyKeyMap;
 
