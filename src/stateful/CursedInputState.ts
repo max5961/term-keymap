@@ -1,6 +1,6 @@
 import type { Data, Key } from "../types.js";
-import type { InputReadyKeyMaps, SafeKeyMapMetaData } from "./createKeymaps.js";
 import type { KeyMap } from "./match.js";
+import { UserConfig } from "./UserConfig.js";
 import { match } from "./match.js";
 import { parseBuffer } from "../parse/parseBuffer.js";
 import { PeekSet } from "../util/PeekSet.js";
@@ -34,9 +34,9 @@ export class CursedInputState {
 
     public process(
         buf: Buffer,
-        keymaps: InputReadyKeyMaps,
+        keymaps: UserConfig,
     ): { data: Data; keymap?: KeyMap[]; name?: string } {
-        const safeKeymaps = keymaps.keymaps;
+        const actions = keymaps.actions;
 
         const data = parseBuffer(buf);
 
@@ -62,11 +62,13 @@ export class CursedInputState {
             }
         }
 
-        const bucket: Record<number, SafeKeyMapMetaData[]> = {};
+        const bucket: Record<number, UserConfig["actions"]> = {};
 
-        safeKeymaps.forEach((km) => {
-            if (!bucket[km.keymap.length]) bucket[km.keymap.length] = [];
-            bucket[km.keymap.length].push(km);
+        actions.forEach((action) => {
+            if (!bucket[action.keymap.length]) {
+                bucket[action.keymap.length] = [];
+            }
+            bucket[action.keymap.length].push(action);
         });
 
         const lengths = Object.keys(bucket)
@@ -99,17 +101,17 @@ export class CursedInputState {
     }
 
     private checkMatch(
-        safekm: SafeKeyMapMetaData,
+        action: UserConfig["actions"][number],
         idx: number,
         curr: Node | null,
     ): boolean {
         if (idx < 0 || idx > this.depth || curr === null) return false;
 
-        if (match(safekm.keymap[idx--], curr.data)) {
+        if (match(action.keymap[idx--], curr.data)) {
             if (idx < 0) {
                 return true;
             } else {
-                return this.checkMatch(safekm, idx, curr.prev);
+                return this.checkMatch(action, idx, curr.prev);
             }
         }
 

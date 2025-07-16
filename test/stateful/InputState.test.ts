@@ -1,14 +1,13 @@
 import { describe, expect, test } from "vitest";
 import { InputState } from "../../src/stateful/InputState.js";
-import { createKeymaps } from "../../src/stateful/createKeymaps.js";
+import { createActions } from "../../src/stateful/createActions.js";
 import { encodeMods } from "../helpers/encodeMods.js";
-import { create } from "node:domain";
 
 describe("stateful legacy", () => {
     test("previous input does not effect matches", () => {
-        const dummy = createKeymaps([]);
-        const real = createKeymaps([{ name: "foo", keymap: { input: "b" } }]);
-        const ip = new InputState(5);
+        const dummy = createActions([]);
+        const real = createActions([{ name: "foo", keymap: { input: "b" } }]);
+        const ip = new InputState({ maxDepth: 5 });
         ip.process(Buffer.from([97]), dummy);
         ip.process(Buffer.from([97]), dummy);
         ip.process(Buffer.from([97]), dummy);
@@ -19,8 +18,8 @@ describe("stateful legacy", () => {
     });
 
     test("Handles abc", () => {
-        const ip = new InputState(5);
-        const keymap = createKeymaps([
+        const ip = new InputState({ maxDepth: 5 });
+        const keymap = createActions([
             { name: "foo", keymap: { input: "abc" } },
         ]);
 
@@ -39,8 +38,8 @@ describe("stateful legacy", () => {
     });
 
     test("Shorter inputs take precedence", () => {
-        const ip = new InputState(5);
-        const keymaps = createKeymaps([
+        const ip = new InputState({ maxDepth: 5 });
+        const keymaps = createActions([
             { name: "foo", keymap: { input: "abc" } },
             { name: "bar", keymap: { input: "ab" } },
             { name: "baz", keymap: { input: "a" } },
@@ -64,8 +63,8 @@ describe("stateful legacy", () => {
     });
 
     test("Handles concatenation of flattened sequences", () => {
-        const ip = new InputState(10);
-        const keymaps = createKeymaps([
+        const ip = new InputState({ maxDepth: 50 });
+        const keymaps = createActions([
             {
                 name: "foo",
                 keymap: [{ input: "abc" }, { input: "def" }],
@@ -74,9 +73,8 @@ describe("stateful legacy", () => {
 
         const matches = [] as (string | undefined)[];
 
-        let match: ReturnType<typeof ip.process>;
         for (let i = 97; i < 103; ++i) {
-            match = ip.process(Buffer.from([i]), keymaps);
+            const match = ip.process(Buffer.from([i]), keymaps);
             matches.push(match.name);
         }
         expect(matches).toEqual([
@@ -90,8 +88,8 @@ describe("stateful legacy", () => {
     });
 
     test("Invalid sequences do not corrupt state (mouse CSI)", () => {
-        const ip = new InputState(10);
-        const keymaps = createKeymaps([
+        const ip = new InputState({ maxDepth: 5 });
+        const keymaps = createActions([
             {
                 name: "foo",
                 keymap: [{ input: "abc" }],
@@ -111,8 +109,8 @@ describe("stateful legacy", () => {
     });
 
     test("Modifier only keys do not corrupt state (kitty shift only)", () => {
-        const ip = new InputState(10);
-        const keymaps = createKeymaps([
+        const ip = new InputState({ maxDepth: 5 });
+        const keymaps = createActions([
             {
                 name: "foo",
                 keymap: [{ input: "abc" }],
@@ -133,7 +131,7 @@ describe("stateful legacy", () => {
 
     describe("ambiguous legacy keycodes", () => {
         test("<C-i><C-i>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [
@@ -143,7 +141,7 @@ describe("stateful legacy", () => {
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([9]), keymaps);
@@ -155,14 +153,14 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<Tab><Tab>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [{ key: "tab" }, { key: "tab" }],
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([9]), keymaps);
@@ -174,14 +172,14 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<C-i><Tab>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [{ key: "ctrl", input: "i" }, { key: "tab" }],
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([9]), keymaps);
@@ -193,7 +191,7 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<C-m><C-m>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [
@@ -203,7 +201,7 @@ describe("stateful legacy", () => {
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([13]), keymaps);
@@ -215,14 +213,14 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<CR><CR>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [{ key: "return" }, { key: "return" }],
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([13]), keymaps);
@@ -234,14 +232,14 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<CR><C-m>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [{ key: "return" }, { key: "ctrl", input: "m" }],
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([13]), keymaps);
@@ -253,7 +251,7 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<C-' '><C-' '>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [
@@ -263,7 +261,7 @@ describe("stateful legacy", () => {
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([0]), keymaps);
@@ -275,7 +273,7 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<C-2><C-2>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [
@@ -285,7 +283,7 @@ describe("stateful legacy", () => {
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([0]), keymaps);
@@ -297,7 +295,7 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<C-2><C-' '>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [
@@ -307,7 +305,7 @@ describe("stateful legacy", () => {
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([0]), keymaps);
@@ -319,14 +317,14 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, "foo"]);
         });
         test("<Esc><Esc><Esc>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [{ key: "esc" }, { key: "esc" }, { key: "esc" }],
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([27]), keymaps);
@@ -341,7 +339,7 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, undefined, "foo"]);
         });
         test("<C-3><C-3><C-3>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [
@@ -352,7 +350,7 @@ describe("stateful legacy", () => {
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([27]), keymaps);
@@ -367,7 +365,7 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, undefined, "foo"]);
         });
         test("<C-[><C-[><C-[>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [
@@ -378,7 +376,7 @@ describe("stateful legacy", () => {
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([27]), keymaps);
@@ -393,7 +391,7 @@ describe("stateful legacy", () => {
             expect(matches).toEqual([undefined, undefined, "foo"]);
         });
         test("<Esc><C-3><C-[>", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     name: "foo",
                     keymap: [
@@ -404,7 +402,7 @@ describe("stateful legacy", () => {
                 },
             ]);
 
-            const ip = new InputState(50);
+            const ip = new InputState({ maxDepth: 50 });
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([27]), keymaps);
@@ -422,10 +420,10 @@ describe("stateful legacy", () => {
 });
 
 describe("stateful kitty", () => {
-    const ip = new InputState(50);
+    const ip = new InputState({ maxDepth: 50 });
 
     const getKeymaps = () =>
-        createKeymaps([
+        createActions([
             {
                 keymap: [{ key: "tab" }, { key: "tab" }],
                 name: "TAB_TEST",
@@ -440,8 +438,8 @@ describe("stateful kitty", () => {
         clear();
 
         // Send ambiguous keycodes for Tab, Ctrl + i
-        ip.process(Buffer.from([9]), createKeymaps([]));
-        ip.process(Buffer.from([9]), createKeymaps([]));
+        ip.process(Buffer.from([9]), createActions([]));
+        ip.process(Buffer.from([9]), createActions([]));
 
         const keymaps = getKeymaps();
 
@@ -461,7 +459,7 @@ describe("stateful kitty", () => {
 
     // prettier-ignore
     test("long sequence", () => {
-            const keymaps = createKeymaps([
+            const keymaps = createActions([
                 {
                     keymap: [
                         { key: ["super", "ctrl"], input: "Aa" },
@@ -472,7 +470,7 @@ describe("stateful kitty", () => {
             ]);
 
             // Load input state
-            const dummy = createKeymaps([])
+            const dummy = createActions([])
             ip.process(Buffer.from(`\x1b[97;${encodeMods(["super", "ctrl", "shift"])}u`),dummy);
             ip.process(Buffer.from(`\x1b[97;${encodeMods(["super", "ctrl"])}u`), dummy);
             ip.process(Buffer.from(`\x1b[99;${encodeMods(["alt"])}u`), dummy);
@@ -486,9 +484,9 @@ describe("stateful kitty", () => {
         });
 
     test("Sequence over size of input state fails with q size of 5", () => {
-        const ip = new InputState(5);
+        const ip = new InputState({ maxDepth: 5 });
 
-        const keymaps = createKeymaps([
+        const keymaps = createActions([
             {
                 keymap: { input: "aaaaaa" },
                 name: "foobar",
@@ -506,9 +504,9 @@ describe("stateful kitty", () => {
     });
 
     test("Sequence same size of q size and sequence len matches", () => {
-        const ip = new InputState(6);
+        const ip = new InputState({ maxDepth: 6 });
 
-        const keymaps = createKeymaps([
+        const keymaps = createActions([
             {
                 keymap: { input: "aaaaaa" },
                 name: "foobar",
@@ -526,7 +524,7 @@ describe("stateful kitty", () => {
     });
 
     test("Smaller concats take precedence", () => {
-        const keymaps = createKeymaps([
+        const keymaps = createActions([
             {
                 keymap: { input: "aaa" },
                 name: "",

@@ -18,7 +18,8 @@
         "fix": "eslint --fix",
         "example:stateful": "tsc -p examples && node ./compiled-examples/examples/stateful.js",
         "example:parse": "tsc -p examples && node ./compiled-examples/examples/parse.js",
-        "example:mouse": "tsc -p examples && node ./compiled-examples/examples/mouse.js"
+        "example:mouse": "tsc -p examples && node ./compiled-examples/examples/mouse.js",
+        "example:leader": "tsc -p examples && node ./compiled-examples/examples/statefulWithLeader.js"
     },
     "type": "module",
     "keywords": [

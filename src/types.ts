@@ -7,6 +7,13 @@ export type Key =
 
     // capsLock & numLock are technically modifiers since they modify the kitty
     // modifier bit, but aren't typically used in combination with other keys
+    | "leader"
+    | "ctrl"
+    | "alt"
+    | "shift"
+    | "super"
+    | "hyper"
+    | "meta"
     | "capsLock"
     | "numLock"
     | "backspace"
