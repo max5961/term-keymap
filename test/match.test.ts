@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { match } from "../src/stateful/match.js";
 import { PeekSet } from "../src/util/PeekSet.js";
-import { KeyMap } from "../src/stateful/match.js";
 import { Data } from "../src/types.js";
+import type { KeyMap } from "../src/types.js";
 
 describe("match", () => {
     // prettier-ignore

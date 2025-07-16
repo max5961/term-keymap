@@ -1,4 +1,4 @@
-import type { KeyMap } from "./match.js";
+import type { KeyMap } from "../types.js";
 
 /**
  * Handles variable input lengths and expands into a single sequence for easier

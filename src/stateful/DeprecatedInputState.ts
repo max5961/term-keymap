@@ -1,8 +1,7 @@
-import type { Data, Key } from "../types.js";
-import type { KeyMap } from "./match.js";
+import type { Data, Key, KeyMap } from "../types.js";
 import { UserConfig } from "./UserConfig.js";
 import { match } from "./match.js";
-import { parseBuffer } from "../parse/parseBuffer.js";
+import { parseBuffer } from "../parsers/parseBuffer.js";
 import { PeekSet } from "../util/PeekSet.js";
 import { splitAmbiguousData, type ShortData } from "./splitAmbiguousData.js";
 
@@ -19,7 +18,7 @@ import { splitAmbiguousData, type ShortData } from "./splitAmbiguousData.js";
  * keeping it anyways because it was fun to write and it might possibly have future
  * use?
  */
-export class CursedInputState {
+export class DeprecatedInputState {
     private maxDepth: number;
     private depth: number;
     private firstChildren: Node[];

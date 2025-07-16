@@ -1,7 +1,7 @@
-import { parseBuffer } from "../parse/parseBuffer.js";
-import type { Data, Key } from "../types.js";
+import { parseBuffer } from "../parsers/parseBuffer.js";
+import type { Data, Key, KeyMap } from "../types.js";
 import { PeekSet } from "../util/PeekSet.js";
-import { match, type KeyMap } from "./match.js";
+import { match } from "./match.js";
 import type { ShortData } from "./splitAmbiguousData.js";
 import { splitAmbiguousData } from "./splitAmbiguousData.js";
 import { UserConfig, type SanitizedAction } from "./UserConfig.js";

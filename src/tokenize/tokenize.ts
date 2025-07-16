@@ -1,6 +1,6 @@
-import { type KeyMap } from "../stateful/match.js";
-import { type Key, type Modifier } from "../types.js";
-import { ModMap, KeySet, KeyAliases } from "./helpers.js";
+import type { Key, Modifier, KeyMap } from "../types.js";
+import { ModMap, KeyAliases } from "./maps.js";
+import { Sets } from "../constants.js";
 
 export type ArrayOnlyKeyMap = KeyMap & { key?: Key[] };
 
@@ -43,7 +43,7 @@ export type ArrayOnlyKeyMap = KeyMap & { key?: Key[] };
  *   as the literal char to allow for mappings that could otherwise be interpreted
  *   as Mod + Mod.  i.e.: `<C-A>` should be `Ctrl + A`, not `Ctrl + Alt`
  */
-export function tokenizeKmString(s: string): KeyMap[] | undefined {
+export function tokenize(s: string): KeyMap[] | undefined {
     const res = [] as ArrayOnlyKeyMap[];
     let curr = {} as ArrayOnlyKeyMap;
 
@@ -146,7 +146,7 @@ function getGrouping(
             }
 
             // Phase must be >= 2 here.
-            if (KeySet.has(lower as Key) || upper in KeyAliases) {
+            if (Sets.Keys.has(lower as Key) || upper in KeyAliases) {
                 phase = P.Key;
                 keys.add(KeyAliases[upper] || lower);
 

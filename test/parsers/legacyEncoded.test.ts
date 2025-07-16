@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { checkParse } from "../helpers/checkParse.js";
-import { KeyMap } from "../../src/stateful/match.js";
+import type { KeyMap } from "../../src/types.js";
 
 // Since we are testing CSI and SS3 sequences, just use escape
 const ESC = "\x1b";

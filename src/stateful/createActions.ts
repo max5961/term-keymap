@@ -1,5 +1,5 @@
-import type { KeyMap } from "./match.js";
 import { UserConfig, type Action } from "./UserConfig.js";
+import type { KeyMap } from "../types.js";
 
 export function createActionsWithLeader(
     leader?: Omit<KeyMap, "leader"> | Omit<KeyMap, "leader">[],

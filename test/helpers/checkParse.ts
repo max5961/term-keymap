@@ -1,5 +1,6 @@
-import { type KeyMap, match } from "../../src/stateful/match";
-import { parseBuffer } from "../../src/parse/parseBuffer";
+import type { KeyMap } from "../../src/types";
+import { match } from "../../src/stateful/match";
+import { parseBuffer } from "../../src/parsers/parseBuffer";
 
 export function checkParse(buffer: number[] | string, keymap: KeyMap): boolean {
     const buf =

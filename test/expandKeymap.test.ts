@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { expandKeymap } from "../src/stateful/expandKeymap.js";
-import { KeyMap } from "../src/stateful/match.js";
+import type { KeyMap } from "../src/types.js";
 
 describe("expandKeymap", () => {
     test.each<[string, KeyMap | KeyMap[], KeyMap[]]>([

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import type { Key } from "../../src/types";
-import { encodeMods } from "./encodeMods.js";
+import type { Key } from "../../../src/types.js";
+import { encodeMods } from "../encodeMods.js";
 
 describe("encodeMods converts set of keys into a byte", () => {
     test.each<[Key[], number]>([

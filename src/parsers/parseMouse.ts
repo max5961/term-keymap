@@ -1,5 +1,5 @@
 import type { Data } from "../types.js";
-import { Decode } from "../util/Decode.js";
+import { Decode } from "./Decode.js";
 
 /**
  * If the data is revealed to be a mouse event, the event is parsed and data

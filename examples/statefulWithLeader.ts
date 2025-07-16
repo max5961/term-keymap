@@ -1,12 +1,14 @@
-import { createKeymapsWithLeader } from "../src/stateful/createKeymaps.js";
-import { InputState } from "../src/stateful/InputState.js";
-import { configureStdin } from "../src/configureStdin.js";
+import {
+    createActionsWithLeader,
+    configureStdin,
+    InputState,
+} from "../src/index.js";
 
 configureStdin({});
 
 const ip = new InputState();
 
-const keymaps = createKeymapsWithLeader({ input: " " })([
+const keymaps = createActionsWithLeader({ input: " " })([
     {
         keymap: { leader: true, input: "foo" },
         name: "leader-foo",

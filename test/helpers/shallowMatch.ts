@@ -1,5 +1,5 @@
 import { type Data } from "../../src/types";
-import { type KeyMap } from "../../src/stateful/match";
+import type { KeyMap } from "../../src/types";
 
 export type ShortData = Pick<Data, "key" | "input">;
 

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { KeyMap } from "../../src/stateful/match.js";
-import { tokenizeKmString as tokenize } from "../../src/tokenize_string/tokenizeKmString.js";
+import { tokenize } from "../../src/tokenize/tokenize.js";
+import type { KeyMap } from "../../src/types.js";
 
 describe("tokenizeKmString", () => {
     describe("Groupings", () => {

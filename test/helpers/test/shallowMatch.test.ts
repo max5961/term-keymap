@@ -1,8 +1,8 @@
 import { describe, test, expect } from "vitest";
-import { shallowMatch } from "./shallowMatch";
-import { PeekSet } from "../../src/util/PeekSet";
-import { KeyMap } from "../../src/stateful/match";
-import { ShortData } from "./shallowMatch";
+import { shallowMatch } from "../shallowMatch";
+import { PeekSet } from "../../../src/util/PeekSet";
+import { ShortData } from "./../shallowMatch";
+import type { KeyMap } from "../../../src/types";
 
 describe("shallowMatch test helper", () => {
     test.each<[boolean, KeyMap, ShortData]>([

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { parseBuffer } from "../../src/parse/parseBuffer";
+import { parseBuffer } from "../../src/parsers/parseBuffer";
 import { type Data } from "../../src/types";
 
 type Button = keyof Omit<Required<Data>["mouse"], "x" | "y">;

@@ -1,5 +1,5 @@
-import { enableKittyProtocol } from "./util/enableKittyProtocol.js";
-import { enableMouse } from "./util/enableMouse.js";
+import { enableKittyProtocol } from "../terminal/enableKittyProtocol.js";
+import { enableMouse } from "../terminal/enableMouse.js";
 
 export type ConfigureReturn = {
     readonly stdout?: NodeJS.WriteStream;

@@ -1,5 +1,5 @@
 import type { Data, Key } from "../types.js";
-import { Decode } from "../util/Decode.js";
+import { Decode } from "./Decode.js";
 import { getModifiers } from "../util/getModifiers.js";
 import { LegacyKeyMap } from "../maps/LegacyKeyMap.js";
 import { LetterMap } from "../maps/LetterMap.js";

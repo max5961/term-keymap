@@ -21,4 +21,9 @@ export default defineConfig([
         extends: ["js/recommended"],
     },
     tseslint.configs.recommended,
+    {
+        rules: {
+            ["@typescript-eslint/no-namespace"]: "off",
+        },
+    },
 ]);

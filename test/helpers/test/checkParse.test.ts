@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { checkParse } from "./checkParse";
-import { KeyMap } from "../../src/stateful/match";
+import { checkParse } from "../checkParse";
+import type { KeyMap } from "../../../src/types";
 
 describe("checkParse test helper", () => {
     test.each<[boolean, string, KeyMap]>([

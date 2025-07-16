@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { parseBuffer } from "../src/parse/parseBuffer";
+import { parseBuffer } from "../../src/parsers/parseBuffer";
 
 describe("buffers that aren't explicitly handled are encoded to utf and added to the input set", () => {
     test("pasted text", () => {

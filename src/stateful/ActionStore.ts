@@ -17,7 +17,9 @@ export class ActionStore {
     }
 
     /**
-     * Subscribes action(s) to the store based on *deep equality* of each action.
+     * Subscribes action(s) to the store. Actions are tracked by reference, so
+     * duplicate subscriptions of the same action have no effect.
+
      * Returns a function to unsubscribe each of the provided actions.
      */
     public subscribe = (...actions: Action[]) => {

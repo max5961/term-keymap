@@ -1,4 +1,4 @@
-import { queryKittySupport } from "../terminal/queryKittySupport.js";
+import { queryKittySupport } from "./queryKittySupport.js";
 
 export function enableKittyProtocol({
     enabled,

@@ -1,10 +1,4 @@
-import type { Data, Key } from "../types.js";
-
-export type KeyMap = {
-    key?: Key | Key[];
-    input?: string;
-    leader?: boolean;
-};
+import type { Data, KeyMap } from "../types.js";
 
 export function match<T extends Pick<Data, "key" | "input">>(
     keymap: KeyMap,

@@ -8,16 +8,10 @@ describe.only("Keymaps with leader", () => {
             {
                 keymap: { leader: true, input: "foo" },
                 name: "leader-foo",
-                callback() {
-                    console.log(this.name);
-                },
             },
             {
                 keymap: { input: "bar" },
                 name: "bar",
-                callback() {
-                    console.log(this.name);
-                },
             },
         ]);
 

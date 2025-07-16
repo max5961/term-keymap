@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { checkParse } from "../helpers/checkParse.js";
-import { KeyMap } from "../../src/stateful/match.js";
-import { parseBuffer } from "../../src/parse/parseBuffer.js";
+import { parseBuffer } from "../../src/parsers/parseBuffer.js";
+import type { KeyMap } from "../../src/types.js";
 
 const CSI = "\x1b[";
 

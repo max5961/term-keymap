@@ -1,5 +1,4 @@
-import { parseBuffer } from "../src/parse/parseBuffer.js";
-import { configureStdin } from "../src/configureStdin.js";
+import { configureStdin, parseBuffer } from "../src/index.js";
 
 configureStdin({
     stdout: process.stdout,

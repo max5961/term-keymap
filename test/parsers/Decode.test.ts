@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { Decode } from "../src/util/Decode.js";
-import { testEachCsi } from "./helpers/testEachCsi.js";
+import { Decode } from "../../src/parsers/Decode.js";
+import { testEachCsi } from "../helpers/testEachCsi.js";
 
 type TestCases = [string, ...unknown[]][];
 

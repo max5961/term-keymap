@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { CursedInputState } from "../../src/stateful/CursedInputState.js";
+import { DeprecatedInputState } from "../../src/stateful/DeprecatedInputState.js";
 import { encodeMods } from "../helpers/encodeMods.js";
 import { createActions } from "../../src/stateful/createActions.js";
 
 describe.skip("stateful", () => {
     test("previous input does not effect matches", () => {
-        const ip = new CursedInputState(5);
+        const ip = new DeprecatedInputState(5);
         const dummy = createActions([]);
         const real = createActions([{ name: "foo", keymap: { input: "b" } }]);
         ip.process(Buffer.from([97]), dummy);
@@ -18,7 +18,7 @@ describe.skip("stateful", () => {
     });
 
     test("Handles abc", () => {
-        const ip = new CursedInputState(5);
+        const ip = new DeprecatedInputState(5);
         const keymap = createActions([
             { name: "foo", keymap: { input: "abc" } },
         ]);
@@ -38,7 +38,7 @@ describe.skip("stateful", () => {
     });
 
     test("Shorter inputs take precedence", () => {
-        const ip = new CursedInputState(5);
+        const ip = new DeprecatedInputState(5);
         const keymaps = createActions([
             { name: "foo", keymap: { input: "abc" } },
             { name: "bar", keymap: { input: "ab" } },
@@ -63,7 +63,7 @@ describe.skip("stateful", () => {
     });
 
     test("Handles concatenation of flattened sequences", () => {
-        const ip = new CursedInputState(10);
+        const ip = new DeprecatedInputState(10);
         const keymaps = createActions([
             {
                 name: "foo",
@@ -89,7 +89,7 @@ describe.skip("stateful", () => {
     });
 
     test("Invalid sequences do not corrupt state (mouse CSI)", () => {
-        const ip = new CursedInputState(10);
+        const ip = new DeprecatedInputState(10);
         const keymaps = createActions([
             {
                 name: "foo",
@@ -110,7 +110,7 @@ describe.skip("stateful", () => {
     });
 
     test("Modifier only keys do not corrupt state (kitty shift only)", () => {
-        const ip = new CursedInputState(10);
+        const ip = new DeprecatedInputState(10);
         const keymaps = createActions([
             {
                 name: "foo",
@@ -142,7 +142,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([9]), keymaps);
@@ -161,7 +161,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([9]), keymaps);
@@ -174,7 +174,7 @@ describe.skip("stateful", () => {
         });
         test("<C-i><Tab> fails", () => {
             /**
-             * This is impossible to match because CursedInputState creates compatible
+             * This is impossible to match because DeprecatedInputState creates compatible
              * paths based on the ambiguity of the buffer it receives.  For example,
              * because keycode 9 is ambiguous with Tab and Ctrl + i, the tree will
              * split at the leaf nodes and create two separate paths (if they don't
@@ -193,7 +193,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([9]), keymaps);
@@ -215,7 +215,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([13]), keymaps);
@@ -234,7 +234,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([13]), keymaps);
@@ -253,7 +253,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([13]), keymaps);
@@ -275,7 +275,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([0]), keymaps);
@@ -297,7 +297,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([0]), keymaps);
@@ -319,7 +319,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([0]), keymaps);
@@ -338,7 +338,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([27]), keymaps);
@@ -364,7 +364,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([27]), keymaps);
@@ -390,7 +390,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([27]), keymaps);
@@ -416,7 +416,7 @@ describe.skip("stateful", () => {
                 },
             ]);
 
-            const ip = new CursedInputState(50);
+            const ip = new DeprecatedInputState(50);
             const matches = [] as (string | undefined)[];
 
             let match = ip.process(Buffer.from([27]), keymaps);
@@ -434,7 +434,7 @@ describe.skip("stateful", () => {
 });
 
 describe("stateful", () => {
-    const ip = new CursedInputState(50);
+    const ip = new DeprecatedInputState(50);
 
     const getKeymaps = () =>
         createActions([
@@ -504,7 +504,7 @@ describe("stateful", () => {
         });
 
         test("Sequence over size of input state fails", () => {
-            const ip = new CursedInputState(5);
+            const ip = new DeprecatedInputState(5);
 
             const keymaps = createActions([
                 {
@@ -524,7 +524,7 @@ describe("stateful", () => {
         });
 
         test("Sequence same size of input state matches", () => {
-            const ip = new CursedInputState(6);
+            const ip = new DeprecatedInputState(6);
 
             const keymaps = createActions([
                 {

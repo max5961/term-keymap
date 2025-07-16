@@ -1,6 +1,4 @@
-import { configureStdin } from "../src/configureStdin.js";
-import { createKeymaps } from "../src/stateful/createKeymaps.js";
-import { InputState } from "../src/stateful/InputState.js";
+import { configureStdin, createActions, InputState } from "../src/index.js";
 
 configureStdin({
     stdout: process.stdout,
@@ -8,7 +6,7 @@ configureStdin({
     enableKittyProtocol: true,
 });
 
-const keymaps = createKeymaps([
+const keymaps = createActions([
     {
         keymap: { input: "a" },
         name: "shortest wins",

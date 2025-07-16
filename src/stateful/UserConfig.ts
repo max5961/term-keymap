@@ -1,6 +1,6 @@
 import { toArray } from "../util/toArray.js";
 import { expandKeymap } from "./expandKeymap.js";
-import { type KeyMap } from "./match.js";
+import { type KeyMap } from "../types.js";
 
 export type Action = {
     keymap: KeyMap | KeyMap[];
