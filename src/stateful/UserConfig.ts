@@ -30,9 +30,9 @@ export class UserConfig {
         leader?: KeyMap | KeyMap[],
         leaderTimeout?: number,
     ) {
-        this.#actions = this.sanitizeActions(actions);
         this.#leader = leader ? expandKeymap(leader) : leader;
         this.#leaderTimeout = leaderTimeout ?? 1000;
+        this.#actions = this.sanitizeActions(actions);
     }
 
     private sanitizeActions(actions: Action[]): SanitizedAction[] {
@@ -49,7 +49,7 @@ export class UserConfig {
             const leader = sequence[i].leader;
             const node = expandKeymap(sequence[i]);
 
-            // We need to make sure the leader sequence is appended first if it exists
+            // Leader sequence should be appended first if it exists
             if (leader) {
                 // Sequence is dependent on global leader which is absent, so essentially
                 // nullify the sequence.  <leader>a for example, should NOT match

@@ -1,10 +1,21 @@
 import { parseBuffer } from "../parse/parseBuffer.js";
 import type { Data, Key } from "../types.js";
 import { PeekSet } from "../util/PeekSet.js";
-import type { InputReadyKeyMaps, SafeKeyMapMetaData } from "./createKeymaps.js";
 import { match, type KeyMap } from "./match.js";
 import type { ShortData } from "./splitAmbiguousData.js";
 import { splitAmbiguousData } from "./splitAmbiguousData.js";
+import { UserConfig, type SanitizedAction } from "./UserConfig.js";
+
+const Modifiers = new PeekSet<Key>([
+    "ctrl",
+    "alt",
+    "super",
+    "meta",
+    "hyper",
+    "capsLock",
+    "numLock",
+    "shift",
+]);
 
 export class InputState {
     private maxDepth: number;
@@ -63,71 +74,46 @@ export class InputState {
 
     public process(
         buf: Buffer,
-        keymaps: InputReadyKeyMaps,
+        config: UserConfig,
     ): { data: Data; keymap?: KeyMap[]; name?: string } {
         const data = parseBuffer(buf);
-        const safeKeymaps = keymaps.keymaps;
 
-        if (this.leaderTimeoutMode) {
-            this.startLeaderTimeout(keymaps.leaderTimeout);
+        if (!data.key.size && !data.input.size) {
+            return { data };
         }
 
-        if (data.key.size || data.input.size) {
-            // Since the leader can be just a single sequence, or a long sequence
-            // of keymaps, we need to append the most recent data in order to check
-            // against the leader (not doing that here, but it needs to be done)
+        const onlyMods = Array.from(data.key.values()).every((key) =>
+            Modifiers.has(key),
+        );
 
-            const modifiers = new PeekSet<Key>([
-                "shift",
-                "alt",
-                "ctrl",
-                "super",
-                "hyper",
-                "meta",
-                "capsLock",
-                "numLock",
-            ]);
+        if (onlyMods && !data.input.size) {
+            return { data };
+        }
 
-            const keys = Array.from(data.key.values()) as Key[];
-            const onlyModifiers = keys.every((key) => modifiers.has(key));
-            const leaderMatch =
-                keymaps.leader &&
-                this.checkMatch(
-                    { keymap: keymaps.leader },
-                    keymaps.leader.length - 1,
-                    this.head,
-                );
+        this.appendData(data);
 
-            if (leaderMatch) {
-                this.leaderTimeoutMode = true;
-                this.startLeaderTimeout(keymaps.leaderTimeout);
-            }
+        if (config.leader) {
+            const leaderMatch = this.checkMatch({ keymap: config.leader });
 
-            const removeFromHead =
-                !leaderMatch && onlyModifiers && !data.input.size;
-            const appendData = leaderMatch || data.input.size || !onlyModifiers;
-
-            if (removeFromHead) {
-                this.removeFromHead();
-            } else if (appendData) {
-                this.appendData(data);
-            } else {
-                return { data };
+            if (leaderMatch || this.leaderTimeoutMode) {
+                this.startLeaderTimeout(config.leaderTimeout);
             }
         }
 
-        return this.checkKeymapMatch(safeKeymaps, data);
+        return this.checkKeymapMatch(config, data);
     }
 
     private checkKeymapMatch(
-        safeKeymaps: InputReadyKeyMaps["keymaps"],
+        config: UserConfig,
         data: Data,
     ): ReturnType<InputState["process"]> {
-        const bucket: Record<number, SafeKeyMapMetaData[]> = {};
+        const bucket: Record<number, SanitizedAction[]> = {};
 
-        safeKeymaps.forEach((km) => {
-            if (!bucket[km.keymap.length]) bucket[km.keymap.length] = [];
-            bucket[km.keymap.length].push(km);
+        config.actions.forEach((action) => {
+            if (!bucket[action.keymap.length]) {
+                bucket[action.keymap.length] = [];
+            }
+            bucket[action.keymap.length].push(action);
         });
 
         const lengths = Object.keys(bucket)
@@ -135,20 +121,16 @@ export class InputState {
             .sort();
 
         for (const length of lengths) {
-            for (const safekm of bucket[length]) {
-                const matched = this.checkMatch(
-                    safekm,
-                    safekm.keymap.length - 1,
-                    this.head,
-                );
+            for (const action of bucket[length]) {
+                const matched = this.checkMatch(action);
 
                 if (matched) {
                     this.clear();
-                    safekm.callback?.();
+                    action.callback?.();
                     return {
                         data: data,
-                        name: safekm.name,
-                        keymap: safekm.keymap,
+                        name: action.name,
+                        keymap: action.keymap,
                     };
                 }
             }
@@ -165,20 +147,23 @@ export class InputState {
      * possibilities for ambiguous keycodes that are appended to the data history
      */
     private checkMatch(
-        safekm: SafeKeyMapMetaData,
-        idx: number,
-        node: Node | null,
+        action: SanitizedAction,
+        idx?: number,
+        node?: Node | null,
     ): boolean {
-        if (!node) return false;
-        if (safekm.keymap.length > this.size) return false;
+        idx = idx ?? action.keymap.length - 1;
+        node = node === undefined ? this.head : node;
+
+        if (node === null) return false;
+        if (action.keymap.length > this.size) return false;
         if (idx < 0) return false;
 
-        if (node.data.some((d) => match(safekm.keymap[idx], d))) {
+        if (node.data.some((d) => match(action.keymap[idx!], d))) {
             --idx;
             if (idx < 0) {
                 return true;
             } else {
-                return this.checkMatch(safekm, idx, node.prev);
+                return this.checkMatch(action, idx, node.prev);
             }
         }
 
@@ -188,6 +173,7 @@ export class InputState {
     private startLeaderTimeout(leaderTimeout: number) {
         clearTimeout(this.leaderTimeoutID);
 
+        this.leaderTimeoutMode = true;
         this.leaderTimeoutID = setTimeout(() => {
             this.leaderTimeoutMode = false;
             this.clear();
