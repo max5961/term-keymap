@@ -21,9 +21,13 @@ Key features:
 - **Raw Stdin Buffer Parser**: Bypass the keymap API and directly use the parsed
   buffer data if desired.
 
----
+# Documentation & Resources
 
-# Examples
+- [Full API Reference](./doc/API.md)
+- [Using parseBuffer as a Standalone](./doc/parseBuffer.md)
+- [Example Setups](./doc/examples.md)
+
+# Quickstart
 
 ### Static Keymaps
 
@@ -31,11 +35,11 @@ Key features:
 import { createActionsWithLeader, configureStdin, InputState } from "term-input";
 
 configureStdin({
-    stdout: process.stdout,
     enableMouse: true,
     enableKittyProtocol: true,
 })
 
+// `createActions` if no leader key desired
 const actions = createActionsWithLeader(" ")([
     {
         keymap: { key: "ctrl", input: "c" },
@@ -110,7 +114,6 @@ const unsubscribeShowData = store.subscribe(showData);
 
 ```typescript
 configureStdin({
-    stdout: process.stdout,
     enableMouse: false,
     enableKittyProtocol: true,
 });
@@ -162,6 +165,7 @@ process.stdin.on("data", (buf: Buffer) => {
 | scrollUp | boolean | true when scrolling up on the scroll wheel |
 | scrollDown | boolean | true when scroll down on the scroll wheel |
 | mousemove | boolean | true when mouse is moving within term window |
+
 
 
 
