@@ -289,4 +289,81 @@ describe("leader other than space", () => {
 
         expect(results).toEqual([undefined, undefined, undefined, "foo"]);
     });
+
+    test("leader as sequence of <A-a><C-a>", () => {
+        const actions = createActionsWithLeader([
+            { key: "alt", input: "a" },
+            { key: "ctrl", input: "a" },
+        ])([
+            {
+                keymap: "<leader>foo",
+                name: "foo",
+            },
+        ]);
+
+        const ip = new InputState();
+
+        const results = [] as (undefined | string)[];
+
+        let r = ip.process(Buffer.from([27, 97]), actions);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([1]), actions);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("f"), actions);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("o"), actions);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("o"), actions);
+        results.push(r.name);
+
+        expect(results).toEqual([
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            "foo",
+        ]);
+    });
+});
+
+describe("createActionsWithLeader can accept leader in string form", () => {
+    test("leader as <C-a><C-b>", () => {
+        const actions = createActionsWithLeader("<C-a><C-b>")([
+            {
+                keymap: "<leader>foo",
+                name: "foo",
+            },
+        ]);
+
+        const ip = new InputState();
+
+        const results = [] as (undefined | string)[];
+
+        let r = ip.process(Buffer.from([1]), actions);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([2]), actions);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("f"), actions);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("o"), actions);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("o"), actions);
+        results.push(r.name);
+
+        expect(results).toEqual([
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            "foo",
+        ]);
+    });
 });
