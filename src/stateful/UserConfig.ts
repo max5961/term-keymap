@@ -49,9 +49,10 @@ export class UserConfig {
 
         for (let i = 0; i < sequence.length; ++i) {
             const leader = sequence[i].leader;
+            delete sequence[i].leader;
+
             const node = expandKeymap(sequence[i]);
 
-            // Leader sequence should be appended first if it exists
             if (leader) {
                 // Sequence is dependent on global leader which is absent, so essentially
                 // nullify the sequence.  <leader>a for example, should NOT match
@@ -63,7 +64,9 @@ export class UserConfig {
                 }
             }
 
-            result.push(...node);
+            for (const km of node) {
+                if (Object.keys(km).length) result.push(km);
+            }
         }
 
         return result;

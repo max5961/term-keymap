@@ -242,4 +242,36 @@ describe("tokenizeKmString", () => {
             expect(result).toEqual(keymap);
         });
     });
+
+    describe("leader", () => {
+        test("leader only", () => {
+            const result = tokenize("<leader>");
+            expect(result).toEqual([{ leader: true }]);
+        });
+
+        test("leader cannot be combined with input within a grouping", () => {
+            const result = tokenize("<leader-foo>");
+            expect(result).toEqual([{ input: "<leader-foo>" }]);
+        });
+
+        test("leader cannot be combined with keys within a grouping", () => {
+            const result = tokenize("<f1-leader>");
+            expect(result).toEqual([{ input: "<f1-leader>" }]);
+        });
+
+        test("leader cannot be combined with mods within a grouping", () => {
+            const result = tokenize("<C-leader>");
+            expect(result).toEqual([{ input: "<C-leader>" }]);
+        });
+
+        test("leader can be part of a larger sequence", () => {
+            const result = tokenize("<leader>foo<leader><C-bar>");
+            expect(result).toEqual([
+                { leader: true },
+                { input: "foo" },
+                { leader: true },
+                { key: ["ctrl"], input: "bar" },
+            ]);
+        });
+    });
 });

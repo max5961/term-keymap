@@ -4,8 +4,7 @@ import {
     configureStdin,
 } from "../src/index.js";
 
-// **needs a default param**
-configureStdin({});
+configureStdin();
 
 // no leader support yet for string keymaps
 const actions = createActionsWithLeader({ input: " " })([

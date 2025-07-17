@@ -1,6 +1,7 @@
 import type { Key, Modifier, KeyMap } from "../types.js";
 import { ModMap, KeyAliases } from "./maps.js";
 import { Sets } from "../constants.js";
+import { PeekSet } from "../util/PeekSet.js";
 
 export type ArrayOnlyKeyMap = KeyMap & { key?: Key[] };
 
@@ -65,17 +66,33 @@ export function tokenize(s: string): KeyMap[] {
                 // '<' treated as any other character and the grouping becomes a string
                 // literal
                 if (mods.size || keys.size) {
-                    if (
-                        (mods.size && (keys.size || input.length)) ||
-                        (keys.size && !input.length)
-                    ) {
-                        pushCurr();
+                    let schedulePush = false;
 
-                        curr.key = [...mods.values(), ...keys.values()];
-                        if (input) curr.input = input;
+                    if (keys.only("leader") && !mods.size && !input.length) {
+                        pushCurr();
+                        curr.leader = true;
+                        schedulePush = true;
+                    }
+
+                    if (!keys.has("leader")) {
+                        if (
+                            (mods.size && (keys.size || input.length)) ||
+                            (keys.size && !input.length)
+                        ) {
+                            pushCurr();
+
+                            curr.key = [
+                                ...(mods.values() as SetIterator<Key>),
+                                ...(keys.values() as SetIterator<Key>),
+                            ];
+                            if (input) curr.input = input;
+                            schedulePush = true;
+                        }
+                    }
+
+                    if (schedulePush) {
                         res.push(curr);
                         curr = {};
-
                         i = eidx;
                         continue;
                     }
@@ -111,13 +128,13 @@ function getGrouping(
     sidx: number,
     eidx: number,
 ): {
-    mods: Set<Modifier>;
-    keys: Set<Key>;
+    mods: PeekSet<Modifier>;
+    keys: PeekSet<Key | "leader">;
     input: string;
 } {
     // Results
-    const mods = new Set<Modifier>();
-    const keys = new Set<Key>();
+    const mods = new PeekSet<Modifier>();
+    const keys = new PeekSet<Key | "leader">();
     let input = "";
 
     // Loop Trackers
@@ -146,7 +163,11 @@ function getGrouping(
             }
 
             // Phase must be >= 2 here.
-            if (Sets.Keys.has(lower as Key) || upper in KeyAliases) {
+            if (
+                Sets.Keys.has(lower as Key) ||
+                upper in KeyAliases ||
+                lower === "leader"
+            ) {
                 phase = P.Key;
                 keys.add(KeyAliases[upper] || lower);
 

@@ -40,7 +40,7 @@ export type Opts = {
     enableKittyProtocol?: boolean;
 };
 
-export function configureStdin(opts: Opts) {
+export function configureStdin(opts: Opts = {}) {
     opts.stdout = opts.stdout ?? process.stdout;
     opts.enableMouse = opts.enableMouse ?? true;
     opts.mouseMode = opts.mouseMode ?? 3;
