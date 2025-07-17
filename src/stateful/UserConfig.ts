@@ -28,10 +28,14 @@ export class UserConfig {
 
     constructor(
         actions: Action[],
-        leader?: KeyMap | KeyMap[],
+        leader?: KeyMap | KeyMap[] | string,
         leaderTimeout?: number,
     ) {
-        this.#leader = leader ? expandKeymap(leader) : leader;
+        if (typeof leader === "string") {
+            this.#leader = tokenize(leader);
+        } else {
+            this.#leader = leader ? expandKeymap(leader) : leader;
+        }
         this.#leaderTimeout = leaderTimeout ?? 1000;
         this.#actions = this.sanitizeActions(actions);
     }

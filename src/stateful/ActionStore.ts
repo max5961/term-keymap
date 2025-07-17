@@ -29,6 +29,10 @@ export class ActionStore {
         };
     };
 
+    public unsubscribe = (...actions: Action[]) => {
+        actions.forEach((action) => this.active.delete(action));
+    };
+
     /**
      * Returns the current set of actions, or an empty list if paused.
      */
