@@ -1,8 +1,8 @@
-# term-input
+# term-keymap
 
 *Parses raw keyboard and mouse stdin buffers in Node and returns structured
-data.  Provides a keymap API with support for dynamically assigning and removing
-keymaps at runtime.*
+data.  Provides a flexible keymap API with support for dynamically assigning and
+removing keymaps at runtime.*
 
 *Supports a wide range of key combinations, mouse actions, and full
 compatibility with the [Kitty Keyboard

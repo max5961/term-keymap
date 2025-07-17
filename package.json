@@ -1,7 +1,7 @@
 {
-    "name": "term-input",
+    "name": "term-keymap",
     "version": "0.0.0",
-    "description": "Parse std input buffers and assign keymaps",
+    "description": "Parse stdin buffers into readable data and assign keymaps.",
     "main": "./dist/index.js",
     "exports": {
         "types": "./dist/index.d.ts",
@@ -30,6 +30,7 @@
         "vim",
         "neovim",
         "keymap",
+        "mouse",
         "parse",
         "buffer"
     ],

@@ -1,13 +1,7 @@
 import { toArray } from "../util/toArray.js";
 import { expandKeymap } from "./expandKeymap.js";
-import { type KeyMap } from "../types.js";
+import type { KeyMap, Action } from "../types.js";
 import { tokenize } from "../tokenize/tokenize.js";
-
-export type Action = {
-    keymap: KeyMap | KeyMap[] | string;
-    name?: string;
-    callback?: () => unknown;
-};
 
 /**
  * Transformed `Action` such that `keymap` is always in expanded form and `leader`

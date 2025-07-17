@@ -1,5 +1,6 @@
 import type { createActionsWithLeader } from "./createActions.js";
-import { UserConfig, type Action } from "./UserConfig.js";
+import { UserConfig } from "./UserConfig.js";
+import type { Action } from "../types.js";
 
 type Params = Parameters<typeof createActionsWithLeader>;
 
