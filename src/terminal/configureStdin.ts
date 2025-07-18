@@ -9,6 +9,12 @@ export type ConfigureReturn = {
 
 export type Opts = {
     /**
+     * The stdin stream that configureStdin puts into raw mode
+     * @default process.stdin
+     */
+    stdin?: typeof process.stdin;
+
+    /**
      * The stdout stream that configuration escape codes are sent to
      * @default process.stdout
      */
@@ -41,15 +47,16 @@ export type Opts = {
 };
 
 export function configureStdin(opts: Opts = {}) {
+    opts.stdin = opts.stdin ?? process.stdin;
     opts.stdout = opts.stdout ?? process.stdout;
     opts.enableMouse = opts.enableMouse ?? true;
     opts.mouseMode = opts.mouseMode ?? 3;
     opts.enableKittyProtocol = opts.enableKittyProtocol ?? true;
 
-    if (!process.stdin.isTTY) {
+    if (!opts.stdin.isTTY) {
         throw new Error("Terminal does not support raw mode.");
     } else {
-        process.stdin.setRawMode(true);
+        opts.stdin.setRawMode(true);
     }
 
     let kittyEnabled = false;
