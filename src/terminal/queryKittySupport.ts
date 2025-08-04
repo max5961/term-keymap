@@ -21,7 +21,7 @@ export function queryKittySupport(): Promise<boolean> {
         const timeoutID = setTimeout(() => {
             process.stdin.off("data", handleData);
             res(false);
-        }, 250);
+        }, 50);
 
         function handleData(buf: Buffer): void {
             const utf = buf.toString("utf-8");

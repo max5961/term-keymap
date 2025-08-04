@@ -1,3 +1,5 @@
+let willRestoreOnExit = false;
+
 export function enableMouse({
     enabled,
     mode,
@@ -13,5 +15,8 @@ export function enableMouse({
     stdout.write(enabled ? start : end);
     if (enabled) stdout.write("\x1b[?1006h");
 
-    process.on("exit", () => stdout!.write(end));
+    if (!willRestoreOnExit) {
+        process.on("exit", () => stdout!.write(end));
+        willRestoreOnExit = true;
+    }
 }

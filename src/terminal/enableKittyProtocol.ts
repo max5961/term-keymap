@@ -1,5 +1,7 @@
 import { queryKittySupport } from "./queryKittySupport.js";
 
+let willRestoreOnExit = false;
+
 export function enableKittyProtocol({
     enabled,
     stdout,
@@ -15,9 +17,13 @@ export function enableKittyProtocol({
 
     if (enabled) {
         stdout.write(sendEnhancement);
-        process.on("exit", () => stdout.write(restore));
+        if (!willRestoreOnExit) {
+            process.on("exit", () => stdout.write(restore));
+            willRestoreOnExit = true;
+        }
     } else {
         stdout.write(restore);
+        willRestoreOnExit = false;
     }
 
     return queryKittySupport();
