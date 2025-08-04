@@ -1,6 +1,6 @@
 {
     "name": "term-keymap",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "Parse stdin buffers into readable data and assign keymaps.",
     "main": "./dist/index.js",
     "exports": {
