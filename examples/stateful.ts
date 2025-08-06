@@ -1,4 +1,10 @@
-import { configureStdin, createActions, InputState } from "../src/index.js";
+import {
+    configureStdin,
+    createActions,
+    InputState,
+    setKittyProtocol,
+    setMouse,
+} from "../src/index.js";
 
 configureStdin({
     stdout: process.stdout,
@@ -39,22 +45,63 @@ const keymaps = createActions([
             console.log(this.name + " - matched!");
         },
     },
+    {
+        keymap: "<A-e>",
+        name: "enable kitty",
+        callback() {
+            setKittyProtocol(true, process.stdout, process.stdin);
+        },
+    },
+    {
+        keymap: "<A-d>",
+        name: "disable kitty",
+        callback() {
+            setKittyProtocol(false, process.stdout, process.stdin);
+        },
+    },
+    {
+        keymap: "<A-m>",
+        name: "enable mouse",
+        callback() {
+            setMouse(true, process.stdout);
+        },
+    },
+    {
+        keymap: "<A-n>",
+        name: "disable mouse",
+        callback() {
+            setMouse(false, process.stdout);
+        },
+    },
 ]);
 
 const ip = new InputState();
 
+const safeExit = () => {
+    // setTimeout(() => {
+    //     process.stdout.write("\x1b[<u");
+    //     process.exit();
+    // }, 1000);
+    process.exit();
+};
 process.stdin.on("data", (buf: Buffer) => {
-    if (buf[0] === 3) process.exit();
+    if (buf[0] === 3) {
+        safeExit();
+    }
 
     console.clear();
     const { data, name } = ip.process(buf, keymaps);
 
-    if (data.key.only("ctrl") && data.input.only("c")) process.exit();
+    if (data.key.only("ctrl") && data.input.only("c")) safeExit();
 
     console.log({
         key: data.key.values(),
         input: data.input.values(),
     });
+
+    if (data.mouse) {
+        console.log(data.mouse);
+    }
 
     console.log(name ?? "no match");
 });

@@ -1,9 +1,8 @@
-import { enableKittyProtocol } from "./enableKittyProtocol.js";
-import { enableMouse } from "./enableMouse.js";
+import { setKittyProtocol } from "./setKittyProtocol.js";
+import { setMouse } from "./setMouse.js";
 
 export type ConfigureReturn = {
     readonly stdout?: NodeJS.WriteStream;
-    readonly enableMouse?: typeof enableMouse;
     readonly kittySupported?: boolean;
 };
 
@@ -47,11 +46,11 @@ export type Opts = {
 };
 
 export function configureStdin(opts: Opts = {}) {
-    opts.stdin = opts.stdin ?? process.stdin;
-    opts.stdout = opts.stdout ?? process.stdout;
-    opts.enableMouse = opts.enableMouse ?? true;
-    opts.mouseMode = opts.mouseMode ?? 3;
-    opts.enableKittyProtocol = opts.enableKittyProtocol ?? true;
+    opts.stdin ??= process.stdin;
+    opts.stdout ??= process.stdout;
+    opts.enableMouse ??= true;
+    opts.mouseMode ??= 3;
+    opts.enableKittyProtocol ??= true;
 
     if (!opts.stdin.isTTY) {
         throw new Error("Terminal does not support raw mode.");
@@ -60,18 +59,13 @@ export function configureStdin(opts: Opts = {}) {
     }
 
     let kittyEnabled = false;
-    if (opts.enableKittyProtocol) {
-        enableKittyProtocol({
-            stdout: opts.stdout,
-            enabled: opts.enableKittyProtocol,
-        }).then((supported) => (kittyEnabled = supported));
-    }
+    setKittyProtocol(opts.enableKittyProtocol, opts.stdout, opts.stdin)?.then(
+        (isSupported) => {
+            kittyEnabled = isSupported;
+        },
+    );
 
-    enableMouse({
-        enabled: opts.enableMouse,
-        mode: opts.mouseMode,
-        stdout: opts.stdout,
-    });
+    setMouse(opts.enableMouse, opts.stdout, opts.mouseMode);
 
     return Object.freeze({
         /**
@@ -80,9 +74,9 @@ export function configureStdin(opts: Opts = {}) {
         stdout: opts.stdout,
 
         /**
-         * Represents is has been enabled in the configuration options
+         * The stdout stream chosen in the configuration options
          */
-        enableMouse: enableMouse,
+        stdin: opts.stdin,
 
         /**
          * @returns `boolean` representing whether or not the Kitty Protocol is

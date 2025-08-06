@@ -5,7 +5,10 @@
  * not support the protocol.  If Kitty responds with `x1b[0u` then it is supported,
  * but not turned on and the Promise still returns false.
  */
-export function queryKittySupport(): Promise<boolean> {
+export function queryKittySupport(
+    stdout: NodeJS.WriteStream,
+    stdin: NodeJS.ReadStream,
+): Promise<boolean> {
     const queries = {
         kittyProgressiveEnhancements: "\x1b[?u",
         deviceAttributes: "\x1b[>0c",
@@ -14,12 +17,12 @@ export function queryKittySupport(): Promise<boolean> {
     const regex = /\[\?(\d+)u/gm;
 
     return new Promise((res) => {
-        process.stdout.write(queries.kittyProgressiveEnhancements);
-        process.stdout.write(queries.deviceAttributes);
+        stdout.write(queries.kittyProgressiveEnhancements);
+        stdout.write(queries.deviceAttributes);
 
         // Fallback in case incompatible term does not respond
         const timeoutID = setTimeout(() => {
-            process.stdin.off("data", handleData);
+            stdin.off("data", handleData);
             res(false);
         }, 50);
 
@@ -33,9 +36,9 @@ export function queryKittySupport(): Promise<boolean> {
             }
 
             clearTimeout(timeoutID);
-            process.stdin.off("data", handleData);
+            stdin.off("data", handleData);
         }
 
-        process.stdin.on("data", handleData);
+        stdin.on("data", handleData);
     });
 }
