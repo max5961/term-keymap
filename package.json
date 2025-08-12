@@ -1,6 +1,6 @@
 {
     "name": "term-keymap",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "Parse stdin buffers into readable data and assign keymaps.",
     "main": "./dist/index.js",
     "exports": {
@@ -16,6 +16,7 @@
         "test": "tsc && npx vitest",
         "lint": "eslint",
         "fix": "eslint --fix",
+        "publish": "npm run compile && npm publish --access=public",
         "example:stateful": "tsc -p examples && node ./compiled-examples/examples/stateful.js",
         "example:parse": "tsc -p examples && node ./compiled-examples/examples/parse.js",
         "example:mouse": "tsc -p examples && node ./compiled-examples/examples/mouse.js",
