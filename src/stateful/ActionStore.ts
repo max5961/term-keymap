@@ -35,10 +35,24 @@ export class ActionStore {
     };
 
     /**
-     * Returns the current set of actions, or an empty list if paused.
+     * Returns a `UserConfig` object which contains a sanitized version of the
+     * actions subscribed to the store.  If the store is paused, subscribed actions
+     * are ignored.
      */
     public getActions = (): UserConfig => {
         const actions = this.isPaused ? [] : Array.from(this.active.values());
+        return new UserConfig(actions, this.leader, this.leaderTimeout);
+    };
+
+    /**
+     * Same as `ActionStore.getActions` but accepts an array of additional Actions
+     * to be sanitized.
+     */
+    public getCombinedActions = (additional: Action[]): UserConfig => {
+        const actions = this.isPaused
+            ? []
+            : [...this.active.values(), ...additional];
+
         return new UserConfig(actions, this.leader, this.leaderTimeout);
     };
 
