@@ -120,14 +120,17 @@ export class InputState {
             .map((len) => Number(len))
             .sort();
 
+        let lastMatch: ReturnType<InputState["process"]> | undefined;
         for (const length of lengths) {
+            if (lastMatch) break;
+
             for (const action of bucket[length]) {
                 const matched = this.checkMatch(action);
 
                 if (matched) {
-                    this.clear();
                     action.callback?.();
-                    return {
+
+                    lastMatch = {
                         data: data,
                         name: action.name,
                         keymap: action.keymap,
@@ -136,7 +139,11 @@ export class InputState {
             }
         }
 
-        return { data };
+        if (lastMatch) {
+            this.clear();
+        }
+
+        return lastMatch || { data };
     }
 
     /**
