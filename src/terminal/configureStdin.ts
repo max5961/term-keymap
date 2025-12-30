@@ -53,7 +53,9 @@ export function configureStdin(opts: Opts = {}) {
     opts.enableKittyProtocol ??= true;
 
     if (!opts.stdin.isTTY) {
-        throw new Error("Terminal does not support raw mode.");
+        console.warn(
+            "term-keymap: warning terminal does not support raw mode.",
+        );
     } else {
         opts.stdin.setRawMode(true);
     }

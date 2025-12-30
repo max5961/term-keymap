@@ -23,14 +23,14 @@ export class ActionStore {
 
      * Returns a function to unsubscribe each of the provided actions.
      */
-    public subscribe = (...actions: Action[]) => {
+    public subscribe = (...actions: Readonly<Action[]>) => {
         actions.forEach((action) => this.active.add(action));
         return () => {
             actions.forEach((action) => this.active.delete(action));
         };
     };
 
-    public unsubscribe = (...actions: Action[]) => {
+    public unsubscribe = (...actions: Readonly<Action[]>) => {
         actions.forEach((action) => this.active.delete(action));
     };
 
@@ -58,7 +58,6 @@ export class ActionStore {
 
     /**
      * Temporarily disables all actions by making `getActions()` return an empty list.
-     * Useful when input should be ignored without needing to modify subscriptions.
      */
     public pause = () => {
         this.#isPaused = true;

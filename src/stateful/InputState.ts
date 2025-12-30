@@ -187,7 +187,7 @@ export class InputState {
         }, leaderTimeout);
     }
 
-    private clear() {
+    public clear() {
         this.root = null;
         this.head = null;
         this.size = 0;

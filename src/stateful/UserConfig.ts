@@ -21,7 +21,7 @@ export class UserConfig {
     #leaderTimeout: number;
 
     constructor(
-        actions: Action[],
+        actions: Readonly<Action[]>,
         leader?: KeyMap | KeyMap[] | string,
         leaderTimeout?: number,
     ) {
@@ -34,7 +34,7 @@ export class UserConfig {
         this.#actions = this.sanitizeActions(actions);
     }
 
-    private sanitizeActions(actions: Action[]): SanitizedAction[] {
+    private sanitizeActions(actions: Readonly<Action[]>): SanitizedAction[] {
         return actions.map((action) => {
             return { ...action, keymap: this.sanitizeKeymap(action.keymap) };
         });
