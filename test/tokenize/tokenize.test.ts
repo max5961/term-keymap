@@ -38,12 +38,13 @@ describe("tokenizeKmString", () => {
             ]);
         });
 
-        test("Abbreviated versions of keys CR, BS, DEL", () => {
-            const result = tokenize("<CR><BS><DEL>");
+        test("Abbreviated versions of keys CR, BS, DEL, ESC", () => {
+            const result = tokenize("<CR><BS><DEL><ESC>");
             expect(result).toEqual([
                 { key: ["return"] },
                 { key: ["backspace"] },
                 { key: ["delete"] },
+                { key: ["esc"] },
             ]);
         });
 

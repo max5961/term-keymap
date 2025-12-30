@@ -3,6 +3,7 @@ import type { Key } from "../types.js";
 export const KittyKey: Record<number, Key> = {
     9: "tab",
     13: "return",
+    27: "esc",
     127: "backspace",
     57344: "esc",
     57345: "return",

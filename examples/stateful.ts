@@ -14,6 +14,10 @@ configureStdin({
 
 const keymaps = createActions([
     {
+        keymap: "<Esc>",
+        name: "esc press",
+    },
+    {
         keymap: { input: "a" },
         name: "shortest wins",
     },

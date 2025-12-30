@@ -6,6 +6,14 @@ import type { KeyMap } from "../../src/types.js";
 const CSI = "\x1b[";
 
 describe("Kitty protocol", () => {
+    test("capsLock w/ only numLock uppercases letters", () => {
+        expect(checkParse("\x1b[97;193u", { input: "A" })).toBe(true);
+    });
+
+    test("Esc", () => {
+        expect(checkParse("\x1b[27u", { key: "esc" })).toBe(true);
+    });
+
     describe("Lowercase alphabet", () => {
         test.each([
             ["97u", { input: "a" }],
@@ -248,10 +256,6 @@ describe("Kitty protocol", () => {
         ])("\\x1b[%s => %o", (csi, keymap) => {
             expect(checkParse(CSI + csi, keymap)).toBe(true);
         });
-    });
-
-    test("capsLock w/ only numLock uppercases letters", () => {
-        expect(checkParse("\x1b[97;193u", { input: "A" })).toBe(true);
     });
 
     // prettier-ignore
