@@ -24,7 +24,7 @@ export function splitAmbiguousData({ key, input }: Data): ShortData[] {
         return matches;
     };
 
-    // <C-> === 'tab'
+    // <C-i> === 'tab'
     if (key.has("ctrl", "tab") && input.only("i")) {
         const split = [toMatch(["ctrl"], "i"), toMatch(["tab"])];
 
@@ -69,6 +69,10 @@ export function splitAmbiguousData({ key, input }: Data): ShortData[] {
             toMatch(["esc"]),
             toMatch(["ctrl"], "3"),
             toMatch(["ctrl"], "["),
+
+            // Escape is not able to combine with other keys in legacy nor kitty protocol
+            // toMatch(["esc"], "3"),
+            // toMatch(["esc"], "["),
         ];
 
         if (key.only("ctrl", "esc")) {
@@ -136,7 +140,7 @@ export function splitAmbiguousData({ key, input }: Data): ShortData[] {
     if (key.has("ctrl", "backspace") && input.only("8")) {
         const split = [toMatch(["ctrl"], "8"), toMatch(["backspace"])];
 
-        if (key.only("ctrl")) {
+        if (key.only("ctrl", "backspace")) {
             return split;
         }
 

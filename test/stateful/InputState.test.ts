@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { InputState } from "../../src/stateful/InputState.js";
 import { createActions } from "../../src/stateful/createActions.js";
 import { encodeMods } from "../helpers/encodeMods.js";
+import { KeyMap } from "../../src/types.js";
 
 describe("stateful legacy", () => {
     test("previous input does not effect matches", () => {
@@ -15,6 +16,65 @@ describe("stateful legacy", () => {
         const match = ip.process(Buffer.from([98]), real);
 
         expect(match.name).toBe("foo");
+    });
+
+    describe("disambiguates ambiguous xterm encodings", () => {
+        const ip = new InputState();
+        test.each([
+            [[9], { key: "tab" }],
+            [[9], { key: "ctrl", input: "i" }],
+            [[13], { key: "return" }],
+            [[13], { key: "ctrl", input: "m" }],
+            [[0], { key: "ctrl", input: " " }],
+            [[0], { key: "ctrl", input: "2" }],
+            [[27], { key: "ctrl", input: "3" }],
+            [[27], { key: "ctrl", input: "[" }],
+            // esc itself does not allow combine with other keys
+            // [[27], { key: "esc", input: "3" }],
+            // [[27], { key: "esc", input: "[" }],
+            [[28], { key: "ctrl", input: "4" }],
+            [[28], { key: "ctrl", input: "\\" }],
+            [[29], { key: "ctrl", input: "5" }],
+            [[29], { key: "ctrl", input: "]" }],
+            [[30], { key: "ctrl", input: "6" }],
+            [[30], { key: "ctrl", input: "^" }],
+            [[31], { key: "ctrl", input: "7" }],
+            [[31], { key: "ctrl", input: "/" }],
+            // backspace itself does not allow to combine with other keys (besides ctrl - see 0x08 )
+            [[127], { key: "backspace" }],
+            [[127], { key: "ctrl", input: "8" }],
+            [[8], { key: ["ctrl", "backspace"] }],
+            [[8], { key: "ctrl", input: "h" }],
+
+            // same for adding an alt key
+            [[27, 9], { key: ["alt", "tab"] }],
+            [[27, 9], { key: ["alt", "ctrl"], input: "i" }],
+            [[27, 13], { key: ["alt", "return"] }],
+            [[27, 13], { key: ["alt", "ctrl"], input: "m" }],
+            [[27, 0], { key: ["alt", "ctrl"], input: " " }],
+            [[27, 0], { key: ["alt", "ctrl"], input: "2" }],
+            [[27, 27], { key: ["alt", "ctrl"], input: "3" }],
+            [[27, 27], { key: ["alt", "ctrl"], input: "[" }],
+            [[27, 28], { key: ["alt", "ctrl"], input: "4" }],
+            [[27, 28], { key: ["alt", "ctrl"], input: "\\" }],
+            [[27, 29], { key: ["alt", "ctrl"], input: "5" }],
+            [[27, 29], { key: ["alt", "ctrl"], input: "]" }],
+            [[27, 30], { key: ["alt", "ctrl"], input: "6" }],
+            [[27, 30], { key: ["alt", "ctrl"], input: "^" }],
+            [[27, 31], { key: ["alt", "ctrl"], input: "7" }],
+            [[27, 31], { key: ["alt", "ctrl"], input: "/" }],
+            [[27, 127], { key: ["alt", "backspace"] }],
+            [[27, 127], { key: ["alt", "ctrl"], input: "8" }],
+            [[27, 8], { key: ["alt", "ctrl", "backspace"] }],
+            [[27, 8], { key: ["alt", "ctrl"], input: "h" }],
+        ])("%o => %o", (buf, keymap) => {
+            const actions = createActions([
+                { name: "foo", keymap: keymap as KeyMap },
+            ]);
+
+            const result = ip.process(Buffer.from(buf), actions);
+            expect(result.name).toBe("foo");
+        });
     });
 
     test("Handles abc", () => {

@@ -18,6 +18,14 @@ const keymaps = createActions([
         name: "esc press",
     },
     {
+        keymap: { key: "backspace" },
+        name: "bs press",
+    },
+    {
+        keymap: { key: "return" },
+        name: "return",
+    },
+    {
         keymap: { input: "a" },
         name: "shortest wins",
     },
@@ -101,6 +109,7 @@ process.stdin.on("data", (buf: Buffer) => {
     console.log({
         key: data.key.values(),
         input: data.input.values(),
+        buf: data.raw.buffer,
     });
 
     if (data.mouse) {
