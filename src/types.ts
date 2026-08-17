@@ -7,11 +7,16 @@ export type KeyMap = {
     leader?: boolean;
 };
 
-export type Action = {
-    keymap: KeyMap | KeyMap[] | string;
+export interface Action {
     name?: string;
     callback?: () => unknown;
-};
+    keymap: KeyMap | KeyMap[] | string;
+}
+
+/** Action object de-abstracted into its most simple form */
+export interface RawAction extends Action {
+    keymap: KeyMap[];
+}
 
 export type Modifier = (typeof Arrays.Modifiers)[number];
 export type Key = Modifier | (typeof Arrays.Keys)[number];

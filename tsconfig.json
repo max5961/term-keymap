@@ -5,6 +5,7 @@
         "test/stateful/DeprecatedInputState.test.ts"
     ],
     "compilerOptions": {
+        "rootDir": "./src/",
         "outDir": "./dist/",
         "target": "es2022",
         "module": "nodenext",
@@ -33,6 +34,7 @@
         // options could be a problem for stability
         // Remove dom/dom.iterable if code does not run in the DOM
         "lib": ["dom", "dom.iterable", "es2022"],
+        "types": ["node"],
 
         // Must use import attribute of type "json"
         // import data from "./data.json" assert { type: "json" };
