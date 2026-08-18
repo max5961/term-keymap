@@ -1,5 +1,9 @@
-import { InputState, configureStdin, type Action } from "../src/index.js";
-import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
+import {
+    ActionStore,
+    InputState,
+    configureStdin,
+    type Action,
+} from "../src/index.js";
 
 configureStdin();
 

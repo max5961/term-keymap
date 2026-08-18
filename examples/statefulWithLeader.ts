@@ -1,9 +1,13 @@
-import { configureStdin, InputState, type Action } from "../src/index.js";
-import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
+import {
+    configureStdin,
+    InputState,
+    ActionStore,
+    type Action,
+} from "../src/index.js";
 
 configureStdin({});
 
-const ip = new InputState({ leader: "longword" });
+const ip = new InputState({ leader: { key: ["ctrl", "f8"] } });
 const actions: Action[] = [
     {
         keymap: { leader: true, input: "foo" },

@@ -3,9 +3,9 @@ import {
     InputState,
     setKittyProtocol,
     setMouse,
+    ActionStore,
     type Action,
 } from "../src/index.js";
-import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
 
 configureStdin({
     stdout: process.stdout,

@@ -1,76 +1,102 @@
-import type { createActionsWithLeader } from "./createActions.js";
-import { UserConfig } from "./UserConfig.js";
-import type { Action } from "../types.js";
+import { tokenize } from "../tokenize/tokenize.js";
+import type { KeyMap, RawKeyMap } from "../types.js";
+import { toArray } from "../util/toArray.js";
+import { expandKeymap } from "./expandKeymap.js";
+import type { Action, RawAction } from "../types.js";
 
-type Params = Parameters<typeof createActionsWithLeader>;
+export const LEADER = Symbol("term-keymap.leader");
 
 export class ActionStore {
-    private active: Set<Action>;
-    private leader: Params[0];
-    private leaderTimeout: Params[1];
-    #isPaused: boolean;
+    private map: Map<Action, RawAction>;
+    private sortedActions: Map<number, Set<RawAction>>;
+    private computedActions: RawAction[] | undefined;
 
-    constructor(...params: Params) {
-        this.active = new Set();
-        this.leader = params[0];
-        this.leaderTimeout = params[1];
-        this.#isPaused = false;
+    constructor(actions?: Action[]) {
+        this.map = new Map();
+        this.sortedActions = new Map();
+
+        if (actions) {
+            for (let i = 0; i < actions.length; ++i) {
+                this.addAction(actions[i]);
+            }
+        }
     }
 
-    /**
-     * Subscribes action(s) to the store. Actions are tracked by reference, so
-     * duplicate subscriptions of the same action have no effect.
+    public addAction(action: Action) {
+        if (this.map.has(action)) return () => {};
+        this.computedActions = undefined;
 
-     * Returns a function to unsubscribe each of the provided actions.
-     */
-    public subscribe = (...actions: Readonly<Action[]>) => {
-        actions.forEach((action) => this.active.add(action));
-        return () => {
-            actions.forEach((action) => this.active.delete(action));
+        const raw = this.getRawAction(action);
+        this.map.set(action, raw);
+
+        const length = raw.keymap.length;
+        if (!this.sortedActions.get(length)) {
+            this.sortedActions.set(length, new Set());
+        }
+        this.sortedActions.get(length)!.add(raw);
+
+        return () => this.removeAction(action);
+    }
+
+    public removeAction(action: Action): boolean {
+        if (!this.map.has(action)) return false;
+        this.computedActions = undefined;
+
+        const raw = this.map.get(action)!;
+        const length = raw.keymap.length;
+        this.map.delete(action);
+        this.sortedActions.get(length)?.delete(raw);
+        if (this.sortedActions.get(length)?.size === 0) {
+            this.sortedActions.delete(length);
+        }
+
+        return true;
+    }
+
+    /** @internal
+     * Returns an array of raw actions sorted in ascending order by length of the
+     * action
+     * */
+    public _getRawActions(): RawAction[] {
+        if (this.computedActions) {
+            return this.computedActions;
+        }
+
+        const sortedKeys = [...this.sortedActions.keys()].sort((a, b) => a - b);
+        const result: RawAction[] = [];
+        for (let i = 0; i < sortedKeys.length; ++i) {
+            const set = this.sortedActions.get(sortedKeys[i])!;
+            result.push(...set);
+        }
+
+        this.computedActions = result;
+        return result;
+    }
+
+    private getRawAction(action: Action): RawAction {
+        return {
+            ...action,
+            keymap: this.getRawKeymap(action.keymap),
         };
-    };
+    }
 
-    public unsubscribe = (...actions: Readonly<Action[]>) => {
-        actions.forEach((action) => this.active.delete(action));
-    };
+    private getRawKeymap(keymap: KeyMap | KeyMap[] | string): RawKeyMap[] {
+        const sequence =
+            typeof keymap === "string" ? tokenize(keymap) : toArray(keymap);
 
-    /**
-     * Returns a `UserConfig` object which contains a sanitized version of the
-     * actions subscribed to the store.  If the store is paused, subscribed actions
-     * are ignored.
-     */
-    public getActions = (): UserConfig => {
-        const actions = this.isPaused ? [] : Array.from(this.active.values());
-        return new UserConfig(actions, this.leader, this.leaderTimeout);
-    };
+        const result: RawKeyMap[] = [];
+        for (let i = 0; i < sequence.length; ++i) {
+            const keymap = sequence[i];
+            if (keymap.leader) {
+                result.push(LEADER);
+            }
 
-    /**
-     * Same as `ActionStore.getActions` but accepts an array of additional Actions
-     * to be sanitized.
-     */
-    public getCombinedActions = (additional: Action[]): UserConfig => {
-        const actions = this.isPaused
-            ? []
-            : [...this.active.values(), ...additional];
+            const expanded = expandKeymap(keymap);
+            for (const km of expanded) {
+                if (km.input || km.key) result.push(km);
+            }
+        }
 
-        return new UserConfig(actions, this.leader, this.leaderTimeout);
-    };
-
-    /**
-     * Temporarily disables all actions by making `getActions()` return an empty list.
-     */
-    public pause = () => {
-        this.#isPaused = true;
-    };
-
-    /**
-     * Re-enables action retrieval — `getActions()` will return subscribed actions again.
-     */
-    public resume = () => {
-        this.#isPaused = false;
-    };
-
-    public get isPaused(): boolean {
-        return this.#isPaused;
+        return result;
     }
 }

@@ -1,9 +1,11 @@
 import { describe, test, expect } from "vitest";
-import { createActionsWithLeader } from "../../src/stateful/createActions";
 import { InputState } from "../../src/stateful/InputState";
+import { ActionStore } from "../../src/stateful/ActionStore";
+import { KeyMap } from "../../src/types";
 
 describe("keymaps with leader using tokens", () => {
-    const actions = createActionsWithLeader({ input: " " })([
+    const leader = { input: " " };
+    const store = new ActionStore([
         {
             keymap: { leader: true, input: "foo" },
             name: "leader-foo",
@@ -23,20 +25,20 @@ describe("keymaps with leader using tokens", () => {
     ]);
 
     test("{ leader: true, input: 'foo' }", () => {
-        const ip = new InputState();
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from(" "), actions);
+        let r = ip.process(Buffer.from(" "), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("f"), actions);
+        r = ip.process(Buffer.from("f"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
         expect(results).toEqual([
@@ -48,20 +50,20 @@ describe("keymaps with leader using tokens", () => {
     });
 
     test("[ { leader: true }, { input: 'bar' }]", () => {
-        const ip = new InputState();
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from(" "), actions);
+        let r = ip.process(Buffer.from(" "), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("b"), actions);
+        r = ip.process(Buffer.from("b"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("a"), actions);
+        r = ip.process(Buffer.from("a"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("r"), actions);
+        r = ip.process(Buffer.from("r"), store);
         results.push(r.name);
 
         expect(results).toEqual([
@@ -73,32 +75,32 @@ describe("keymaps with leader using tokens", () => {
     });
 
     test("[ { leader: true }, { input: 'baz' }, { leader: true, input: 'baz' }]", () => {
-        const ip = new InputState();
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from(" "), actions);
+        let r = ip.process(Buffer.from(" "), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("b"), actions);
+        r = ip.process(Buffer.from("b"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("a"), actions);
+        r = ip.process(Buffer.from("a"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("z"), actions);
+        r = ip.process(Buffer.from("z"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from(" "), actions);
+        r = ip.process(Buffer.from(" "), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("b"), actions);
+        r = ip.process(Buffer.from("b"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("a"), actions);
+        r = ip.process(Buffer.from("a"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("z"), actions);
+        r = ip.process(Buffer.from("z"), store);
         results.push(r.name);
 
         expect(results).toEqual([
@@ -115,7 +117,8 @@ describe("keymaps with leader using tokens", () => {
 });
 
 describe("keymaps with leader using string keymaps", () => {
-    const actions = createActionsWithLeader({ input: " " })([
+    const leader = { input: " " };
+    const store = new ActionStore([
         {
             keymap: "<leader>foo",
             name: "leader-foo",
@@ -131,20 +134,20 @@ describe("keymaps with leader using string keymaps", () => {
     ]);
 
     test("<leader>foo", () => {
-        const ip = new InputState();
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from(" "), actions);
+        let r = ip.process(Buffer.from(" "), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("f"), actions);
+        r = ip.process(Buffer.from("f"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
         expect(results).toEqual([
@@ -156,20 +159,20 @@ describe("keymaps with leader using string keymaps", () => {
     });
 
     test("<leader>bar", () => {
-        const ip = new InputState();
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from(" "), actions);
+        let r = ip.process(Buffer.from(" "), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("b"), actions);
+        r = ip.process(Buffer.from("b"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("a"), actions);
+        r = ip.process(Buffer.from("a"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("r"), actions);
+        r = ip.process(Buffer.from("r"), store);
         results.push(r.name);
 
         expect(results).toEqual([
@@ -181,32 +184,32 @@ describe("keymaps with leader using string keymaps", () => {
     });
 
     test("<leader>baz<leader>baz", () => {
-        const ip = new InputState();
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from(" "), actions);
+        let r = ip.process(Buffer.from(" "), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("b"), actions);
+        r = ip.process(Buffer.from("b"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("a"), actions);
+        r = ip.process(Buffer.from("a"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("z"), actions);
+        r = ip.process(Buffer.from("z"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from(" "), actions);
+        r = ip.process(Buffer.from(" "), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("b"), actions);
+        r = ip.process(Buffer.from("b"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("a"), actions);
+        r = ip.process(Buffer.from("a"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("z"), actions);
+        r = ip.process(Buffer.from("z"), store);
         results.push(r.name);
 
         expect(results).toEqual([
@@ -224,33 +227,34 @@ describe("keymaps with leader using string keymaps", () => {
 
 describe("leader other than space", () => {
     test("leader as { input: foo }", () => {
-        const actions = createActionsWithLeader({ input: "foo" })([
+        const leader = { input: "foo" };
+        const store = new ActionStore([
             {
                 keymap: "bar",
                 name: "bar",
             },
         ]);
 
-        const ip = new InputState();
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from("f"), actions);
+        let r = ip.process(Buffer.from("f"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("b"), actions);
+        r = ip.process(Buffer.from("b"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("a"), actions);
+        r = ip.process(Buffer.from("a"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("r"), actions);
+        r = ip.process(Buffer.from("r"), store);
         results.push(r.name);
 
         expect(results).toEqual([
@@ -263,61 +267,66 @@ describe("leader other than space", () => {
         ]);
     });
 
-    test("leader as <C-b>", () => {
-        const actions = createActionsWithLeader({ key: "ctrl" })([
-            {
-                keymap: "foo",
-                name: "foo",
-            },
-        ]);
-
-        const ip = new InputState();
-
-        const results = [] as (undefined | string)[];
-
-        let r = ip.process(Buffer.from([2]), actions);
-        results.push(r.name);
-
-        r = ip.process(Buffer.from("f"), actions);
-        results.push(r.name);
-
-        r = ip.process(Buffer.from("o"), actions);
-        results.push(r.name);
-
-        r = ip.process(Buffer.from("o"), actions);
-        results.push(r.name);
-
-        expect(results).toEqual([undefined, undefined, undefined, "foo"]);
-    });
-
-    test("leader as sequence of <A-a><C-a>", () => {
-        const actions = createActionsWithLeader([
-            { key: "alt", input: "a" },
-            { key: "ctrl", input: "a" },
-        ])([
+    test("modifiers without any counterparts cannot be leaders", () => {
+        const leader: KeyMap = { key: "ctrl" };
+        const store = new ActionStore([
             {
                 keymap: "<leader>foo",
                 name: "foo",
             },
         ]);
 
-        const ip = new InputState();
+        // kitty-encoded buffers are the only way a modifier with no other keypresses can be recieved
+        const ctrlBuffer = [27, 91, 53, 55, 52, 52, 50, 59, 49, 51, 51, 117];
+
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from([27, 97]), actions);
+        let r = ip.process(Buffer.from(ctrlBuffer), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from([1]), actions);
+        r = ip.process(Buffer.from("f"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("f"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        expect(results).toEqual([undefined, undefined, undefined, undefined]);
+    });
+
+    test("leader as sequence of <A-a><C-a>", () => {
+        const leader: KeyMap[] = [
+            { key: "alt", input: "a" },
+            { key: "ctrl", input: "a" },
+        ];
+        const store = new ActionStore([
+            {
+                keymap: "<leader>foo",
+                name: "foo",
+            },
+        ]);
+
+        const ip = new InputState({ leader });
+
+        const results = [] as (undefined | string)[];
+
+        let r = ip.process(Buffer.from([27, 97]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([1]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("f"), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("o"), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
         expect(results).toEqual([
@@ -330,32 +339,33 @@ describe("leader other than space", () => {
     });
 });
 
-describe("createActionsWithLeader can accept leader in string form", () => {
+describe("can accept a leader argument in string form", () => {
     test("leader as <C-a><C-b>", () => {
-        const actions = createActionsWithLeader("<C-a><C-b>")([
+        const leader = "<C-a><C-b>";
+        const store = new ActionStore([
             {
                 keymap: "<leader>foo",
                 name: "foo",
             },
         ]);
 
-        const ip = new InputState();
+        const ip = new InputState({ leader });
 
         const results = [] as (undefined | string)[];
 
-        let r = ip.process(Buffer.from([1]), actions);
+        let r = ip.process(Buffer.from([1]), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from([2]), actions);
+        r = ip.process(Buffer.from([2]), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("f"), actions);
+        r = ip.process(Buffer.from("f"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
-        r = ip.process(Buffer.from("o"), actions);
+        r = ip.process(Buffer.from("o"), store);
         results.push(r.name);
 
         expect(results).toEqual([

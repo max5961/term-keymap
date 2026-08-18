@@ -238,7 +238,7 @@ describe("Kitty protocol", () => {
         });
     });
 
-    describe("CSI keycode ; modifier u (numLock combinations)", () => {
+    describe("CSI keycode ; modifier u (w/ numLock)", () => {
         test.each<[string, KeyMap]>([
             ["97;129u", { input: "a" }],
             ["98;129u", { input: "b" }],

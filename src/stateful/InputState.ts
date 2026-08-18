@@ -4,7 +4,7 @@ import { PeekSet } from "../util/PeekSet.js";
 import { match } from "./match.js";
 import type { ShortData } from "./splitAmbiguousData.js";
 import { splitAmbiguousData } from "./splitAmbiguousData.js";
-import { LEADER, type ActionStore } from "./ActionStoreRewrite.js";
+import { LEADER, type ActionStore } from "./ActionStore.js";
 import { tokenize } from "../tokenize/tokenize.js";
 import { expandKeymap } from "./expandKeymap.js";
 

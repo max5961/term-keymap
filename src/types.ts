@@ -1,6 +1,6 @@
 import type { PeekSet } from "./util/PeekSet.js";
 import { Arrays } from "./constants.js";
-import type { LEADER } from "./stateful/ActionStoreRewrite.js";
+import type { LEADER } from "./stateful/ActionStore.js";
 
 export type KeyMap = {
     key?: Key | Key[];

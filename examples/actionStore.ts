@@ -1,5 +1,9 @@
-import { configureStdin, InputState, type Action } from "../src/index.js";
-import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
+import {
+    configureStdin,
+    InputState,
+    ActionStore,
+    type Action,
+} from "../src/index.js";
 
 const actions: Action[] = [
     {
