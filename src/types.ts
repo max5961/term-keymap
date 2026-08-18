@@ -1,5 +1,6 @@
 import type { PeekSet } from "./util/PeekSet.js";
 import { Arrays } from "./constants.js";
+import type { LEADER } from "./stateful/ActionStoreRewrite.js";
 
 export type KeyMap = {
     key?: Key | Key[];
@@ -7,16 +8,18 @@ export type KeyMap = {
     leader?: boolean;
 };
 
-export interface Action {
+export type Action = {
     name?: string;
     callback?: () => unknown;
     keymap: KeyMap | KeyMap[] | string;
-}
+};
 
 /** Action object de-abstracted into its most simple form */
-export interface RawAction extends Action {
-    keymap: KeyMap[];
-}
+export type RawAction = Omit<Action, "keymap"> & {
+    keymap: RawKeyMap[];
+};
+
+export type RawKeyMap = KeyMap | typeof LEADER;
 
 export type Modifier = (typeof Arrays.Modifiers)[number];
 export type Key = Modifier | (typeof Arrays.Keys)[number];

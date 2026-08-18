@@ -1,8 +1,10 @@
 import { tokenize } from "../tokenize/tokenize.js";
-import type { KeyMap } from "../types.js";
+import type { KeyMap, RawKeyMap } from "../types.js";
 import { toArray } from "../util/toArray.js";
 import { expandKeymap } from "./expandKeymap.js";
 import type { Action, RawAction } from "../types.js";
+
+export const LEADER = Symbol("term-keymap.leader");
 
 export class ActionStore {
     private map: Map<Action, RawAction>;
@@ -72,15 +74,20 @@ export class ActionStore {
         };
     }
 
-    private getRawKeymap(keymap: KeyMap | KeyMap[] | string): KeyMap[] {
+    private getRawKeymap(keymap: KeyMap | KeyMap[] | string): RawKeyMap[] {
         const sequence =
             typeof keymap === "string" ? tokenize(keymap) : toArray(keymap);
 
-        const result = [] as KeyMap[];
+        const result: RawKeyMap[] = [];
         for (let i = 0; i < sequence.length; ++i) {
-            const expanded = expandKeymap(sequence[i]);
+            const keymap = sequence[i];
+            if (keymap.leader) {
+                result.push(LEADER);
+            }
+
+            const expanded = expandKeymap(keymap);
             for (const km of expanded) {
-                if (Object.keys(km).length) result.push(km);
+                if (km.input || km.key) result.push(km);
             }
         }
 

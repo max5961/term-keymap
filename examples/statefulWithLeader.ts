@@ -3,7 +3,7 @@ import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
 
 configureStdin({});
 
-const ip = new InputState({ leader: " " });
+const ip = new InputState({ leader: "<A-j>LOL" });
 const actions: Action[] = [
     {
         keymap: { leader: true, input: "foo" },
@@ -19,6 +19,13 @@ const actions: Action[] = [
             console.log(this.name);
         },
     },
+    // {
+    //     keymap: "<leader>brodude",
+    //     name: "leader-brodude string",
+    //     callback() {
+    //         console.log(this.name);
+    //     },
+    // },
 ];
 
 const store = new ActionStore();
@@ -29,7 +36,7 @@ process.stdin.on("data", (buf: Buffer) => {
 
     const { data, name } = ip.process(buf, store);
 
-    console.clear();
+    // console.clear();
     console.log(data);
 
     console.log(name ?? "no match!");
