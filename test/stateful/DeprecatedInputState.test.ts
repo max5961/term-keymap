@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { DeprecatedInputState } from "../../src/stateful/DeprecatedInputState.js";
+import {
+    DeprecatedInputState,
+    createActions,
+} from "../../src/stateful/DeprecatedInputState.js";
 import { encodeMods } from "../helpers/encodeMods.js";
-import { createActions } from "../../src/stateful/createActions.js";
 
 describe.skip("stateful", () => {
     test("previous input does not effect matches", () => {

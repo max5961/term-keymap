@@ -1,9 +1,11 @@
-import type { Data, Key, KeyMap } from "../types.js";
-import { UserConfig } from "./UserConfig.js";
+import type { Action, Data, Key, KeyMap } from "../types.js";
 import { match } from "./match.js";
 import { parseBuffer } from "../parsers/parseBuffer.js";
 import { PeekSet } from "../util/PeekSet.js";
 import { splitAmbiguousData, type ShortData } from "./splitAmbiguousData.js";
+import { tokenize } from "../tokenize/tokenize.js";
+import { expandKeymap } from "./expandKeymap.js";
+import { toArray } from "../util/toArray.js";
 
 /**
  * @deprecated
@@ -239,3 +241,112 @@ class Node {
         return true;
     }
 }
+
+/**
+ * @deprecated
+ * Transformed `Action` such that `keymap` is always in expanded form and `leader`
+ * is removed as an option from keymap.
+ */
+type SanitizedAction = Omit<Action, "keymap"> & {
+    keymap: Omit<KeyMap, "leader">[];
+};
+
+/**
+ * @deprecated
+ * Sanitized Actions and leader data that can be more easily checked against
+ * a history of stdin data.
+ *
+ * This is a poor design that makes it difficult in practice to add/delete
+ * keymaps and set leader keys.
+ */
+export class UserConfig {
+    #actions: SanitizedAction[];
+    #leader: KeyMap[] | undefined;
+    #leaderTimeout: number;
+
+    constructor(
+        actions: Readonly<Action[]>,
+        leader?: KeyMap | KeyMap[] | string,
+        leaderTimeout?: number,
+    ) {
+        if (typeof leader === "string") {
+            this.#leader = tokenize(leader);
+        } else {
+            this.#leader = leader ? expandKeymap(leader) : leader;
+        }
+        this.#leaderTimeout = leaderTimeout ?? 1000;
+        this.#actions = this.sanitizeActions(actions);
+    }
+
+    private sanitizeActions(actions: Readonly<Action[]>): SanitizedAction[] {
+        return actions.map((action) => {
+            return { ...action, keymap: this.sanitizeKeymap(action.keymap) };
+        });
+    }
+
+    private sanitizeKeymap(keymap: KeyMap | KeyMap[] | string): KeyMap[] {
+        const sequence =
+            typeof keymap === "string" ? tokenize(keymap) : toArray(keymap);
+        const result = [] as KeyMap[];
+
+        for (let i = 0; i < sequence.length; ++i) {
+            const leader = sequence[i].leader;
+            delete sequence[i].leader;
+
+            const node = expandKeymap(sequence[i]);
+
+            if (leader) {
+                // Sequence is dependent on global leader which is absent, so essentially
+                // nullify the sequence.  <leader>a for example, should NOT match
+                // 'a'.  Could have a console.warn here in the future.
+                if (!this.leader) {
+                    return [];
+                } else {
+                    result.push(...this.leader);
+                }
+            }
+
+            for (const km of node) {
+                if (Object.keys(km).length) result.push(km);
+            }
+        }
+
+        return result;
+    }
+
+    get actions() {
+        return this.#actions;
+    }
+
+    get leader() {
+        return this.#leader;
+    }
+
+    get leaderTimeout() {
+        return this.#leaderTimeout;
+    }
+}
+
+/**
+ * @deprecated
+ * For use with `UserConfig`.  Curry in a leader keymap and creates
+ * `SanitizedAction[]`
+ *
+ * With the non deprecated InputState class, leader can be passed as a ctor
+ * argument.
+ * */
+export function createActionsWithLeader(
+    leader?: Omit<KeyMap, "leader"> | Omit<KeyMap, "leader">[] | string,
+    leaderTimeout?: number,
+) {
+    return (actions: Action[]): UserConfig => {
+        return new UserConfig(actions, leader, leaderTimeout);
+    };
+}
+
+/**
+ * @deprecated
+ * For use with `UserConfig`
+ * Creates `SanitizedAction[]`
+ * */
+export const createActions = createActionsWithLeader();
