@@ -1,11 +1,7 @@
-import {
-    ActionStore,
-    configureStdin,
-    InputState,
-    type Action,
-} from "../src/index.js";
+import { configureStdin, InputState, type Action } from "../src/index.js";
+import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
 
-const additional: Action[] = [
+const actions: Action[] = [
     {
         keymap: [{ input: "foo" }, { key: "ctrl", input: "d" }],
         name: "foo<C-d>",
@@ -20,22 +16,22 @@ const additional: Action[] = [
             process.exit();
         },
     },
+    {
+        keymap: "<leader>bar",
+        name: "<leader>bar",
+        callback() {
+            console.log(this.name);
+        },
+    },
 ];
 
-const actionStore = new ActionStore(" ", 1000);
-
-actionStore.subscribe({
-    keymap: "<leader>bar",
-    name: "<leader>bar",
-    callback() {
-        console.log(this.name);
-    },
-});
+const store = new ActionStore();
+actions.forEach((a) => store.addAction(a));
 
 configureStdin();
 
-const inputState = new InputState();
+const inputState = new InputState({ leader: " ", leaderTimeout: 1000 });
 
 process.stdin.on("data", (buf) => {
-    inputState.process(buf, actionStore.getCombinedActions(additional));
+    inputState.process(buf, store);
 });

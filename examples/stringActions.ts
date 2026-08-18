@@ -1,13 +1,9 @@
-import {
-    createActionsWithLeader,
-    InputState,
-    configureStdin,
-} from "../src/index.js";
+import { InputState, configureStdin, type Action } from "../src/index.js";
+import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
 
 configureStdin();
 
-// no leader support yet for string keymaps
-const actions = createActionsWithLeader({ input: " " })([
+const actions: Action[] = [
     {
         keymap: "<C-A-jk>",
         name: "foo",
@@ -17,7 +13,7 @@ const actions = createActionsWithLeader({ input: " " })([
     },
     {
         keymap: "<C-j><C-j><tab>",
-        name: "ctrl + j",
+        name: "ctrl + j + <tab>",
         callback() {
             console.log(this.name);
         },
@@ -29,14 +25,24 @@ const actions = createActionsWithLeader({ input: " " })([
             process.exit();
         },
     },
-]);
+    {
+        // keymap: "<leader>brodude",
+        keymap: { leader: true, input: "brodude" },
+        name: "brodude",
+        callback() {
+            console.log(this.name);
+        },
+    },
+];
 
-const inputState = new InputState();
+const inputState = new InputState({ leader: " " });
+const store = new ActionStore();
+actions.forEach((a) => store.addAction(a));
 
 process.stdin.on("data", (buf) => {
     console.clear();
 
-    const { data } = inputState.process(buf, actions);
+    const { data } = inputState.process(buf, store);
 
     console.log(data);
 

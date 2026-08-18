@@ -1,10 +1,11 @@
 import {
     configureStdin,
-    createActions,
     InputState,
     setKittyProtocol,
     setMouse,
+    type Action,
 } from "../src/index.js";
+import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
 
 configureStdin({
     stdout: process.stdout,
@@ -12,7 +13,7 @@ configureStdin({
     enableKittyProtocol: true,
 });
 
-const keymaps = createActions([
+const keymaps: Action[] = [
     {
         keymap: "<Esc>",
         name: "esc press",
@@ -85,9 +86,14 @@ const keymaps = createActions([
             setMouse(false, process.stdout);
         },
     },
-]);
+];
 
-const ip = new InputState();
+const store = new ActionStore();
+for (const action of keymaps) {
+    store.addAction(action);
+}
+
+const ip = new InputState({ leader: " " });
 
 const safeExit = () => {
     // setTimeout(() => {
@@ -102,7 +108,7 @@ process.stdin.on("data", (buf: Buffer) => {
     }
 
     console.clear();
-    const { data, name } = ip.process(buf, keymaps);
+    const { data, name } = ip.process(buf, store);
 
     if (data.key.only("ctrl") && data.input.only("c")) safeExit();
 

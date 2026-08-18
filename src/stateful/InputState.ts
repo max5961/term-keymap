@@ -1,10 +1,12 @@
 import { parseBuffer } from "../parsers/parseBuffer.js";
-import type { Data, Key, KeyMap } from "../types.js";
+import type { Data, Key, KeyMap, RawAction } from "../types.js";
 import { PeekSet } from "../util/PeekSet.js";
 import { match } from "./match.js";
 import type { ShortData } from "./splitAmbiguousData.js";
 import { splitAmbiguousData } from "./splitAmbiguousData.js";
-import { UserConfig, type SanitizedAction } from "./UserConfig.js";
+import type { ActionStore } from "./ActionStoreRewrite.js";
+import { tokenize } from "../tokenize/tokenize.js";
+import { expandKeymap } from "./expandKeymap.js";
 
 const Modifiers = new PeekSet<Key>([
     "ctrl",
@@ -17,25 +19,35 @@ const Modifiers = new PeekSet<Key>([
     "shift",
 ]);
 
+type Opts = {
+    maxDepth?: number;
+    leader?: KeyMap | KeyMap[] | string;
+    leaderTimeout?: number;
+};
+
 export class InputState {
-    private maxDepth: number;
     private size: number;
-    private root: Node | null;
-    private head: Node | null;
+    private root: Node | undefined;
+    private head: Node | undefined;
     private leaderTimeoutMode: boolean;
     private leaderTimeoutID: ReturnType<typeof setTimeout> | undefined;
+    private readonly maxDepth: number;
+    private readonly leader: KeyMap[] | undefined;
+    private readonly leaderTimeout: number;
 
-    constructor(
-        opts: {
-            maxDepth?: number;
-            leader?: Key | string;
-            leaderTimeout?: number;
-        } = {},
-    ) {
+    constructor(opts: Opts = {}) {
         this.maxDepth = opts.maxDepth ?? 50;
+        this.leaderTimeout = opts.leaderTimeout ?? 1000;
+        this.leader =
+            typeof opts.leader === "string"
+                ? tokenize(opts.leader)
+                : opts.leader
+                  ? expandKeymap(opts.leader)
+                  : undefined;
+
         this.size = 0;
-        this.root = null;
-        this.head = null;
+        this.root = undefined;
+        this.head = undefined;
         this.leaderTimeoutMode = false;
         this.leaderTimeoutID = undefined;
     }
@@ -57,24 +69,21 @@ export class InputState {
         if (this.size > this.maxDepth) {
             this.root = this.root.next;
             if (this.root) {
-                this.root.prev = null;
+                this.root.prev = undefined;
                 --this.size;
             }
         }
     }
 
-    public removeFromHead() {
-        if (!this.root || !this.head) return;
-
-        this.head = this.head.prev;
-        if (this.head && this.head.next) {
-            this.head.next = null;
-        }
+    public clear() {
+        this.root = undefined;
+        this.head = undefined;
+        this.size = 0;
     }
 
     public process(
         buf: Buffer,
-        config: UserConfig,
+        store: ActionStore,
     ): { data: Data; keymap?: KeyMap[]; name?: string } {
         const data = parseBuffer(buf);
 
@@ -92,58 +101,41 @@ export class InputState {
 
         this.appendData(data);
 
-        if (config.leader) {
-            const leaderMatch = this.checkMatch({ keymap: config.leader });
+        if (this.leader) {
+            const leaderMatch = this.checkMatch({ keymap: this.leader });
 
             if (leaderMatch || this.leaderTimeoutMode) {
-                this.startLeaderTimeout(config.leaderTimeout);
+                this.startLeaderTimeout(this.leaderTimeout);
             }
         }
 
-        return this.checkKeymapMatch(config, data);
+        const actions = store._getRawActions();
+        return this.checkKeymapMatch(actions, data);
     }
 
     private checkKeymapMatch(
-        config: UserConfig,
+        actions: RawAction[],
         data: Data,
     ): ReturnType<InputState["process"]> {
-        const bucket: Record<number, SanitizedAction[]> = {};
-
-        config.actions.forEach((action) => {
-            if (!bucket[action.keymap.length]) {
-                bucket[action.keymap.length] = [];
-            }
-            bucket[action.keymap.length].push(action);
-        });
-
-        const lengths = Object.keys(bucket)
-            .map((len) => Number(len))
-            .sort();
-
-        let lastMatch: ReturnType<InputState["process"]> | undefined;
-        for (const length of lengths) {
-            if (lastMatch) break;
-
-            for (const action of bucket[length]) {
-                const matched = this.checkMatch(action);
-
-                if (matched) {
-                    action.callback?.();
-
-                    lastMatch = {
-                        data: data,
-                        name: action.name,
-                        keymap: action.keymap,
-                    };
-                }
+        let matchedAction: RawAction | undefined;
+        for (let i = 0; i < actions.length; ++i) {
+            const action = actions[i];
+            const wasMatch = this.checkMatch(action);
+            if (wasMatch) {
+                matchedAction = action;
+                break;
             }
         }
 
-        if (lastMatch) {
-            this.clear();
-        }
+        if (!matchedAction) return { data };
 
-        return lastMatch || { data };
+        this.clear();
+        matchedAction.callback?.();
+        return {
+            data: data,
+            name: matchedAction.name,
+            keymap: matchedAction.keymap,
+        };
     }
 
     /**
@@ -154,14 +146,14 @@ export class InputState {
      * possibilities for ambiguous keycodes that are appended to the data history
      */
     private checkMatch(
-        action: SanitizedAction,
+        action: RawAction,
         idx?: number,
-        node?: Node | null,
+        node?: Node | undefined,
     ): boolean {
         idx = idx ?? action.keymap.length - 1;
         node = node === undefined ? this.head : node;
 
-        if (node === null) return false;
+        if (node === undefined) return false;
         if (action.keymap.length > this.size) return false;
         if (idx < 0) return false;
 
@@ -186,22 +178,16 @@ export class InputState {
             this.clear();
         }, leaderTimeout);
     }
-
-    public clear() {
-        this.root = null;
-        this.head = null;
-        this.size = 0;
-    }
 }
 
 class Node {
-    public prev: null | Node;
-    public next: null | Node;
+    public prev: Node | undefined;
+    public next: Node | undefined;
     public data: ShortData[];
 
     constructor(data: ShortData[]) {
         this.data = data;
-        this.prev = null;
-        this.next = null;
+        this.prev = undefined;
+        this.next = undefined;
     }
 }

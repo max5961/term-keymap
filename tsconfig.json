@@ -1,11 +1,11 @@
 {
-    "include": ["src"],
+    "include": ["src", "examples"],
     "exclude": [
         "src/stateful/DeprecatedInputState.ts",
         "test/stateful/DeprecatedInputState.test.ts"
     ],
     "compilerOptions": {
-        "rootDir": "./src/",
+        "rootDir": ".",
         "outDir": "./dist/",
         "target": "es2022",
         "module": "nodenext",

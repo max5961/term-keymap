@@ -1,14 +1,10 @@
-import {
-    createActionsWithLeader,
-    configureStdin,
-    InputState,
-} from "../src/index.js";
+import { configureStdin, InputState, type Action } from "../src/index.js";
+import { ActionStore } from "../src/stateful/ActionStoreRewrite.js";
 
 configureStdin({});
 
-const ip = new InputState();
-
-const keymaps = createActionsWithLeader({ input: " " })([
+const ip = new InputState({ leader: " " });
+const actions: Action[] = [
     {
         keymap: { leader: true, input: "foo" },
         name: "leader-foo",
@@ -23,12 +19,15 @@ const keymaps = createActionsWithLeader({ input: " " })([
             console.log(this.name);
         },
     },
-]);
+];
+
+const store = new ActionStore();
+actions.forEach((a) => store.addAction(a));
 
 process.stdin.on("data", (buf: Buffer) => {
     if (buf[0] === 3) process.exit();
 
-    const { data, name } = ip.process(buf, keymaps);
+    const { data, name } = ip.process(buf, store);
 
     console.clear();
     console.log(data);

@@ -45,7 +45,10 @@ export class ActionStore {
         return true;
     }
 
-    /** @internal */
+    /** @internal
+     * Returns an array of raw actions sorted in ascending order by length of the
+     * action
+     * */
     public _getRawActions(): RawAction[] {
         if (this.computedActions) {
             return this.computedActions;
