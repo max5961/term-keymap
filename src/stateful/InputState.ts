@@ -1,12 +1,5 @@
 import { parseBuffer } from "../parsers/parseBuffer.js";
-import type {
-    Action,
-    Data,
-    Key,
-    KeyMap,
-    RawAction,
-    RawKeyMap,
-} from "../types.js";
+import type { Data, Key, KeyMap, RawAction, RawKeyMap } from "../types.js";
 import { PeekSet } from "../util/PeekSet.js";
 import { match } from "./match.js";
 import type { ShortData } from "./splitAmbiguousData.js";
@@ -36,12 +29,11 @@ export class InputState {
     private size: number;
     private root: Node | undefined;
     private head: Node | undefined;
-    private leaderTimeoutMode: boolean;
     private leaderTimeoutID: ReturnType<typeof setTimeout> | undefined;
     private readonly maxDepth: number;
     private readonly leader: KeyMap[] | undefined;
     private readonly leaderTimeout: number;
-    private readonly resolvedKeymaps: WeakSet<RawAction, KeyMap[]>;
+    private readonly resolvedKeymaps: WeakMap<RawAction, KeyMap[]>;
 
     constructor(opts: Opts = {}) {
         this.maxDepth = opts.maxDepth ?? 50;
@@ -55,7 +47,6 @@ export class InputState {
         this.size = 0;
         this.root = undefined;
         this.head = undefined;
-        this.leaderTimeoutMode = false;
         this.leaderTimeoutID = undefined;
         this.resolvedKeymaps = new WeakMap();
     }
@@ -87,6 +78,7 @@ export class InputState {
         this.root = undefined;
         this.head = undefined;
         this.size = 0;
+        this.clearLeaderTimeout();
     }
 
     public process(
@@ -112,10 +104,8 @@ export class InputState {
         if (this.leader) {
             const leaderMatch = this.checkMatch(this.leader);
 
-            console.log({ leaderMatch, leader: this.leader });
-
-            if (leaderMatch || this.leaderTimeoutMode) {
-                this.startLeaderTimeout(this.leaderTimeout);
+            if (leaderMatch || this.leaderWasTriggered) {
+                this.startLeaderTimeout();
             }
         }
 
@@ -129,7 +119,7 @@ export class InputState {
     ): ReturnType<InputState["process"]> {
         for (let i = 0; i < actions.length; ++i) {
             const action = actions[i];
-            const keymap = this.injectLeaderIntoKeymap(action.keymap);
+            const keymap = this.getResolvedKeymap(action);
 
             if (this.checkMatch(keymap)) {
                 this.clear();
@@ -175,6 +165,16 @@ export class InputState {
         return false;
     }
 
+    private getResolvedKeymap(action: RawAction): KeyMap[] {
+        if (this.resolvedKeymaps.has(action)) {
+            return this.resolvedKeymaps.get(action)!;
+        }
+
+        const withLeader = this.injectLeaderIntoKeymap(action.keymap);
+        this.resolvedKeymaps.set(action, withLeader);
+        return withLeader;
+    }
+
     private injectLeaderIntoKeymap(raw: RawKeyMap[]): KeyMap[] {
         const result: KeyMap[] = [];
         for (let i = 0; i < raw.length; ++i) {
@@ -188,18 +188,26 @@ export class InputState {
             }
         }
 
-        // console.log(result);
         return result;
     }
 
-    private startLeaderTimeout(leaderTimeout: number) {
-        clearTimeout(this.leaderTimeoutID);
+    private get leaderWasTriggered() {
+        return !!this.leaderTimeoutID;
+    }
 
-        this.leaderTimeoutMode = true;
+    private startLeaderTimeout() {
+        this.clearLeaderTimeout();
         this.leaderTimeoutID = setTimeout(() => {
-            this.leaderTimeoutMode = false;
+            this.leaderTimeoutID = undefined;
             this.clear();
-        }, leaderTimeout);
+        }, this.leaderTimeout);
+    }
+
+    private clearLeaderTimeout() {
+        if (this.leaderTimeoutID) {
+            clearTimeout(this.leaderTimeoutID);
+            this.leaderTimeoutID = undefined;
+        }
     }
 }
 
