@@ -23,42 +23,60 @@ Key features:
 
 # Documentation & Resources
 
-- [Full API Reference](./doc/API.md)
-- [Using parseBuffer as a Standalone](./doc/parseBuffer.md)
-- [Example Setups](./doc/examples.md)
+<!-- - [Full API Reference](./doc/API.md) -->
+<!-- - [Using parseBuffer as a Standalone](./doc/parseBuffer.md) -->
+<!-- - [Example Setups](./doc/examples.md) -->
+
+[Example Setups](./examples)
 
 # Quickstart
 
-### Static Keymaps
+### Matching stateful stdin with keymaps
 
 ```typescript
-import { createActionsWithLeader, configureStdin, InputState } from "term-input";
+import { , configureStdin, ActionStore, InputState } from "term-input";
 
 configureStdin({
     enableMouse: true,
     enableKittyProtocol: true,
 })
 
-// `createActions` if no leader key desired
-const actions = createActionsWithLeader(" ")([
-    {
-        keymap: { key: "ctrl", input: "c" },
-        name: "quit",
-        callback: () => process.exit(),
-    },
-    {
-        // Keymaps can be string-form, or structured token objects such as above
-        keymap: "<C-j>",
-        name: "Ctrl + j",
-    },
-    {
-        // Sequence of keypresses using the leader key we defined (" ")
-        keymap: [{ leader: true, input: "foo" }, { key: "ctrl", input: "bar" }],
-        name: "<leader>foo<C-bar>",
-    }
-])
+const inputState = new InputState({ key: "ctrl", input: " " });
 
-const inputState = new InputState();
+// Initialize the store with optional Actions
+const store = new ActionStore([
+    {
+        keymap: [{ input: "foo" }, { key: "ctrl", input: "d" }],
+        callback: () => {
+            // handle match
+        }
+    },
+
+    // KeyMaps can be set in string form as well
+    {
+        keymap: "<leader>bar"
+        callback: () => {
+            // handle match
+        }
+    }
+
+    // If InputState.process matches <C-c> it will return the Action's name if
+    // it exists. This provides a different way of handling matched keymaps
+    {
+        keymap: "<C-c>",
+        name: "quit",
+    },
+]);
+
+// Or add an Action directly.  ActionStore.addAction returns a callback to remove it
+// (or you can use ActionStore.removeAction if you have a reference to the Action)
+//
+// ActionStore.clear() removes all Actions at once
+
+const removeEscAction = store.addAction({
+    keymap: "<Esc>",
+    callback: createCb("match escape key"),
+});
 
 process.stdin.on("data", (buf: Buffer) => {
     const { data, name } = inputState.process(buf, actions);
@@ -67,6 +85,9 @@ process.stdin.on("data", (buf: Buffer) => {
 
     // If there is a match, and you chose not to assign a callback, you handle
     // the `name` manually here.
+    if (name === "quit") {
+        process.exit();
+    }
 
     if (data.mouse) {
         // Handle mouse data here
@@ -74,43 +95,14 @@ process.stdin.on("data", (buf: Buffer) => {
 })
 ```
 
-### Dynamic Keymaps
-
->Subscribe or unsubscribe actions at runtime based on the state of the app.
->Useful if the app requires context specific keymaps.
-
-```typescript
-import { ActionStore, Action, configureStdin } from "term-input";
-
-configureStdin();
-
-const store = new ActionStore({ leader: " " });
-const inputState = new InputState();
-
-const quitAction: Action = { keymap: "<C-c>", name: "quit", callback: () => process.exit() }
-store.subscribe(quitAction);
-
-process.stdin.on("data", () => {
-    inputState.process(buf, store.getActions());
-})
-
-// Elsewhere in your code...
-const showData: Action = {
-    keymap: "<A-r>",
-    name : "show-data",
-    callback: toggleShowData,
-}
-
-// `subscribe` returns an unsubscribe function
-// useful for when you don't want to hold onto the Action object directly
-const unsubscribeShowData = store.subscribe(showData);
-```
 
 
 ### Handling raw data
 
->Want to handle stdin manually without the keymap API? You can parse raw
->input directly.
+>`parseBuffer` provides direct stdin parsing when stateful matching provided
+>by `InputState` and `ActionStore` isn't needed. It returns a `Data` object
+>which contains the parsed info. `Data.key` and `Data.input` are extended Set
+>objects with an `only(...values)` method for easier matching.
 
 ```typescript
 configureStdin({
@@ -119,36 +111,29 @@ configureStdin({
 });
 
 process.stdin.on("data", (buf: Buffer) => {
+    console.clear();
+
     const data = parseBuffer(buf);
 
-    // data.key and data.input are enhanced Sets, most notably with an `only()`
-    // method that helps narrow results easier.
+    print(data);
 
-    console.log({ raw: data.raw });
-    console.log({ key: data.key.values() });
-    console.log({ input: data.input.values() });
+    if (data.key.only("backspace")) {
+        // handler
+    }
+    if (!data.key.size && data.input.only("a")) {
+        // handler
+    }
+    if (data.key.only("ctrl") && data.input.only("a")) {
+        // handler
+    }
+    if (data.key.only("ctrl", "alt", "super") && data.input.only("U")) {
+        // handler
+    }
 
     if (data.key.only("ctrl") && data.input.only("c")) {
         process.exit();
     }
-
-    if (data.key.only("backspace")) {
-        console.log("\nmatch: backspace");
-    }
-
-    if (!data.key.size && data.input.only("a")) {
-        console.log("\nmatch: a");
-    }
-
-    if (data.key.only("ctrl") && data.input.only("a")) {
-        console.log("\nmatch: <C-a>");
-    }
-
-    // Requires Kitty keyboard support
-    if (data.key.only("ctrl", "alt", "super") && data.input.only("U")) {
-        console.log("\nmatch: ctrl + alt + super + U");
-    }
-})
+});
 ```
 
 ### Mouse Data
@@ -165,7 +150,6 @@ process.stdin.on("data", (buf: Buffer) => {
 | scrollUp | boolean | true when scrolling up on the scroll wheel |
 | scrollDown | boolean | true when scroll down on the scroll wheel |
 | mousemove | boolean | true when mouse is moving within term window |
-
 
 
 
