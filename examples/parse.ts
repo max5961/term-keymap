@@ -1,4 +1,11 @@
 import { configureStdin, parseBuffer } from "../src/index.js";
+import { createCb } from "./util/createCb.js";
+import { print } from "./util/prettyPrinter.js";
+
+// `parseBuffer` provides direct stdin parsing when stateful matching provided
+// by `InputState` and `ActionStore` isn't needed. It returns a `Data` object
+// which contains the parsed info. `Data.key` and `Data.input` are extended Set
+// objects with an `only(...values)` method for easier matching.
 
 configureStdin({
     enableMouse: false,
@@ -9,24 +16,23 @@ process.stdin.on("data", (buf: Buffer) => {
     console.clear();
 
     const data = parseBuffer(buf);
-    if (data.key.only("ctrl") && data.input.only("c")) process.exit();
 
-    console.log({ raw: data.raw });
-    console.log({ key: data.key.values() });
-    console.log({ input: data.input.values() });
+    print(data);
 
     if (data.key.only("backspace")) {
-        console.log("\nmatch: backspace");
+        createCb("match backspacekey")();
     }
     if (!data.key.size && data.input.only("a")) {
-        console.log("\nmatch: a");
+        createCb("match 'a'")();
     }
     if (data.key.only("ctrl") && data.input.only("a")) {
-        console.log("\nmatch: <C-a>");
+        createCb("match <C-a>")();
     }
     if (data.key.only("ctrl", "alt", "super") && data.input.only("U")) {
-        console.log("\nmatch: ctrl + alt + super + U");
+        createCb("match <C-A-D-U>")();
+    }
+
+    if (data.key.only("ctrl") && data.input.only("c")) {
+        process.exit();
     }
 });
-
-console.clear();

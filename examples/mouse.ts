@@ -1,7 +1,6 @@
 import { configureStdin, parseBuffer } from "../src/index.js";
 
 configureStdin({
-    stdout: process.stdout,
     enableMouse: true,
     mouseMode: 3,
 });
@@ -19,5 +18,3 @@ process.stdin.on("data", (buf) => {
         process.exit();
     }
 });
-
-console.clear();

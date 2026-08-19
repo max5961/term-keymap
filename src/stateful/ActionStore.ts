@@ -22,6 +22,12 @@ export class ActionStore {
         }
     }
 
+    public clear() {
+        this.map = new Map();
+        this.sortedActions = new Map();
+        this.computedActions = undefined;
+    }
+
     public addAction(action: Action) {
         if (this.map.has(action)) return () => {};
         this.computedActions = undefined;

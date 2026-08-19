@@ -123,6 +123,7 @@ export class InputState {
 
             if (this.checkMatch(keymap)) {
                 this.clear();
+                action.callback?.();
                 return {
                     data: data,
                     name: action.name,
