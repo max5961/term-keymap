@@ -80,7 +80,7 @@ export class KeyMapCreator implements IKeyHelper {
     private keys: Set<Key>;
     private mods: Set<Key>;
     private sections: KeyMap[];
-    private readValue: KeyMap[] | undefined;
+    private readSections: KeyMap[] | undefined;
 
     constructor(
         keys: Set<Key> = new Set(),
@@ -95,19 +95,19 @@ export class KeyMapCreator implements IKeyHelper {
     /** @internal
      * Once read/chaining is done, the instance essentially becomes immutable.
      * */
-    public $$read() {
-        if (this.readValue) {
-            return this.readValue;
+    public $$read(): KeyMap[] {
+        if (this.readSections) {
+            return this.readSections;
         }
-        this.readValue = [...this.sections];
-        return this.readValue;
+        this.readSections = [...this.sections];
+        return this.readSections;
     }
 
     private pushSection(input?: string) {
         const section: KeyMap = {};
 
-        if (input !== undefined) {
-            section.input = input;
+        if (input?.[0] !== undefined) {
+            section.input = input[0];
         }
 
         if (this.mods.size || this.keys.size) {
@@ -115,6 +115,10 @@ export class KeyMapCreator implements IKeyHelper {
         }
 
         this.sections.push(section);
+        if (input && input.length > 1) {
+            this.pushSection(input.slice(1));
+        }
+
         this.keys = new Set();
         this.mods = new Set();
     }
