@@ -1,6 +1,7 @@
 import type { PeekSet } from "./util/PeekSet.js";
 import { Arrays } from "./constants.js";
 import type { LEADER } from "./stateful/ActionStore.js";
+import type { KeyMapCreator } from "./util/KeyMapCreator.js";
 
 export type KeyMap = {
     key?: Key | Key[];
@@ -11,7 +12,7 @@ export type KeyMap = {
 export type Action = {
     name?: string;
     callback?: () => unknown;
-    keymap: KeyMap | KeyMap[] | string;
+    keymap: KeyMap | KeyMap[] | string | KeyMapCreator;
 };
 
 /** Action object de-abstracted into its most simple form */

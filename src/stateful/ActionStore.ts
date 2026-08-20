@@ -3,13 +3,14 @@ import type { KeyMap, RawKeyMap } from "../types.js";
 import { toArray } from "../util/toArray.js";
 import { expandKeymap } from "./expandKeymap.js";
 import type { Action, RawAction } from "../types.js";
+import { KeyMapCreator } from "../util/KeyMapCreator.js";
 
 export const LEADER = Symbol("term-keymap.leader");
 
 export class ActionStore {
     private map: Map<Action, RawAction>;
     private sortedActions: Map<number, Set<RawAction>>;
-    private computedActions: RawAction[] | undefined;
+    private cachedRawActions: RawAction[] | undefined;
 
     constructor(actions?: Action[]) {
         this.map = new Map();
@@ -25,12 +26,12 @@ export class ActionStore {
     public clear() {
         this.map = new Map();
         this.sortedActions = new Map();
-        this.computedActions = undefined;
+        this.cachedRawActions = undefined;
     }
 
     public addAction(action: Action) {
         if (this.map.has(action)) return () => {};
-        this.computedActions = undefined;
+        this.cachedRawActions = undefined;
 
         const raw = this.getRawAction(action);
         this.map.set(action, raw);
@@ -46,7 +47,7 @@ export class ActionStore {
 
     public removeAction(action: Action): boolean {
         if (!this.map.has(action)) return false;
-        this.computedActions = undefined;
+        this.cachedRawActions = undefined;
 
         const raw = this.map.get(action)!;
         const length = raw.keymap.length;
@@ -64,8 +65,8 @@ export class ActionStore {
      * action
      * */
     public _getRawActions(): RawAction[] {
-        if (this.computedActions) {
-            return this.computedActions;
+        if (this.cachedRawActions) {
+            return this.cachedRawActions;
         }
 
         const sortedKeys = [...this.sortedActions.keys()].sort((a, b) => a - b);
@@ -75,11 +76,19 @@ export class ActionStore {
             result.push(...set);
         }
 
-        this.computedActions = result;
+        this.cachedRawActions = result;
         return result;
     }
 
     private getRawAction(action: Action): RawAction {
+        if (action.keymap instanceof KeyMapCreator) {
+            // KeyMapCreator reads are always in expanded form
+            return {
+                ...action,
+                keymap: action.keymap.$$read(),
+            };
+        }
+
         return {
             ...action,
             keymap: this.getRawKeymap(action.keymap),
