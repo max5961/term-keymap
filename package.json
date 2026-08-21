@@ -20,7 +20,8 @@
         "example:stateful": "tsc -p examples && node ./compiled-examples/examples/stateful.js",
         "example:parse": "tsc -p examples && node ./compiled-examples/examples/parse.js",
         "example:mouse": "tsc -p examples && node ./compiled-examples/examples/mouse.js",
-        "example:leader": "tsc -p examples && node ./compiled-examples/examples/leader.js"
+        "example:leader": "tsc -p examples && node ./compiled-examples/examples/leader.js",
+        "benchmark": "tsc -p benchmark && node ./compiled-benchmark/benchmark/benchmarkStateful.js"
     },
     "type": "module",
     "keywords": [

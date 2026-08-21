@@ -1,3 +1,6 @@
 node_modules/
 dist/
 compiled-examples/
+compiled-benchmark/
+*.log
+todo.md
