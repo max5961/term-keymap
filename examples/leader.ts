@@ -21,10 +21,18 @@ const store = new ActionStore([
 
     // In string notation
     {
-        // keymap: "<leader>bar<leader>baz",
-        keymap: key.leader.input("bar").leader.input("baz"),
+        keymap: "<leader>bar<leader>baz",
+        // keymap: key.leader.input("bar").leader.input("baz"),
         // keymap: [ { leader: true, input: "bar" }, { leader: true, input: "baz" }],
         callback: createCb("match <leader>bar<leader>baz"),
+    },
+
+    // In keymap builder form
+    {
+        keymap: key.leader.ctrl.input("b"),
+        // keymap: "<leader><C-b>",
+        // keymap: [{ leader: true, key: "ctrl", input: "b" }],
+        callback: createCb("match <leader><C-b>"),
     },
     {
         keymap: "<C-c>",
@@ -32,21 +40,11 @@ const store = new ActionStore([
             process.exit();
         },
     },
-    {
-        // keymap: "<leader><leader><leader>lol",
-        keymap: key.leader.leader.leader.input("lol"),
-        callback: createCb("multiple leaders"),
-    },
-    {
-        keymap: key.input("foo").leader.backspace,
-        callback: createCb("input before leader then backspace"),
-    },
 ]);
 
 configureStdin();
 process.stdin.on("data", (buf: Buffer) => {
     console.clear();
-
     const { data, keymap } = inputState.process(buf, store);
     print(data, keymap);
 });

@@ -34,7 +34,7 @@ Key features:
 ### Matching stateful stdin with keymaps
 
 ```typescript
-import { , configureStdin, ActionStore, InputState } from "term-input";
+import { configureStdin, key, ActionStore, InputState } from "term-input";
 
 configureStdin({
     enableMouse: true,
@@ -52,13 +52,21 @@ const store = new ActionStore([
         }
     },
 
-    // KeyMaps can be set in string form as well
+    // KeyMaps can be set in string form
     {
         keymap: "<leader>bar"
         callback: () => {
             // handle match
         }
-    }
+    },
+
+    // or KeyMaps can be set by chaining
+    {
+        keymap: key.leader.input("baz"),
+        callback: () => {
+            // handle match
+        }
+    },
 
     // If InputState.process matches <C-c> it will return the Action's name if
     // it exists. This provides a different way of handling matched keymaps
