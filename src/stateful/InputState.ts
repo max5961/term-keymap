@@ -7,6 +7,7 @@ import { splitAmbiguousData } from "./splitAmbiguousData.js";
 import { LEADER, type ActionStore } from "./ActionStore.js";
 import { tokenize } from "../tokenize/tokenize.js";
 import { expandKeymap } from "./expandKeymap.js";
+import { KeyMapBuilder } from "../util/KeyMapBuilder.js";
 
 const Modifiers = new PeekSet<Key>([
     "ctrl",
@@ -21,7 +22,7 @@ const Modifiers = new PeekSet<Key>([
 
 type Opts = {
     maxDepth?: number;
-    leader?: KeyMap | KeyMap[] | string;
+    leader?: KeyMap | KeyMap[] | string | KeyMapBuilder;
     leaderTimeout?: number;
 };
 
@@ -40,6 +41,8 @@ export class InputState {
         this.leaderTimeout = opts.leaderTimeout ?? 1000;
         if (typeof opts.leader === "string") {
             this.leader = expandKeymap(tokenize(opts.leader));
+        } else if (opts.leader instanceof KeyMapBuilder) {
+            this.leader = opts.leader.$$read();
         } else if (opts.leader) {
             this.leader = expandKeymap(opts.leader);
         }

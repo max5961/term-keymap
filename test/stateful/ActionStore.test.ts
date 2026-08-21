@@ -2,6 +2,7 @@ import { describe, test, expect } from "vitest";
 import { ActionStore } from "../../src/stateful/ActionStore.js";
 import type { Action } from "../../src/types.js";
 import { InputState } from "../../src/stateful/InputState";
+import { key } from "../../src/util/KeyMapBuilder.js";
 
 describe("ActionStore w/o leader", () => {
     const a1: Action = { keymap: "<C-a>", name: "ctrl-a" };
@@ -57,5 +58,73 @@ describe("ActionStore w/o leader", () => {
         results.push(r.name);
 
         expect(results).toEqual(["ctrl-d", undefined]);
+    });
+
+    test("ActionStore.clear() removes all actions", () => {
+        const store = new ActionStore([
+            { keymap: "<C-a>", name: "ctrl-a" },
+            { keymap: "<C-b>", name: "ctrl-b" },
+            { keymap: "<C-c>", name: "ctrl-c" },
+        ]);
+
+        const ip = new InputState();
+
+        const results = [] as (undefined | string)[];
+
+        let r = ip.process(Buffer.from([1]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([2]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([3]), store);
+        results.push(r.name);
+
+        store.clear();
+
+        r = ip.process(Buffer.from([1]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([2]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([3]), store);
+        results.push(r.name);
+
+        expect(results).toEqual([
+            "ctrl-a",
+            "ctrl-b",
+            "ctrl-c",
+            undefined,
+            undefined,
+            undefined,
+        ]);
+    });
+
+    test("ActionStore works with keymaps from KeyMapBuilder", () => {
+        const store = new ActionStore([
+            { keymap: key.ctrl.input("a"), name: "ctrl-a" },
+            { keymap: key.ctrl.input("b"), name: "ctrl-b" },
+            { keymap: key.ctrl.input("c"), name: "ctrl-c" },
+            { keymap: key.input("a"), name: "a" },
+        ]);
+
+        const ip = new InputState();
+
+        const results = [] as (undefined | string)[];
+
+        let r = ip.process(Buffer.from([1]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([2]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([3]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([97]), store);
+        results.push(r.name);
+
+        expect(results).toEqual(["ctrl-a", "ctrl-b", "ctrl-c", "a"]);
     });
 });

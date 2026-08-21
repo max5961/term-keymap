@@ -3,7 +3,7 @@ import type { KeyMap, RawKeyMap } from "../types.js";
 import { toArray } from "../util/toArray.js";
 import { expandKeymap } from "./expandKeymap.js";
 import type { Action, RawAction } from "../types.js";
-import { KeyMapCreator } from "../util/KeyMapCreator.js";
+import { BaseKeyMapBuilder } from "../util/KeyMapBuilder.js";
 
 export const LEADER = Symbol("term-keymap.leader");
 
@@ -81,8 +81,8 @@ export class ActionStore {
     }
 
     private getRawAction(action: Action): RawAction {
-        if (action.keymap instanceof KeyMapCreator) {
-            // KeyMapCreator reads are always in expanded form
+        if (action.keymap instanceof BaseKeyMapBuilder) {
+            // KeyMapBuilder reads are always in raw and expanded form
             return {
                 ...action,
                 keymap: action.keymap.$$read(),

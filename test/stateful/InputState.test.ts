@@ -3,6 +3,7 @@ import { InputState } from "../../src/stateful/InputState.js";
 import { encodeMods } from "../helpers/encodeMods.js";
 import { KeyMap } from "../../src/types.js";
 import { ActionStore } from "../../src/stateful/ActionStore.js";
+import { key } from "../../src/util/KeyMapBuilder.js";
 
 describe("stateful legacy", () => {
     test("previous input does not effect matches", () => {
@@ -610,5 +611,30 @@ describe("stateful kitty", () => {
         if (match.name) matches.push(match.name);
 
         expect(matches).toEqual(["baz", "baz", "baz"]);
+    });
+});
+
+describe("Supports KeyMapBuilder in constructor", () => {
+    test("Supports when setting in InputState and ActionStore", () => {
+        const leader = key.ctrl.input("a");
+        const store = new ActionStore([
+            { keymap: { input: "a" }, name: "a" },
+            { keymap: { leader: true, input: "b" }, name: "leader-b" },
+        ]);
+
+        const ip = new InputState({ leader });
+
+        const results = [] as (undefined | string)[];
+
+        let r = ip.process(Buffer.from([97]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([1]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([98]), store);
+        results.push(r.name);
+
+        expect(results).toEqual(["a", undefined, "leader-b"]);
     });
 });

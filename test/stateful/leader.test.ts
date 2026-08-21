@@ -2,6 +2,7 @@ import { describe, test, expect } from "vitest";
 import { InputState } from "../../src/stateful/InputState";
 import { ActionStore } from "../../src/stateful/ActionStore";
 import { KeyMap } from "../../src/types";
+import { key } from "../../src/util/KeyMapBuilder";
 
 describe("keymaps with leader using tokens", () => {
     const leader = { input: " " };
@@ -339,7 +340,7 @@ describe("leader other than space", () => {
     });
 });
 
-describe("can accept a leader argument in string form", () => {
+describe("InputState can accept a leader argument in string form", () => {
     test("leader as <C-a><C-b>", () => {
         const leader = "<C-a><C-b>";
         const store = new ActionStore([
@@ -375,5 +376,26 @@ describe("can accept a leader argument in string form", () => {
             undefined,
             "foo",
         ]);
+    });
+});
+
+describe("Supports KeyMapBuilder", () => {
+    test("Supports when setting in InputState and ActionStore", () => {
+        const leader = key.ctrl.input("a");
+        const store = new ActionStore([
+            { keymap: key.leader.input("a"), name: "leader + a" },
+        ]);
+
+        const ip = new InputState({ leader });
+
+        const results = [] as (undefined | string)[];
+
+        let r = ip.process(Buffer.from([1]), store);
+        results.push(r.name);
+
+        r = ip.process(Buffer.from([97]), store);
+        results.push(r.name);
+
+        expect(results).toEqual([undefined, "leader + a"]);
     });
 });

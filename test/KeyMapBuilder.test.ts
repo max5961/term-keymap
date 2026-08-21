@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { key, type KeyMapCreator } from "../src/util/KeyMapCreator.ts";
+import { key, type BaseKeyMapBuilder } from "../src/util/KeyMapBuilder.ts";
 import { KeyMap } from "../src/types.ts";
+import { LEADER } from "../src/stateful/ActionStore.ts";
 
-const parse = (k: KeyMapCreator) => {
+const parse = (k: BaseKeyMapBuilder) => {
     return k.$$read();
 };
 
-describe("KeyMapCreator", () => {
+describe("KeyMapBuilder", () => {
     test(".input('a')", () => {
         const k = parse(key.input("a"));
         expect(k).toEqual([{ input: "a" }]);
@@ -55,9 +56,73 @@ describe("KeyMapCreator", () => {
         ]);
     });
 
+    describe("works with leader combinations", () => {
+        test("leader + single input char", () => {
+            const k = parse(key.leader.input("f"));
+            expect(k).toEqual([LEADER, { input: "f" }]);
+        });
+
+        test("leader + multiple input chars only prepends leader once", () => {
+            const k = parse(key.leader.input("foo"));
+            expect(k).toEqual([
+                LEADER,
+                { input: "f" },
+                { input: "o" },
+                { input: "o" },
+            ]);
+        });
+
+        test("leader after input", () => {
+            const k = parse(key.input("foo").leader);
+            expect(k).toEqual([
+                { input: "f" },
+                { input: "o" },
+                { input: "o" },
+                LEADER,
+            ]);
+        });
+
+        test("multiple consecutive leaders", () => {
+            const k = parse(key.leader.leader.leader.input("a"));
+            // prettier-ignore
+            expect(k).toEqual([
+                LEADER,
+                LEADER,
+                LEADER,
+                { input: "a" }
+            ])
+        });
+
+        test("multiple non-consecutive leaders", () => {
+            const k = parse(key.leader.input("a").leader.input("b"));
+            expect(k).toEqual([LEADER, { input: "a" }, LEADER, { input: "b" }]);
+        });
+
+        test("leader with modifiers", () => {
+            const k = parse(key.leader.ctrl.alt.input("a"));
+            expect(k).toEqual([LEADER, { key: ["ctrl", "alt"], input: "a" }]);
+        });
+
+        test("leader after keys", () => {
+            const k = parse(key.f1.leader);
+            expect(k).toEqual([{ key: ["f1"] }, LEADER]);
+        });
+
+        // Illegal because mods aren't matched with any input but still produces illegal token.
+        // The correct usage/intent here would be `key.leader.ctrl.alt.input("a")`
+        test("leader after mods still produces illegal keymap token", () => {
+            const k = parse(key.ctrl.alt.leader.input("a"));
+            expect(k).toEqual([
+                { key: ["ctrl", "alt"] },
+                LEADER,
+                { input: "a" },
+            ]);
+        });
+    });
+
     describe("Check all keys for typos and ensure all non-modifiers create new sections", () => {
         // prettier-ignore
-        test.each<[string, KeyMapCreator, KeyMap[]]>([
+        test.each<[string, BaseKeyMapBuilder, KeyMap[]]>([
             ["ctrl",               key.ctrl.input("a"),               [{ key: ["ctrl"], input: "a" }]],
             ["alt",                key.alt.input("a"),                [{ key: ["alt"], input: "a"}]],
             ["meta",               key.meta.input("a"),               [{ key: ["meta"], input: "a" }]],

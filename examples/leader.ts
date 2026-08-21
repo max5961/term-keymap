@@ -1,4 +1,4 @@
-import { configureStdin, InputState, ActionStore } from "../src/index.js";
+import { configureStdin, InputState, ActionStore, key } from "../src/index.js";
 import { print } from "./util/prettyPrinter.js";
 import { createCb } from "./util/createCb.js";
 
@@ -13,12 +13,17 @@ const store = new ActionStore([
     // given keymap
     {
         keymap: { leader: true, input: "foo" },
+        // keymap: key.leader.input("foo")
+        // keymap: "<leader>foo"
+        // keymap: "[ { leader: true, input: "f" }, { input: "o" }, { input: "o" }]",
         callback: createCb("match <leader>foo"),
     },
 
     // In string notation
     {
-        keymap: "<leader>bar<leader>baz",
+        // keymap: "<leader>bar<leader>baz",
+        keymap: key.leader.input("bar").leader.input("baz"),
+        // keymap: [ { leader: true, input: "bar" }, { leader: true, input: "baz" }],
         callback: createCb("match <leader>bar<leader>baz"),
     },
     {
@@ -26,6 +31,15 @@ const store = new ActionStore([
         callback() {
             process.exit();
         },
+    },
+    {
+        // keymap: "<leader><leader><leader>lol",
+        keymap: key.leader.leader.leader.input("lol"),
+        callback: createCb("multiple leaders"),
+    },
+    {
+        keymap: key.input("foo").leader.backspace,
+        callback: createCb("input before leader then backspace"),
     },
 ]);
 

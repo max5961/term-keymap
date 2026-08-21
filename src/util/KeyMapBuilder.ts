@@ -1,101 +1,105 @@
-import type { Key, KeyMap } from "../types.js";
+import { LEADER } from "../stateful/ActionStore.js";
+import type { Key, KeyMap, RawKeyMap } from "../types.js";
 
-export interface IKeyHelper {
-    input(input: string): KeyMapCreator;
-    readonly ctrl: KeyMapCreator;
-    readonly alt: KeyMapCreator;
-    readonly meta: KeyMapCreator;
-    readonly super: KeyMapCreator;
-    readonly hyper: KeyMapCreator;
-    readonly f1: KeyMapCreator;
-    readonly f2: KeyMapCreator;
-    readonly f3: KeyMapCreator;
-    readonly f4: KeyMapCreator;
-    readonly f5: KeyMapCreator;
-    readonly f6: KeyMapCreator;
-    readonly f7: KeyMapCreator;
-    readonly f8: KeyMapCreator;
-    readonly f9: KeyMapCreator;
-    readonly f10: KeyMapCreator;
-    readonly f11: KeyMapCreator;
-    readonly f12: KeyMapCreator;
-    readonly f13: KeyMapCreator;
-    readonly f14: KeyMapCreator;
-    readonly f15: KeyMapCreator;
-    readonly f16: KeyMapCreator;
-    readonly f17: KeyMapCreator;
-    readonly f18: KeyMapCreator;
-    readonly f19: KeyMapCreator;
-    readonly f20: KeyMapCreator;
-    readonly f21: KeyMapCreator;
-    readonly f22: KeyMapCreator;
-    readonly f23: KeyMapCreator;
-    readonly f24: KeyMapCreator;
-    readonly f25: KeyMapCreator;
-    readonly f26: KeyMapCreator;
-    readonly f27: KeyMapCreator;
-    readonly f28: KeyMapCreator;
-    readonly f29: KeyMapCreator;
-    readonly f30: KeyMapCreator;
-    readonly f31: KeyMapCreator;
-    readonly f32: KeyMapCreator;
-    readonly f33: KeyMapCreator;
-    readonly f34: KeyMapCreator;
-    readonly f35: KeyMapCreator;
-    readonly backspace: KeyMapCreator;
-    readonly delete: KeyMapCreator;
-    readonly esc: KeyMapCreator;
-    readonly insert: KeyMapCreator;
-    readonly return: KeyMapCreator;
-    readonly tab: KeyMapCreator;
-    readonly up: KeyMapCreator;
-    readonly down: KeyMapCreator;
-    readonly left: KeyMapCreator;
-    readonly right: KeyMapCreator;
-    readonly pageUp: KeyMapCreator;
-    readonly pageDown: KeyMapCreator;
-    readonly home: KeyMapCreator;
-    readonly end: KeyMapCreator;
-    readonly scrollLock: KeyMapCreator;
-    readonly printScreen: KeyMapCreator;
-    readonly begin: KeyMapCreator;
-    readonly pause: KeyMapCreator;
-    readonly menu: KeyMapCreator;
-    readonly mediaPlay: KeyMapCreator;
-    readonly mediaPause: KeyMapCreator;
-    readonly mediaPlayPause: KeyMapCreator;
-    readonly mediaReverse: KeyMapCreator;
-    readonly mediaStop: KeyMapCreator;
-    readonly mediaFastForward: KeyMapCreator;
-    readonly mediaRewind: KeyMapCreator;
-    readonly mediaTrackNext: KeyMapCreator;
-    readonly mediaTrackPrevious: KeyMapCreator;
-    readonly mediaRecord: KeyMapCreator;
-    readonly mediaLowerVolume: KeyMapCreator;
-    readonly mediaRaiseVolume: KeyMapCreator;
-    readonly mediaMuteVolume: KeyMapCreator;
+export interface IKeyMapBuilder {
+    input(input: string): BaseKeyMapBuilder;
+    readonly leader: LeaderKeyMapBuilder;
+    readonly ctrl: BaseKeyMapBuilder;
+    readonly alt: BaseKeyMapBuilder;
+    readonly meta: BaseKeyMapBuilder;
+    readonly super: BaseKeyMapBuilder;
+    readonly hyper: BaseKeyMapBuilder;
+    readonly f1: BaseKeyMapBuilder;
+    readonly f2: BaseKeyMapBuilder;
+    readonly f3: BaseKeyMapBuilder;
+    readonly f4: BaseKeyMapBuilder;
+    readonly f5: BaseKeyMapBuilder;
+    readonly f6: BaseKeyMapBuilder;
+    readonly f7: BaseKeyMapBuilder;
+    readonly f8: BaseKeyMapBuilder;
+    readonly f9: BaseKeyMapBuilder;
+    readonly f10: BaseKeyMapBuilder;
+    readonly f11: BaseKeyMapBuilder;
+    readonly f12: BaseKeyMapBuilder;
+    readonly f13: BaseKeyMapBuilder;
+    readonly f14: BaseKeyMapBuilder;
+    readonly f15: BaseKeyMapBuilder;
+    readonly f16: BaseKeyMapBuilder;
+    readonly f17: BaseKeyMapBuilder;
+    readonly f18: BaseKeyMapBuilder;
+    readonly f19: BaseKeyMapBuilder;
+    readonly f20: BaseKeyMapBuilder;
+    readonly f21: BaseKeyMapBuilder;
+    readonly f22: BaseKeyMapBuilder;
+    readonly f23: BaseKeyMapBuilder;
+    readonly f24: BaseKeyMapBuilder;
+    readonly f25: BaseKeyMapBuilder;
+    readonly f26: BaseKeyMapBuilder;
+    readonly f27: BaseKeyMapBuilder;
+    readonly f28: BaseKeyMapBuilder;
+    readonly f29: BaseKeyMapBuilder;
+    readonly f30: BaseKeyMapBuilder;
+    readonly f31: BaseKeyMapBuilder;
+    readonly f32: BaseKeyMapBuilder;
+    readonly f33: BaseKeyMapBuilder;
+    readonly f34: BaseKeyMapBuilder;
+    readonly f35: BaseKeyMapBuilder;
+    readonly backspace: BaseKeyMapBuilder;
+    readonly delete: BaseKeyMapBuilder;
+    readonly esc: BaseKeyMapBuilder;
+    readonly insert: BaseKeyMapBuilder;
+    readonly return: BaseKeyMapBuilder;
+    readonly tab: BaseKeyMapBuilder;
+    readonly up: BaseKeyMapBuilder;
+    readonly down: BaseKeyMapBuilder;
+    readonly left: BaseKeyMapBuilder;
+    readonly right: BaseKeyMapBuilder;
+    readonly pageUp: BaseKeyMapBuilder;
+    readonly pageDown: BaseKeyMapBuilder;
+    readonly home: BaseKeyMapBuilder;
+    readonly end: BaseKeyMapBuilder;
+    readonly scrollLock: BaseKeyMapBuilder;
+    readonly printScreen: BaseKeyMapBuilder;
+    readonly begin: BaseKeyMapBuilder;
+    readonly pause: BaseKeyMapBuilder;
+    readonly menu: BaseKeyMapBuilder;
+    readonly mediaPlay: BaseKeyMapBuilder;
+    readonly mediaPause: BaseKeyMapBuilder;
+    readonly mediaPlayPause: BaseKeyMapBuilder;
+    readonly mediaReverse: BaseKeyMapBuilder;
+    readonly mediaStop: BaseKeyMapBuilder;
+    readonly mediaFastForward: BaseKeyMapBuilder;
+    readonly mediaRewind: BaseKeyMapBuilder;
+    readonly mediaTrackNext: BaseKeyMapBuilder;
+    readonly mediaTrackPrevious: BaseKeyMapBuilder;
+    readonly mediaRecord: BaseKeyMapBuilder;
+    readonly mediaLowerVolume: BaseKeyMapBuilder;
+    readonly mediaRaiseVolume: BaseKeyMapBuilder;
+    readonly mediaMuteVolume: BaseKeyMapBuilder;
 }
 
-export class KeyMapCreator implements IKeyHelper {
-    private keys: Set<Key>;
-    private mods: Set<Key>;
-    private sections: KeyMap[];
-    private readSections: KeyMap[] | undefined;
+export abstract class BaseKeyMapBuilder implements IKeyMapBuilder {
+    protected keys: Set<Key>;
+    protected mods: Set<Key>;
+    protected abstract sections: (KeyMap | RawKeyMap)[];
+    protected abstract readSections: (KeyMap | RawKeyMap)[] | undefined;
 
     constructor(
         keys: Set<Key> = new Set(),
         mods: Set<Key> = new Set(),
-        sections: KeyMap[] = [],
+        // sections: KeyMap[] = [],
     ) {
         this.keys = keys;
         this.mods = mods;
-        this.sections = sections;
+        // this.sections = sections;
     }
 
     /** @internal
      * Once read/chaining is done, the instance essentially becomes immutable.
      * */
-    public $$read(): KeyMap[] {
+    public abstract $$read(): KeyMap[] | RawKeyMap[];
+
+    protected $$readHelper(): KeyMap[] | RawKeyMap[] {
         if (this.readSections) {
             return this.readSections;
         }
@@ -114,7 +118,10 @@ export class KeyMapCreator implements IKeyHelper {
             section.key = [...this.mods.values(), ...this.keys.values()];
         }
 
-        this.sections.push(section);
+        if (section.input || section.key) {
+            this.sections.push(section);
+        }
+
         if (input && input.length > 1) {
             this.pushSection(input.slice(1));
         }
@@ -126,6 +133,15 @@ export class KeyMapCreator implements IKeyHelper {
     public input(input: string) {
         this.pushSection(input);
         return this;
+    }
+
+    get leader(): LeaderKeyMapBuilder {
+        this.pushSection();
+        this.sections.push(LEADER);
+        if (this instanceof LeaderKeyMapBuilder) {
+            return this;
+        }
+        return new LeaderKeyMapBuilder(this.sections);
     }
 
     get ctrl() {
@@ -486,227 +502,258 @@ export class KeyMapCreator implements IKeyHelper {
     }
 }
 
-export class KeyMapCreatorStarter implements IKeyHelper {
+export class KeyMapBuilderStarter implements IKeyMapBuilder {
     constructor() {}
 
     public input(input: string) {
-        return new KeyMapCreator().input(input);
+        return new KeyMapBuilder([]).input(input);
+    }
+    get leader() {
+        return new KeyMapBuilder([]).leader;
     }
     get ctrl() {
-        return new KeyMapCreator().ctrl;
+        return new KeyMapBuilder([]).ctrl;
     }
     get alt() {
-        return new KeyMapCreator().alt;
+        return new KeyMapBuilder([]).alt;
     }
     get meta() {
-        return new KeyMapCreator().meta;
+        return new KeyMapBuilder([]).meta;
     }
     get super() {
-        return new KeyMapCreator().super;
+        return new KeyMapBuilder([]).super;
     }
     get hyper() {
-        return new KeyMapCreator().hyper;
+        return new KeyMapBuilder([]).hyper;
     }
     get f1() {
-        return new KeyMapCreator().f1;
+        return new KeyMapBuilder([]).f1;
     }
     get f2() {
-        return new KeyMapCreator().f2;
+        return new KeyMapBuilder([]).f2;
     }
     get f3() {
-        return new KeyMapCreator().f3;
+        return new KeyMapBuilder([]).f3;
     }
     get f4() {
-        return new KeyMapCreator().f4;
+        return new KeyMapBuilder([]).f4;
     }
     get f5() {
-        return new KeyMapCreator().f5;
+        return new KeyMapBuilder([]).f5;
     }
     get f6() {
-        return new KeyMapCreator().f6;
+        return new KeyMapBuilder([]).f6;
     }
     get f7() {
-        return new KeyMapCreator().f7;
+        return new KeyMapBuilder([]).f7;
     }
     get f8() {
-        return new KeyMapCreator().f8;
+        return new KeyMapBuilder([]).f8;
     }
     get f9() {
-        return new KeyMapCreator().f9;
+        return new KeyMapBuilder([]).f9;
     }
     get f10() {
-        return new KeyMapCreator().f10;
+        return new KeyMapBuilder([]).f10;
     }
     get f11() {
-        return new KeyMapCreator().f11;
+        return new KeyMapBuilder([]).f11;
     }
     get f12() {
-        return new KeyMapCreator().f12;
+        return new KeyMapBuilder([]).f12;
     }
     get f13() {
-        return new KeyMapCreator().f13;
+        return new KeyMapBuilder([]).f13;
     }
     get f14() {
-        return new KeyMapCreator().f14;
+        return new KeyMapBuilder([]).f14;
     }
     get f15() {
-        return new KeyMapCreator().f15;
+        return new KeyMapBuilder([]).f15;
     }
     get f16() {
-        return new KeyMapCreator().f16;
+        return new KeyMapBuilder([]).f16;
     }
     get f17() {
-        return new KeyMapCreator().f17;
+        return new KeyMapBuilder([]).f17;
     }
     get f18() {
-        return new KeyMapCreator().f18;
+        return new KeyMapBuilder([]).f18;
     }
     get f19() {
-        return new KeyMapCreator().f19;
+        return new KeyMapBuilder([]).f19;
     }
     get f20() {
-        return new KeyMapCreator().f20;
+        return new KeyMapBuilder([]).f20;
     }
     get f21() {
-        return new KeyMapCreator().f21;
+        return new KeyMapBuilder([]).f21;
     }
     get f22() {
-        return new KeyMapCreator().f22;
+        return new KeyMapBuilder([]).f22;
     }
     get f23() {
-        return new KeyMapCreator().f23;
+        return new KeyMapBuilder([]).f23;
     }
     get f24() {
-        return new KeyMapCreator().f24;
+        return new KeyMapBuilder([]).f24;
     }
     get f25() {
-        return new KeyMapCreator().f25;
+        return new KeyMapBuilder([]).f25;
     }
     get f26() {
-        return new KeyMapCreator().f26;
+        return new KeyMapBuilder([]).f26;
     }
     get f27() {
-        return new KeyMapCreator().f27;
+        return new KeyMapBuilder([]).f27;
     }
     get f28() {
-        return new KeyMapCreator().f28;
+        return new KeyMapBuilder([]).f28;
     }
     get f29() {
-        return new KeyMapCreator().f29;
+        return new KeyMapBuilder([]).f29;
     }
     get f30() {
-        return new KeyMapCreator().f30;
+        return new KeyMapBuilder([]).f30;
     }
     get f31() {
-        return new KeyMapCreator().f31;
+        return new KeyMapBuilder([]).f31;
     }
     get f32() {
-        return new KeyMapCreator().f32;
+        return new KeyMapBuilder([]).f32;
     }
     get f33() {
-        return new KeyMapCreator().f33;
+        return new KeyMapBuilder([]).f33;
     }
     get f34() {
-        return new KeyMapCreator().f34;
+        return new KeyMapBuilder([]).f34;
     }
     get f35() {
-        return new KeyMapCreator().f35;
+        return new KeyMapBuilder([]).f35;
     }
     get backspace() {
-        return new KeyMapCreator().backspace;
+        return new KeyMapBuilder([]).backspace;
     }
     get delete() {
-        return new KeyMapCreator().delete;
+        return new KeyMapBuilder([]).delete;
     }
     get esc() {
-        return new KeyMapCreator().esc;
+        return new KeyMapBuilder([]).esc;
     }
     get insert() {
-        return new KeyMapCreator().insert;
+        return new KeyMapBuilder([]).insert;
     }
     get return() {
-        return new KeyMapCreator().return;
+        return new KeyMapBuilder([]).return;
     }
     get tab() {
-        return new KeyMapCreator().tab;
+        return new KeyMapBuilder([]).tab;
     }
     get up() {
-        return new KeyMapCreator().up;
+        return new KeyMapBuilder([]).up;
     }
     get down() {
-        return new KeyMapCreator().down;
+        return new KeyMapBuilder([]).down;
     }
     get left() {
-        return new KeyMapCreator().left;
+        return new KeyMapBuilder([]).left;
     }
     get right() {
-        return new KeyMapCreator().right;
+        return new KeyMapBuilder([]).right;
     }
     get pageUp() {
-        return new KeyMapCreator().pageUp;
+        return new KeyMapBuilder([]).pageUp;
     }
     get pageDown() {
-        return new KeyMapCreator().pageDown;
+        return new KeyMapBuilder([]).pageDown;
     }
     get home() {
-        return new KeyMapCreator().home;
+        return new KeyMapBuilder([]).home;
     }
     get end() {
-        return new KeyMapCreator().end;
+        return new KeyMapBuilder([]).end;
     }
     get scrollLock() {
-        return new KeyMapCreator().scrollLock;
+        return new KeyMapBuilder([]).scrollLock;
     }
     get printScreen() {
-        return new KeyMapCreator().printScreen;
+        return new KeyMapBuilder([]).printScreen;
     }
     get begin() {
-        return new KeyMapCreator().begin;
+        return new KeyMapBuilder([]).begin;
     }
     get pause() {
-        return new KeyMapCreator().pause;
+        return new KeyMapBuilder([]).pause;
     }
     get menu() {
-        return new KeyMapCreator().menu;
+        return new KeyMapBuilder([]).menu;
     }
     get mediaPlay() {
-        return new KeyMapCreator().mediaPlay;
+        return new KeyMapBuilder([]).mediaPlay;
     }
     get mediaPause() {
-        return new KeyMapCreator().mediaPause;
+        return new KeyMapBuilder([]).mediaPause;
     }
     get mediaPlayPause() {
-        return new KeyMapCreator().mediaPlayPause;
+        return new KeyMapBuilder([]).mediaPlayPause;
     }
     get mediaReverse() {
-        return new KeyMapCreator().mediaReverse;
+        return new KeyMapBuilder([]).mediaReverse;
     }
     get mediaStop() {
-        return new KeyMapCreator().mediaStop;
+        return new KeyMapBuilder([]).mediaStop;
     }
     get mediaFastForward() {
-        return new KeyMapCreator().mediaFastForward;
+        return new KeyMapBuilder([]).mediaFastForward;
     }
     get mediaRewind() {
-        return new KeyMapCreator().mediaRewind;
+        return new KeyMapBuilder([]).mediaRewind;
     }
     get mediaTrackNext() {
-        return new KeyMapCreator().mediaTrackNext;
+        return new KeyMapBuilder([]).mediaTrackNext;
     }
     get mediaTrackPrevious() {
-        return new KeyMapCreator().mediaTrackPrevious;
+        return new KeyMapBuilder([]).mediaTrackPrevious;
     }
     get mediaRecord() {
-        return new KeyMapCreator().mediaRecord;
+        return new KeyMapBuilder([]).mediaRecord;
     }
     get mediaLowerVolume() {
-        return new KeyMapCreator().mediaLowerVolume;
+        return new KeyMapBuilder([]).mediaLowerVolume;
     }
     get mediaRaiseVolume() {
-        return new KeyMapCreator().mediaRaiseVolume;
+        return new KeyMapBuilder([]).mediaRaiseVolume;
     }
     get mediaMuteVolume() {
-        return new KeyMapCreator().mediaMuteVolume;
+        return new KeyMapBuilder([]).mediaMuteVolume;
+    }
+}
+
+export class LeaderKeyMapBuilder extends BaseKeyMapBuilder {
+    protected override sections: RawKeyMap[];
+    protected override readSections: RawKeyMap[] | undefined;
+
+    constructor(sections: RawKeyMap[]) {
+        super();
+        this.sections = sections;
+    }
+
+    public override $$read(): RawKeyMap[] {
+        return this.$$readHelper();
+    }
+}
+
+export class KeyMapBuilder extends BaseKeyMapBuilder {
+    protected override sections: KeyMap[];
+    protected override readSections: KeyMap[] | undefined;
+
+    constructor(sections: KeyMap[]) {
+        super();
+        this.sections = sections;
+    }
+
+    public override $$read(): KeyMap[] {
+        return this.$$readHelper() as KeyMap[];
     }
 }
 
@@ -718,4 +765,4 @@ export class KeyMapCreatorStarter implements IKeyHelper {
  * @example
  * key.ctrl.alt.input("foo").ctrl.input("bar") becomes [{ key: ["ctrl", "alt"], input: "foo"}, {key: ["ctrl"], input: "bar"}]
  * */
-export const key = new KeyMapCreatorStarter();
+export const key = new KeyMapBuilderStarter();
