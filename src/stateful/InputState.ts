@@ -1,13 +1,10 @@
 import { parseBuffer } from "../parsers/parseBuffer.js";
-import type { Data, Key, KeyMap, RawAction, RawKeyMap } from "../types.js";
+import type { Data, Key, KeyMap, ExpandedAction } from "../types.js";
 import { PeekSet } from "../util/PeekSet.js";
 import { match } from "./match.js";
 import type { ShortData } from "./splitAmbiguousData.js";
 import { splitAmbiguousData } from "./splitAmbiguousData.js";
-import { LEADER, type ActionStore } from "./ActionStore.js";
-import { tokenize } from "../tokenize/tokenize.js";
-import { expandKeymap } from "./expandKeymap.js";
-import { KeyMapBuilder } from "../util/KeyMapBuilder.js";
+import { type ActionStore } from "./ActionStore.js";
 
 const Modifiers = new PeekSet<Key>([
     "ctrl",
@@ -20,13 +17,21 @@ const Modifiers = new PeekSet<Key>([
     "shift",
 ]);
 
-type Opts = {
+export type InputStateOpts = {
     maxDepth?: number;
-    leader?: KeyMap | KeyMap[] | string | KeyMapBuilder;
     leaderTimeout?: number;
+    leader?: KeyMap[];
 };
 
-export class InputState {
+export interface IInputState {
+    clearState(): void;
+    process(
+        buf: Buffer,
+        store: ActionStore,
+    ): { data: Data; keymap?: KeyMap[]; name?: string };
+}
+
+export class InputState implements IInputState {
     private size: number;
     private root: Node | undefined;
     private head: Node | undefined;
@@ -34,24 +39,16 @@ export class InputState {
     private readonly maxDepth: number;
     private readonly leader: KeyMap[] | undefined;
     private readonly leaderTimeout: number;
-    private readonly resolvedKeymaps: WeakMap<RawAction, KeyMap[]>;
 
-    constructor(opts: Opts = {}) {
+    constructor(opts: InputStateOpts = {}) {
         this.maxDepth = opts.maxDepth ?? 50;
         this.leaderTimeout = opts.leaderTimeout ?? 1000;
-        if (typeof opts.leader === "string") {
-            this.leader = expandKeymap(tokenize(opts.leader));
-        } else if (opts.leader instanceof KeyMapBuilder) {
-            this.leader = opts.leader.$$read();
-        } else if (opts.leader) {
-            this.leader = expandKeymap(opts.leader);
-        }
+        this.leader = opts.leader;
 
         this.size = 0;
         this.root = undefined;
         this.head = undefined;
         this.leaderTimeoutID = undefined;
-        this.resolvedKeymaps = new WeakMap();
     }
 
     private appendData(data: Data) {
@@ -77,7 +74,7 @@ export class InputState {
         }
     }
 
-    public clear() {
+    public clearState() {
         this.root = undefined;
         this.head = undefined;
         this.size = 0;
@@ -112,25 +109,24 @@ export class InputState {
             }
         }
 
-        const actions = store._getRawActions();
+        const actions = store.getSortedActions();
         return this.checkKeymapMatch(actions, data);
     }
 
     private checkKeymapMatch(
-        actions: RawAction[],
+        actions: ExpandedAction[],
         data: Data,
     ): ReturnType<InputState["process"]> {
         for (let i = 0; i < actions.length; ++i) {
             const action = actions[i];
-            const keymap = this.getResolvedKeymap(action);
 
-            if (this.checkMatch(keymap)) {
-                this.clear();
+            if (this.checkMatch(action.keymap)) {
+                this.clearState();
                 action.callback?.();
                 return {
                     data: data,
                     name: action.name,
-                    keymap: keymap,
+                    keymap: action.keymap,
                 };
             }
         }
@@ -169,32 +165,6 @@ export class InputState {
         return false;
     }
 
-    private getResolvedKeymap(action: RawAction): KeyMap[] {
-        if (this.resolvedKeymaps.has(action)) {
-            return this.resolvedKeymaps.get(action)!;
-        }
-
-        const withLeader = this.injectLeaderIntoKeymap(action.keymap);
-        this.resolvedKeymaps.set(action, withLeader);
-        return withLeader;
-    }
-
-    private injectLeaderIntoKeymap(raw: RawKeyMap[]): KeyMap[] {
-        const result: KeyMap[] = [];
-        for (let i = 0; i < raw.length; ++i) {
-            const k = raw[i];
-            if (k === LEADER) {
-                // keymap is invalid since it has a leader but a leader isn't set
-                if (!this.leader) return [];
-                result.push(...this.leader);
-            } else {
-                result.push(k);
-            }
-        }
-
-        return result;
-    }
-
     private get leaderWasTriggered() {
         return !!this.leaderTimeoutID;
     }
@@ -203,7 +173,7 @@ export class InputState {
         this.clearLeaderTimeout();
         this.leaderTimeoutID = setTimeout(() => {
             this.leaderTimeoutID = undefined;
-            this.clear();
+            this.clearState();
         }, this.leaderTimeout);
     }
 

@@ -1,5 +1,11 @@
-import { LEADER } from "../stateful/ActionStore.js";
-import type { Key, KeyMap, RawKeyMap } from "../types.js";
+import { INVALID_KEYMAP, LEADER } from "../constants.js";
+import type {
+    ExpandedKeyMap,
+    Key,
+    KeyMap,
+    ExpandedRawKeyMap,
+    RawKeyMap,
+} from "../types.js";
 
 export interface IKeyMapBuilder {
     input(input: string): BaseKeyMapBuilder;
@@ -82,30 +88,28 @@ export abstract class BaseKeyMapBuilder implements IKeyMapBuilder {
     protected keys: Set<Key>;
     protected mods: Set<Key>;
     protected abstract sections: (KeyMap | RawKeyMap)[];
-    protected abstract readSections: (KeyMap | RawKeyMap)[] | undefined;
+    protected readSections: ExpandedKeyMap | typeof INVALID_KEYMAP | undefined;
 
-    constructor(
-        keys: Set<Key> = new Set(),
-        mods: Set<Key> = new Set(),
-        // sections: KeyMap[] = [],
-    ) {
+    constructor(keys: Set<Key> = new Set(), mods: Set<Key> = new Set()) {
         this.keys = keys;
         this.mods = mods;
-        // this.sections = sections;
     }
 
     /** @internal
      * Once read/chaining is done, the instance essentially becomes immutable.
      * */
-    public abstract $$read(): KeyMap[] | RawKeyMap[];
-
-    protected $$readHelper(): KeyMap[] | RawKeyMap[] {
+    public $$read(
+        leader?: ExpandedKeyMap,
+    ): ExpandedKeyMap | typeof INVALID_KEYMAP {
         if (this.readSections) {
             return this.readSections;
         }
-        this.readSections = [...this.sections];
-        return this.readSections;
+        return this.$$readHelper(leader);
     }
+
+    protected abstract $$readHelper(
+        leader?: ExpandedKeyMap,
+    ): ExpandedKeyMap | typeof INVALID_KEYMAP;
 
     private pushSection(input?: string) {
         const section: KeyMap = {};
@@ -731,29 +735,34 @@ export class KeyMapBuilderStarter implements IKeyMapBuilder {
 
 export class LeaderKeyMapBuilder extends BaseKeyMapBuilder {
     protected override sections: RawKeyMap[];
-    protected override readSections: RawKeyMap[] | undefined;
 
-    constructor(sections: RawKeyMap[]) {
+    constructor(sections: ExpandedRawKeyMap) {
         super();
         this.sections = sections;
     }
 
-    public override $$read(): RawKeyMap[] {
-        return this.$$readHelper();
+    protected override $$readHelper(
+        leader?: ExpandedKeyMap,
+    ): ExpandedKeyMap | typeof INVALID_KEYMAP {
+        if (!leader) {
+            return INVALID_KEYMAP;
+        }
+        return [...this.sections].flatMap((s) => {
+            return s === LEADER ? leader : s;
+        });
     }
 }
 
 export class KeyMapBuilder extends BaseKeyMapBuilder {
     protected override sections: KeyMap[];
-    protected override readSections: KeyMap[] | undefined;
 
     constructor(sections: KeyMap[]) {
         super();
         this.sections = sections;
     }
 
-    public override $$read(): KeyMap[] {
-        return this.$$readHelper() as KeyMap[];
+    protected override $$readHelper(): ExpandedKeyMap {
+        return [...this.sections];
     }
 }
 

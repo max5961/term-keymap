@@ -1,53 +1,69 @@
 import { tokenize } from "../tokenize/tokenize.js";
-import type { KeyMap, RawKeyMap } from "../types.js";
+import type { KeyMap } from "../types.js";
 import { toArray } from "../util/toArray.js";
 import { expandKeymap } from "./expandKeymap.js";
-import type { Action, RawAction } from "../types.js";
+import type { Action, ExpandedKeyMap, ExpandedAction } from "../types.js";
 import { BaseKeyMapBuilder } from "../util/KeyMapBuilder.js";
+import { INVALID_ACTION, INVALID_KEYMAP } from "../constants.js";
 
-export const LEADER = Symbol("term-keymap.leader");
+export interface IActionStore {
+    clearActions(): void;
+    addAction(action: Action): () => void;
+    removeAction(action: Action): void;
+}
 
-export class ActionStore {
-    private map: Map<Action, RawAction>;
-    private sortedActions: Map<number, Set<RawAction>>;
-    private cachedRawActions: RawAction[] | undefined;
+type ActionStoreOpts = {
+    actions?: Action[];
+    leader?: KeyMap[];
+};
 
-    constructor(actions?: Action[]) {
+export class ActionStore implements IActionStore {
+    private map: Map<Action, ExpandedAction>;
+    private sortedActions: Map<number, Set<ExpandedAction>>;
+    private cachedActions: ExpandedAction[] | undefined;
+    private readonly leader?: KeyMap[];
+
+    constructor(opts: ActionStoreOpts = {}) {
         this.map = new Map();
         this.sortedActions = new Map();
+        this.leader = opts.leader;
 
-        if (actions) {
-            for (let i = 0; i < actions.length; ++i) {
-                this.addAction(actions[i]);
+        if (opts.actions) {
+            for (let i = 0; i < opts.actions.length; ++i) {
+                this.addAction(opts.actions[i]);
             }
         }
     }
 
-    public clear() {
+    public clearActions() {
         this.map = new Map();
         this.sortedActions = new Map();
-        this.cachedRawActions = undefined;
+        this.cachedActions = undefined;
     }
 
     public addAction(action: Action) {
-        if (this.map.has(action)) return () => {};
-        this.cachedRawActions = undefined;
+        if (this.map.has(action)) return () => this.removeAction(action);
 
-        const raw = this.getRawAction(action);
-        this.map.set(action, raw);
+        const expanded = this.getExpandedAction(action);
+        if (expanded === INVALID_ACTION) {
+            return () => {};
+        }
 
-        const length = raw.keymap.length;
+        this.cachedActions = undefined;
+        this.map.set(action, expanded);
+
+        const length = expanded.keymap.length;
         if (!this.sortedActions.get(length)) {
             this.sortedActions.set(length, new Set());
         }
-        this.sortedActions.get(length)!.add(raw);
+        this.sortedActions.get(length)!.add(expanded);
 
         return () => this.removeAction(action);
     }
 
-    public removeAction(action: Action): boolean {
-        if (!this.map.has(action)) return false;
-        this.cachedRawActions = undefined;
+    public removeAction(action: Action): void {
+        if (!this.map.has(action)) return;
+        this.cachedActions = undefined;
 
         const raw = this.map.get(action)!;
         const length = raw.keymap.length;
@@ -56,54 +72,60 @@ export class ActionStore {
         if (this.sortedActions.get(length)?.size === 0) {
             this.sortedActions.delete(length);
         }
-
-        return true;
     }
 
-    /** @internal
+    /**
      * Returns an array of raw actions sorted in ascending order by length of the
      * action
      * */
-    public _getRawActions(): RawAction[] {
-        if (this.cachedRawActions) {
-            return this.cachedRawActions;
+    public getSortedActions(): ExpandedAction[] {
+        if (this.cachedActions) {
+            return this.cachedActions;
         }
 
         const sortedKeys = [...this.sortedActions.keys()].sort((a, b) => a - b);
-        const result: RawAction[] = [];
+        const result: ExpandedAction[] = [];
         for (let i = 0; i < sortedKeys.length; ++i) {
             const set = this.sortedActions.get(sortedKeys[i])!;
             result.push(...set);
         }
 
-        this.cachedRawActions = result;
+        this.cachedActions = result;
         return result;
     }
 
-    private getRawAction(action: Action): RawAction {
-        if (action.keymap instanceof BaseKeyMapBuilder) {
-            // KeyMapBuilder reads are always in raw and expanded form
-            return {
-                ...action,
-                keymap: action.keymap.$$read(),
-            };
-        }
+    private getExpandedAction(
+        action: Action,
+    ): ExpandedAction | typeof INVALID_ACTION {
+        const expanded =
+            action.keymap instanceof BaseKeyMapBuilder
+                ? action.keymap.$$read(this.leader)
+                : this.getExpandedKeymap(action.keymap);
 
+        if (expanded === INVALID_KEYMAP) {
+            return INVALID_ACTION;
+        }
         return {
             ...action,
-            keymap: this.getRawKeymap(action.keymap),
+            keymap: expanded,
         };
     }
 
-    private getRawKeymap(keymap: KeyMap | KeyMap[] | string): RawKeyMap[] {
+    private getExpandedKeymap(
+        keymap: KeyMap | KeyMap[] | string,
+    ): ExpandedKeyMap | typeof INVALID_KEYMAP {
         const sequence =
             typeof keymap === "string" ? tokenize(keymap) : toArray(keymap);
 
-        const result: RawKeyMap[] = [];
+        const result: KeyMap[] = [];
         for (let i = 0; i < sequence.length; ++i) {
             const keymap = sequence[i];
             if (keymap.leader) {
-                result.push(LEADER);
+                if (this.leader) {
+                    result.push(...this.leader);
+                } else {
+                    return INVALID_KEYMAP;
+                }
             }
 
             const expanded = expandKeymap(keymap);

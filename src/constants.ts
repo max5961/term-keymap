@@ -1,3 +1,7 @@
+export const LEADER = Symbol("term-keymap.leader");
+export const INVALID_ACTION = Symbol("term-keymap.invalid-action");
+export const INVALID_KEYMAP = Symbol("term-keymap.invalid-keymap");
+
 /**
  * Defines raw arrays for the purpose of extracting union types and building runtime
  * lookup utilities with Sets.

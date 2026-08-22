@@ -1,7 +1,9 @@
 import type { PeekSet } from "./util/PeekSet.js";
-import { Arrays } from "./constants.js";
-import type { LEADER } from "./stateful/ActionStore.js";
-import type { BaseKeyMapBuilder } from "./util/KeyMapBuilder.js";
+import { Arrays, INVALID_ACTION, LEADER } from "./constants.js";
+import type {
+    KeyMapBuilder,
+    LeaderKeyMapBuilder,
+} from "./util/KeyMapBuilder.js";
 
 export type KeyMap = {
     key?: Key | Key[];
@@ -12,15 +14,18 @@ export type KeyMap = {
 export type Action = {
     name?: string;
     callback?: () => unknown;
-    keymap: KeyMap | KeyMap[] | string | BaseKeyMapBuilder;
+    keymap: KeyMap | KeyMap[] | string | KeyMapBuilder | LeaderKeyMapBuilder;
 };
 
 export type RawKeyMap = KeyMap | typeof LEADER;
-
-/** Action object de-abstracted into its most simple form */
-export type RawAction = Omit<Action, "keymap"> & {
-    keymap: RawKeyMap[];
+export type ExpandedRawKeyMap = RawKeyMap[];
+export type ExpandedKeyMap = KeyMap[];
+export type ExpandedAction = Action & {
+    keymap: ExpandedKeyMap;
 };
+export type RawAction = Action | typeof INVALID_ACTION;
+
+export type LeaderKeyMap = KeyMap | KeyMap[] | string | KeyMapBuilder;
 
 export type Modifier = (typeof Arrays.Modifiers)[number];
 export type Key = Modifier | (typeof Arrays.Keys)[number];

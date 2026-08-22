@@ -4,8 +4,7 @@ import type { KeyMap } from "../src/types.js";
 
 describe("expandKeymap", () => {
     test.each<[string, KeyMap | KeyMap[], KeyMap[]]>([
-        // ["Empty KeyMap", {}, []],
-        // ["Empty KeyMap with leader", { leader: true }, []],
+        ["Empty KeyMap with leader", { leader: true }, [{ leader: true }]],
         ["Empty KeyMap", {}, [{}]],
 
         ["Empty KeyMap[]", [], []],
