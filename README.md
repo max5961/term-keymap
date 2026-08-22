@@ -34,57 +34,68 @@ Key features:
 ### Matching stateful stdin with keymaps
 
 ```typescript
-import { configureStdin, key, ActionStore, InputState } from "term-input";
+import { configureStdin, key, KeyMapState } from "term-keymap";
 
 configureStdin({
     enableMouse: true,
     enableKittyProtocol: true,
 })
 
-const inputState = new InputState({ key: "ctrl", input: " " });
+const state = new KeyMapState({
+    // Initialize with optional Actions
+    actions: [
+        {
+            keymap: [{ input: "foo" }, { key: "ctrl", input: "d" }],
+            // can also write as:
+            //
+            // // string form
+            // keymap: "foo<C-d>",
+            //
+            // // builder form
+            // keymap: key.input("foo").ctrl.input("d"),
+            //
+            // // expanded token form
+            // keymap: [{ input: "f" }, { input: "o" }, { input: "o" }, { key: "ctrl", input: "d" }]
+            callback: () => {
+                // handler
+            }
+        },
 
-// Initialize the store with optional Actions
-const store = new ActionStore([
-    {
-        keymap: [{ input: "foo" }, { key: "ctrl", input: "d" }],
-        callback: () => {
-            // handle match
-        }
-    },
+        // If InputState.process matches <C-c> it will return the Action's name if
+        // it exists. This provides a different way of handling matched keymaps
+        {
+            keymap: "<C-c>",
+            // keymap: key.ctrl.input("c"),
+            // keymap: { key: "ctrl", input: "c" },
+            name: "quit",
+        },
+    ],
 
-    // KeyMaps can be set in string form
-    {
-        keymap: "<leader>bar"
-        callback: () => {
-            // handle match
-        }
-    },
-
-    // or KeyMaps can be set by chaining
-    {
-        keymap: key.leader.input("baz"),
-        callback: () => {
-            // handle match
-        }
-    },
-
-    // If InputState.process matches <C-c> it will return the Action's name if
-    // it exists. This provides a different way of handling matched keymaps
-    {
-        keymap: "<C-c>",
-        name: "quit",
-    },
-]);
-
-// Or add an Action directly.  ActionStore.addAction returns a callback to remove it
-// (or you can use ActionStore.removeAction if you have a reference to the Action)
-//
-// ActionStore.clear() removes all Actions at once
-
-const removeEscAction = store.addAction({
-    keymap: "<Esc>",
-    callback: createCb("match escape key"),
+    leader: key.input(" "),
 });
+
+// Or add an Action directly.  KeyMapState.addAction returns a callback to remove it
+// (or you can use KeyMapState.removeAction if you have a reference to the Action)
+//
+// KeyMapState.clearActions() removes all Actions at once
+
+const removeEscAction = state.addAction({
+    keymap: "<Esc>",
+    // keymap: { key: "esc" },
+    // keymap: key.esc,
+    callback: () => {
+        // handler
+    }
+});
+
+state.addAction({
+    keymap: key.leader.input("foo"),
+    // keymap: "<leader>foo",
+    // keymap: { leader: true, input: "foo" },
+    callback: () => {
+        // handler
+    }
+})
 
 process.stdin.on("data", (buf: Buffer) => {
     const { data, name } = inputState.process(buf, actions);
