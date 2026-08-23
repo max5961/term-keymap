@@ -1,6 +1,6 @@
 {
     "name": "term-keymap",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "Parse stdin buffers into readable data and assign keymaps.",
     "main": "./dist/index.js",
     "exports": {
@@ -20,6 +20,7 @@
         "example:stateful": "tsc -p examples && node ./compiled-examples/examples/stateful.js",
         "example:parse": "tsc -p examples && node ./compiled-examples/examples/parse.js",
         "example:mouse": "tsc -p examples && node ./compiled-examples/examples/mouse.js",
+        "example:mouse-state": "tsc -p examples && node ./compiled-examples/examples/mouseState.js",
         "example:leader": "tsc -p examples && node ./compiled-examples/examples/leader.js",
         "benchmark": "tsc -p benchmark && node ./compiled-benchmark/benchmark/benchmarkStateful.js"
     },

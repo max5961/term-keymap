@@ -1,8 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { ActionStore, InputState, key, KeyMapState } from "../../src/index.js";
+import { key, KeyMapState } from "../../src/index.js";
 import { encodeMods } from "../helpers/encodeMods.js";
 import { KeyMap } from "../../src/types.js";
-import { KittyKey } from "../../src/maps/KittyMap.js";
+import { InputState } from "../../src/stateful/InputState.js";
+import { ActionStore } from "../../src/stateful/ActionStore.js";
 
 describe("KeyMapState", () => {
     describe("ActionStore API", () => {

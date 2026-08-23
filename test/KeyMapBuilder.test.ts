@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { key, type BaseKeyMapBuilder } from "../src/util/KeyMapBuilder.ts";
 import { ExpandedKeyMap, KeyMap } from "../src/types.ts";
-import { LEADER } from "../src/constants.js";
 
 const parse = (k: BaseKeyMapBuilder, leader?: ExpandedKeyMap) => {
     return k.$$read(leader);
@@ -132,7 +131,7 @@ describe("KeyMapBuilder", () => {
 
     describe("Check all keys for typos and ensure all non-modifiers create new sections", () => {
         // prettier-ignore
-        test.skip.each<[string, BaseKeyMapBuilder, KeyMap[]]>([
+        test.each<[string, BaseKeyMapBuilder, KeyMap[]]>([
             ["ctrl",               key.ctrl.input("a"),               [{ key: ["ctrl"], input: "a" }]],
             ["alt",                key.alt.input("a"),                [{ key: ["alt"], input: "a"}]],
             ["meta",               key.meta.input("a"),               [{ key: ["meta"], input: "a" }]],

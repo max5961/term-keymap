@@ -50,3 +50,69 @@ export type Data = {
         readonly utf: string;
     };
 };
+
+export type MouseData = Exclude<Data["mouse"], undefined>;
+
+export type MouseEventType =
+    // LEFT BTN
+    | "click"
+    | "dblclick"
+    | "mousedown"
+    | "mouseup"
+
+    // RIGHT BTN
+    | "rightclick"
+    | "rightdblclick"
+    | "rightmousedown"
+    | "rightmouseup"
+
+    // SCROLL WHEEL
+    | "scrollup"
+    | "scrolldown"
+    | "scrollclick"
+    | "scrolldblclick"
+    | "scrollbtndown"
+    | "scrollbtnup"
+
+    // MOVEMENT
+    | "mousemove"
+    | "drag"
+    | "dragstart"
+    | "dragend";
+
+interface IMouseEvent<T extends MouseEventType = any> {
+    type: T;
+    clientX: number;
+    clientY: number;
+}
+
+interface IDragMouseEvent<T extends MouseEventType = any>
+    extends IMouseEvent<T> {
+    dragStartX: number;
+    dragStartY: number;
+}
+
+type MouseEventMap = {
+    click: IMouseEvent<"click">;
+    dblclick: IMouseEvent<"dblclick">;
+    mousedown: IMouseEvent<"mousedown">;
+    mouseup: IMouseEvent<"mouseup">;
+    rightclick: IMouseEvent<"rightclick">;
+    rightdblclick: IMouseEvent<"rightdblclick">;
+    rightmousedown: IMouseEvent<"rightmousedown">;
+    rightmouseup: IMouseEvent<"rightmouseup">;
+    scrollup: IMouseEvent<"scrollup">;
+    scrolldown: IMouseEvent<"scrolldown">;
+    scrollclick: IMouseEvent<"scrollclick">;
+    scrolldblclick: IMouseEvent<"scrolldblclick">;
+    scrollbtndown: IMouseEvent<"scrollbtndown">;
+    scrollbtnup: IMouseEvent<"scrollbtnup">;
+    mousemove: IMouseEvent<"mousemove">;
+    dragstart: IMouseEvent<"dragstart">;
+    drag: IDragMouseEvent<"drag">;
+    dragend: IDragMouseEvent<"dragend">;
+    default: IMouseEvent<MouseEventType>;
+};
+
+export type MouseEvent<T extends keyof MouseEventMap = "default"> =
+    MouseEventMap[T];
