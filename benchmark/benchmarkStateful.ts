@@ -1,6 +1,8 @@
 import child_process from "node:child_process";
 import fs from "node:fs";
-import { ActionStore, InputState, key } from "../src/index.js";
+import { key } from "../src/index.js";
+import { ActionStore } from "../src/stateful/ActionStore.js";
+import { InputState } from "../src/stateful/InputState.js";
 
 const ITER = Number(process.argv[2]);
 if (!Number.isInteger(ITER)) throw new Error("provide a number argument");
@@ -28,13 +30,15 @@ fileLines.push(
 
 // ----- GET RAW ACTIONS FROM ACTION STOR -----
 
-const startGetRaw = performance.now();
-const actions = store._getRawActions();
-const endGetRaw = performance.now();
+const startGetSorted = performance.now();
+const actions = store.getSortedActions();
+const endGetSorted = performance.now();
 
-fileLines.push(`ActionStore._getRawActions total: ${endGetRaw - startGetRaw}`);
 fileLines.push(
-    `ActionStore._getRawActions individual: ${(endGetRaw - startGetRaw) / ITER}`,
+    `ActionStore.getSortedActions total: ${endGetSorted - startGetSorted}`,
+);
+fileLines.push(
+    `ActionStore.getSortedActions individual: ${(endGetSorted - startGetSorted) / ITER}`,
 );
 
 // ----- PROCESS ACTIONS WITH INPUTSTATE -----

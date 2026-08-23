@@ -1,12 +1,12 @@
 {
-    "include": ["src", "examples"],
+    "include": ["src"],
     "exclude": [
         "src/stateful/DeprecatedInputState.ts",
         "test/stateful/DeprecatedInputState.test.ts"
     ],
     "compilerOptions": {
-        "rootDir": ".",
-        "outDir": "./dist/",
+        "rootDir": "./src",
+        "outDir": "./dist",
         "target": "es2022",
         "module": "nodenext",
         "moduleResolution": "nodenext",
@@ -29,11 +29,8 @@
         "noPropertyAccessFromIndexSignature": true,
         "sourceMap": true,
         "skipLibCheck": true,
-
-        // Defines what type definitions the lsp provides.  Using bleeding edge
-        // options could be a problem for stability
-        // Remove dom/dom.iterable if code does not run in the DOM
-        "lib": ["dom", "dom.iterable", "es2022"],
+        "stripInternal": true,
+        "lib": ["es2022"],
         "types": ["node"],
 
         // Must use import attribute of type "json"
@@ -46,8 +43,6 @@
         // Caveats: Does not allow enums
         "isolatedModules": true,
 
-        // Useful, but annoying to have on all the time for when you are deciding
-        // whether or not to use a certain import or variable
         "noUnusedLocals": false
     }
 }

@@ -1,6 +1,6 @@
 {
     "name": "term-keymap",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "description": "Parse stdin buffers into readable data and assign keymaps.",
     "main": "./dist/index.js",
     "exports": {
@@ -11,18 +11,16 @@
         "dist/"
     ],
     "scripts": {
-        "clean": "[ -d dist ] && rm -r dist; [ -d compiled-examples ] && rm -r compiled-examples",
-        "build": "npm run clean; tsc; tsc -p examples",
+        "clean": "[ -d dist ] && rm -r dist; [ -d ./examples/dist ] && rm -r ./examples/dist; [ -d ./benchmark/dist ] && rm -r ./benchmark/dist",
+        "build": "npm run clean; tsc; tsc -p examples; tsc -p benchmark",
         "test": "tsc && npx vitest",
-        "lint": "eslint",
-        "fix": "eslint --fix",
         "publish": "npm run build && npm publish --access=public",
-        "example:stateful": "tsc -p examples && node ./compiled-examples/examples/stateful.js",
-        "example:parse": "tsc -p examples && node ./compiled-examples/examples/parse.js",
-        "example:mouse": "tsc -p examples && node ./compiled-examples/examples/mouse.js",
-        "example:mouse-state": "tsc -p examples && node ./compiled-examples/examples/mouseState.js",
-        "example:leader": "tsc -p examples && node ./compiled-examples/examples/leader.js",
-        "benchmark": "tsc -p benchmark && node ./compiled-benchmark/benchmark/benchmarkStateful.js"
+        "example:stateful": "tsc -p examples && node ./examples/dist/examples/stateful.js",
+        "example:parse": "tsc -p examples && node ./examples/dist/examples/parse.js",
+        "example:mouse": "tsc -p examples && node ./examples/dist/examples/mouse.js",
+        "example:mouse-state": "tsc -p examples && node ./examples/dist/examples/mouseState.js",
+        "example:leader": "tsc -p examples && node ./examples/dist/examples/leader.js",
+        "benchmark": "tsc -p benchmark && node ./benchmark/dist/benchmark/benchmarkStateful.js"
     },
     "type": "module",
     "keywords": [
