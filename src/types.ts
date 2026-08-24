@@ -53,7 +53,7 @@ export type Data = {
 
 export type MouseData = Exclude<Data["mouse"], undefined>;
 
-export type MouseEventType =
+export type MouseEventName =
     // LEFT BTN
     | "click"
     | "dblclick"
@@ -80,19 +80,19 @@ export type MouseEventType =
     | "dragstart"
     | "dragend";
 
-interface IMouseEvent<T extends MouseEventType = any> {
+interface IMouseEvent<T extends MouseEventName = any> {
     type: T;
     clientX: number;
     clientY: number;
 }
 
-interface IDragMouseEvent<T extends MouseEventType = any>
+interface IDragMouseEvent<T extends MouseEventName = any>
     extends IMouseEvent<T> {
     dragStartX: number;
     dragStartY: number;
 }
 
-type MouseEventMap = {
+export type MouseEventMap = {
     click: IMouseEvent<"click">;
     dblclick: IMouseEvent<"dblclick">;
     mousedown: IMouseEvent<"mousedown">;
@@ -111,7 +111,7 @@ type MouseEventMap = {
     dragstart: IMouseEvent<"dragstart">;
     drag: IDragMouseEvent<"drag">;
     dragend: IDragMouseEvent<"dragend">;
-    default: IMouseEvent<MouseEventType>;
+    default: IMouseEvent<MouseEventName>;
 };
 
 export type MouseEvent<T extends keyof MouseEventMap = "default"> =

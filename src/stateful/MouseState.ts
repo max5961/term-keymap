@@ -1,5 +1,5 @@
 import { parseBuffer } from "../parsers/parseBuffer.js";
-import type { Data, MouseData, MouseEvent, MouseEventType } from "../types.js";
+import type { Data, MouseData, MouseEvent, MouseEventName } from "../types.js";
 
 type MouseStateOpts = {
     /**
@@ -36,14 +36,14 @@ export class MouseState {
         this.isDragging = false;
     }
 
-    public on<T extends MouseEventType>(
+    public on<T extends MouseEventName>(
         event: T,
         cb: (event: MouseEvent<T>) => unknown,
     ): void {
         this.pushHandler(event, cb);
     }
 
-    public off<T extends MouseEventType>(
+    public off<T extends MouseEventName>(
         event: T,
         cb: (event: MouseEvent<T>) => unknown,
     ): void {
@@ -164,7 +164,7 @@ export class MouseState {
     }
 
     private dispatchEvent =
-        (x: number, y: number) => (eventType: MouseEventType) => {
+        (x: number, y: number) => (eventType: MouseEventName) => {
             const handlers = this.handlers.get(eventType);
             if (!handlers) return;
 
@@ -188,7 +188,7 @@ export class MouseState {
     private dispatchDbl = (mouse: MouseData) => {
         const dispatch = this.dispatchEvent(mouse.x, mouse.y);
 
-        return (eventType: MouseEventType) => {
+        return (eventType: MouseEventName) => {
             dispatch(eventType);
 
             if (!this.canEmitDouble) {

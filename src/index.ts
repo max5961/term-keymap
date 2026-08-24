@@ -4,7 +4,10 @@ export type {
     Data,
     KeyMap,
     Action,
+    MouseData,
     MouseEvent,
+    MouseEventName,
+    MouseEventMap,
 } from "./types.js";
 export { configureStdin } from "./terminal/configureStdin.js";
 export { setKittyProtocol } from "./terminal/setKittyProtocol.js";
