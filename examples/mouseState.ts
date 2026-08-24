@@ -41,5 +41,11 @@ process.stdin.on("data", (buf) => {
         process.exit();
     }
 
-    mouse.process(data);
+    const mousedata = mouse.process(data);
+
+    // In the example we are setting listeners to handle events, but events can
+    // also be handled by iterating the returned array of MouseEvent objects
+    // mousedata.events.forEach((event) => {
+    //     console.log(event.type, event);
+    // });
 });

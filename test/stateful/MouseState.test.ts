@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { MouseState } from "../../src";
-import type { MouseEventType, MouseEvent } from "../../src/types";
+import type { MouseEventName, MouseEvent } from "../../src/types";
 
 describe("MouseState.process", () => {
     const mouse = new MouseState();
@@ -10,30 +10,11 @@ describe("MouseState.process", () => {
         currentEvent = e;
     };
 
-    const initializeTest = (e: MouseEventType) => {
+    const initializeTest = (e: MouseEventName) => {
         mouse.__clearState();
         mouse.removeAllListeners();
         mouse.on(e, handler);
     };
-
-    // mouse.on("click", handler);
-    // mouse.on("dblclick", handler);
-    // mouse.on("mousedown", handler);
-    // mouse.on("mouseup", handler);
-    // mouse.on("rightclick", handler);
-    // mouse.on("rightdblclick", handler);
-    // mouse.on("rightmousedown", handler);
-    // mouse.on("rightmouseup", handler);
-    // mouse.on("scrollup", handler);
-    // mouse.on("scrolldown", handler);
-    // mouse.on("scrollclick", handler);
-    // mouse.on("scrolldblclick", handler);
-    // mouse.on("scrollbtndown", handler);
-    // mouse.on("scrollbtnup", handler);
-    // mouse.on("mousemove", handler);
-    // mouse.on("dragstart", handler);
-    // mouse.on("drag", handler);
-    // mouse.on("dragend", handler);
 
     test("mousedown", () => {
         initializeTest("mousedown");
@@ -275,5 +256,164 @@ describe("MouseState.process", () => {
         mouse.process(Buffer.from("\x1b[<0;1;1m"));
 
         expect(dispatches).toBe(1);
+    });
+
+    describe("Handle processed MouseEvents from returned MouseEvents array", () => {
+        test("click", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<0;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<0;1;1m"));
+
+            expect(events.some((e) => e.type === "click")).toBe(true);
+        });
+
+        test("mousedown", () => {
+            const mouse = new MouseState();
+            const { events } = mouse.process(Buffer.from("\x1b[<0;1;1M"));
+
+            expect(events.some((e) => e.type === "mousedown")).toBe(true);
+        });
+
+        test("mouseup", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<0;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<0;1;1m"));
+            expect(events.some((e) => e.type === "mouseup")).toBe(true);
+        });
+
+        test("dblclick", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<0;1;1M"));
+            mouse.process(Buffer.from("\x1b[<0;1;1m"));
+            mouse.process(Buffer.from("\x1b[<0;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<0;1;1m"));
+            expect(events.some((e) => e.type === "dblclick")).toBe(true);
+        });
+
+        test("rightmousedown", () => {
+            const mouse = new MouseState();
+            const { events } = mouse.process(Buffer.from("\x1b[<2;1;1M"));
+            expect(events.some((e) => e.type === "rightmousedown")).toBe(true);
+        });
+
+        test("rightmouseup", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<2;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<2;1;1m"));
+            expect(events.some((e) => e.type === "rightmouseup")).toBe(true);
+        });
+
+        test("rightclick", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<2;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<2;1;1m"));
+            expect(events.some((e) => e.type === "rightclick")).toBe(true);
+        });
+
+        test("rightdblclick", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<2;1;1M"));
+            mouse.process(Buffer.from("\x1b[<2;1;1m"));
+            mouse.process(Buffer.from("\x1b[<2;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<2;1;1m"));
+            expect(events.some((e) => e.type === "rightdblclick")).toBe(true);
+        });
+
+        test("scrollbtndown", () => {
+            const mouse = new MouseState();
+            const { events } = mouse.process(Buffer.from("\x1b[<1;1;1M"));
+            expect(events.some((e) => e.type === "scrollbtndown")).toBe(true);
+        });
+
+        test("scrollbtnup", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<1;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<1;1;1m"));
+            expect(events.some((e) => e.type === "scrollbtnup")).toBe(true);
+        });
+
+        test("scrollclick", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<1;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<1;1;1m"));
+            expect(events.some((e) => e.type === "scrollclick")).toBe(true);
+        });
+
+        test("scrolldblclick", () => {
+            const mouse = new MouseState();
+            mouse.process(Buffer.from("\x1b[<1;1;1M"));
+            mouse.process(Buffer.from("\x1b[<1;1;1m"));
+            mouse.process(Buffer.from("\x1b[<1;1;1M"));
+            const { events } = mouse.process(Buffer.from("\x1b[<1;1;1m"));
+            expect(events.some((e) => e.type === "scrolldblclick")).toBe(true);
+        });
+
+        test("scrolldown", () => {
+            const mouse = new MouseState();
+            const { events } = mouse.process(Buffer.from("\x1b[<65;1;1M"));
+            expect(events.some((e) => e.type === "scrolldown")).toBe(true);
+        });
+
+        test("scrollup", () => {
+            const mouse = new MouseState();
+            const { events } = mouse.process(Buffer.from("\x1b[<64;1;1M"));
+            expect(events.some((e) => e.type === "scrollup")).toBe(true);
+        });
+
+        test("mousemove", () => {
+            const mouse = new MouseState();
+            const { events } = mouse.process(Buffer.from("\x1b[<35;1;1M"));
+            expect(events.some((e) => e.type === "mousemove")).toBe(true);
+        });
+
+        describe("drag, dragstart, dragend", () => {
+            const mouse = new MouseState();
+
+            test("dragstart", () => {
+                const { events } = mouse.process(Buffer.from("\x1b[<0;1;1M"));
+                expect(events.some((e) => e.type === "dragstart")).toBe(true);
+            });
+
+            test("drag", () => {
+                const { events } = mouse.process(Buffer.from("\x1b[<32;2;2M"));
+                expect(events.some((e) => e.type === "drag")).toBe(true);
+            });
+
+            test("dragend", () => {
+                const { events } = mouse.process(Buffer.from("\x1b[<0;3;3m"));
+                expect(events.some((e) => e.type === "dragend")).toBe(true);
+            });
+        });
+
+        test("returned MouseEvent[] refreshes after every stdin event (mouse stdin)", () => {
+            const mouse = new MouseState();
+
+            const press1 = mouse.process(Buffer.from("\x1b[<0;1;1M"));
+            const press2 = mouse.process(Buffer.from("\x1b[<0;1;1m"));
+
+            const press1set = new Set(press1.events.map((e) => e.type));
+            const press2set = new Set(press2.events.map((e) => e.type));
+
+            expect(
+                press1set.has("mousedown") && press1set.has("dragstart"),
+            ).toBe(true);
+            expect(
+                !press2set.has("mousedown") && !press2set.has("dragstart"),
+            ).toBe(true);
+        });
+
+        test("returned MouseEvent[] refreshes after every stdin event (keypress stdin)", () => {
+            const mouse = new MouseState();
+
+            const press1 = mouse.process(Buffer.from("\x1b[<0;1;1M"));
+            const press2 = mouse.process(Buffer.from("a"));
+
+            const press1set = new Set(press1.events.map((e) => e.type));
+            const press2set = new Set(press2.events.map((e) => e.type));
+            expect(
+                press1set.has("mousedown") && press1set.has("dragstart"),
+            ).toBe(true);
+            expect(press2set.size).toBe(0);
+        });
     });
 });

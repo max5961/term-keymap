@@ -11,6 +11,7 @@ type MouseStateOpts = {
 
 export class MouseState {
     private handlers: Map<string, Set<(event: MouseEvent) => unknown>>;
+    private dispatchedEvents: MouseEvent[];
     private prevMouse: MouseData | undefined;
     private dblTimer: number;
     private dblTimeoutID: ReturnType<typeof setTimeout> | undefined;
@@ -32,6 +33,7 @@ export class MouseState {
     constructor(opts: MouseStateOpts = {}) {
         opts.doubleTimer ??= 500;
         this.handlers = new Map();
+        this.dispatchedEvents = [];
         this.dblTimer = opts.doubleTimer;
         this.isDragging = false;
     }
@@ -71,9 +73,9 @@ export class MouseState {
         }
     }
 
-    public process(buf: Buffer): Data;
-    public process(data: Data): Data;
-    public process(v: Buffer | Data): Data {
+    public process(buf: Buffer): { data: Data; events: MouseEvent[] };
+    public process(data: Data): { data: Data; events: MouseEvent[] };
+    public process(v: Buffer | Data): { data: Data; events: MouseEvent[] } {
         if (Buffer.isBuffer(v)) {
             v = parseBuffer(v);
         }
@@ -82,7 +84,10 @@ export class MouseState {
             this.isDragging = false;
             this.handleMouse(v.mouse);
         }
-        return v;
+
+        const events = [...this.dispatchedEvents];
+        this.dispatchedEvents = [];
+        return { data: v, events };
     }
 
     private handleMouse(mouse: MouseData): void {
@@ -166,20 +171,21 @@ export class MouseState {
     private dispatchEvent =
         (x: number, y: number) => (eventType: MouseEventName) => {
             const handlers = this.handlers.get(eventType);
-            if (!handlers) return;
 
-            const event: MouseEvent = {
+            const event = {
                 type: eventType,
                 clientX: x,
                 clientY: y,
-            };
+            } as MouseEvent;
 
             // prettier-ignore
             if (eventType === "drag" || eventType === "dragend") {
-                (event as MouseEvent<"drag">).dragStartX = this.dragStartPoint!.x;
-                (event as MouseEvent<"drag">).dragStartY = this.dragStartPoint!.y;
+                (event as MouseEvent<"drag" | "dragend">).dragStartX = this.dragStartPoint!.x;
+                (event as MouseEvent<"drag" | "dragend">).dragStartY = this.dragStartPoint!.y;
             }
 
+            this.dispatchedEvents.push(event);
+            if (!handlers) return;
             handlers.forEach((h) => {
                 h(event);
             });

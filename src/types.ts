@@ -111,8 +111,7 @@ export type MouseEventMap = {
     dragstart: IMouseEvent<"dragstart">;
     drag: IDragMouseEvent<"drag">;
     dragend: IDragMouseEvent<"dragend">;
-    default: IMouseEvent<MouseEventName>;
 };
 
-export type MouseEvent<T extends keyof MouseEventMap = "default"> =
+export type MouseEvent<T extends MouseEventName = MouseEventName> =
     MouseEventMap[T];
