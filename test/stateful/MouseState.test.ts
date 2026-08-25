@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { MouseState } from "../../src";
+import { MouseState } from "../../src/stateful/MouseState";
 import type { MouseEventName, MouseEvent } from "../../src/types";
 
 describe("MouseState.process", () => {

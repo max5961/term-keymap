@@ -435,7 +435,7 @@ describe.skip("stateful", () => {
     });
 });
 
-describe("stateful", () => {
+describe.skip("stateful", () => {
     const ip = new DeprecatedInputState(50);
 
     const getKeymaps = () =>

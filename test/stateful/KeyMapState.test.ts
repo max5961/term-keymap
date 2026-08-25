@@ -200,7 +200,7 @@ describe("KeyMapState", () => {
         expect(match.name).toBe("foobar");
     });
 
-    describe.skip("disambiguates ambiguous xterm encodings", () => {
+    describe("disambiguates ambiguous xterm encodings", () => {
         const state = new KeyMapState();
         // prettier-ignore
         test.each([
@@ -259,7 +259,7 @@ describe("KeyMapState", () => {
         });
     });
 
-    describe.skip("ambiguous legacy keycodes", () => {
+    describe("ambiguous legacy keycodes", () => {
         test("<C-i><C-i>", () => {
             const state = new KeyMapState();
             state.addAction({

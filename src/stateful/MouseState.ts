@@ -1,5 +1,6 @@
 import { parseBuffer } from "../parsers/parseBuffer.js";
 import type { Data, MouseData, MouseEvent, MouseEventName } from "../types.js";
+import { MousePosition } from "./MousePosition.js";
 
 type MouseStateOpts = {
     /**
@@ -18,6 +19,7 @@ export class MouseState {
     private dragStartPoint: { x: number; y: number } | undefined;
     private isDragging: boolean;
     private lastClick: "L" | "R" | "S" | undefined;
+    private mousePosition: MousePosition;
 
     private get canEmitDouble() {
         return this.dblTimeoutID !== undefined;
@@ -33,6 +35,7 @@ export class MouseState {
     constructor(opts: MouseStateOpts = {}) {
         opts.doubleTimer ??= 500;
         this.handlers = new Map();
+        this.mousePosition = new MousePosition();
         this.dispatchedEvents = [];
         this.dblTimer = opts.doubleTimer;
         this.isDragging = false;
@@ -73,21 +76,36 @@ export class MouseState {
         }
     }
 
-    public process(buf: Buffer): { data: Data; events: MouseEvent[] };
-    public process(data: Data): { data: Data; events: MouseEvent[] };
-    public process(v: Buffer | Data): { data: Data; events: MouseEvent[] } {
-        if (Buffer.isBuffer(v)) {
-            v = parseBuffer(v);
+    public process(data: Buffer | Data) {
+        if (Buffer.isBuffer(data)) {
+            data = parseBuffer(data);
         }
 
-        if (v.mouse) {
+        if (data.mouse) {
             this.isDragging = false;
-            this.handleMouse(v.mouse);
+            this.handleMouse(data.mouse);
         }
 
         const events = [...this.dispatchedEvents];
         this.dispatchedEvents = [];
-        return { data: v, events };
+        const wasQueryResults = this.mousePosition.checkQueryAndResolve(
+            data.raw.utf,
+        );
+
+        return {
+            data,
+            events,
+            resolveMousePosition: (
+                layoutHeight: number,
+                stdout: NodeJS.WriteStream & { fd: 1 },
+            ) =>
+                this.mousePosition.resolve(
+                    events,
+                    wasQueryResults,
+                    layoutHeight,
+                    stdout,
+                ),
+        };
     }
 
     private handleMouse(mouse: MouseData): void {
